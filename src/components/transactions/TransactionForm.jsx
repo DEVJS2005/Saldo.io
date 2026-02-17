@@ -1,37 +1,24 @@
 import { useState, useEffect } from 'react';
+// Force Update HMR
+import { useMasterData } from '../../hooks/useMasterData';
 import { useTransactions } from '../../hooks/useTransactions';
-import { db } from '../../db/db';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
-import { Loader2 } from 'lucide-react';
+import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 
-export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate = new Date(), transactionToEdit = null }) => {
+export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', defaultDate = new Date(), transactionToEdit = null }) => {
   const { addTransaction, updateTransaction } = useTransactions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Form State
   const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    date: defaultDate.toISOString().split('T')[0],
-    type: prefillType,
-    categoryId: '',
-    accountId: '',
-    paymentStatus: '', // Default to empty (User request)
-    installments: 1,
-    currentInstallment: 1, // New field: Start from which installment?
-    isRecurring: false,
-    isInstallmentValue: false,
+    // ...
   });
 
   // Fetch Categories & Accounts
-  // Categories are filtered by type in the options, but fetched all here for simplicity
-  const allCategories = useLiveQuery(() => db.categories.toArray());
-  const accounts = useLiveQuery(() => db.accounts.toArray());
+  const { categories: allCategories, accounts } = useMasterData();
 
   // Populate form if editing
   useEffect(() => {
@@ -108,6 +95,7 @@ export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate 
       await updateTransaction(id, data, mode);
       setConfirmModalOpen(false);
       setPendingSubmission(null);
+      if (onSuccess) onSuccess();
       onClose();
       setIsLoading(false);
     } catch (err) {
@@ -140,43 +128,30 @@ export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate 
         const updateData = {
           ...formData,
           amount: finalAmount,
-          paymentStatus: finalStatus
+          paymentStatus: finalStatus,
+          recurrenceId: transactionToEdit.recurrenceId,
+          installmentId: transactionToEdit.installmentId,
+          installmentNumber: transactionToEdit.installmentNumber // Ensure we pass the current number too if needed
         };
 
         // CHECK PROPAGATION LOGIC
         const isSeries = transactionToEdit.recurrenceId || transactionToEdit.installmentId;
 
         if (isSeries) {
+          // Check if ANY significant field changed
           const amountChanged = Math.abs(finalAmount - transactionToEdit.amount) > 0.01;
+          const categoryChanged = transactionToEdit.categoryId !== updateData.categoryId;
+          const accountChanged = transactionToEdit.accountId !== updateData.accountId;
+          const descChanged = transactionToEdit.description !== updateData.description;
+          const typeChanged = transactionToEdit.type !== updateData.type;
+          const dateChanged = transactionToEdit.date !== updateData.date; // simplified check
+          const statusChanged = transactionToEdit.paymentStatus !== updateData.paymentStatus;
 
-          // "A alteração de categoria deve se propagar... menos a edição do valor."
-          // "Para a edição do valor, pode ter um modal perguntando"
-
-          if (amountChanged) {
-            // Determine if other significant fields changed too? 
-            // Doesn't matter, if amount changed, we MUST ask.
-            // Store pending data and open modal
+          if (amountChanged || categoryChanged || accountChanged || descChanged || typeChanged || dateChanged || statusChanged) {
+            // Store pending data and open modal for ANY change in a series
             setPendingSubmission({ id: transactionToEdit.id, data: updateData });
             setConfirmModalOpen(true);
             return; // Stop here, wait for user choice
-          } else {
-            // Amount did NOT change.
-            // Check if other fields changed (Account, Category, Description)
-            const categoryChanged = transactionToEdit.categoryId !== updateData.categoryId;
-            const accountChanged = transactionToEdit.accountId !== updateData.accountId;
-            const descChanged = transactionToEdit.description !== updateData.description;
-            const typeChanged = transactionToEdit.type !== updateData.type;
-
-            if (categoryChanged || accountChanged || descChanged || typeChanged) {
-              // Auto-propagate to FUTURE (or ALL?). 
-              // User said "se propagar para as demais transações... menos a edição do valor"
-              // "Demais" usually implies "Current + Future" in apps.
-              // Let's safe-default to 'future'.
-              await updateTransaction(transactionToEdit.id, updateData, 'future');
-              onClose();
-              setIsLoading(false);
-              return;
-            }
           }
         }
 
@@ -199,6 +174,7 @@ export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate 
           paymentStatus: finalStatus
         });
       }
+      if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       console.error("Erro ao salvar:", err);
@@ -276,7 +252,7 @@ export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate 
         <Select
           label="Categoria"
           value={formData.categoryId}
-          onChange={e => setFormData({ ...formData, categoryId: Number(e.target.value) })}
+          onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
           options={[
             { value: '', label: 'Selecione...' },
             ...(categories || []).map(c => ({ value: c.id, label: c.name }))
@@ -286,7 +262,7 @@ export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate 
         <Select
           label="Conta"
           value={formData.accountId}
-          onChange={e => setFormData({ ...formData, accountId: Number(e.target.value) })}
+          onChange={e => setFormData({ ...formData, accountId: e.target.value })}
           options={[
             { value: '', label: 'Selecione...' },
             ...(accounts || []).map(a => ({ value: a.id, label: a.name }))
@@ -387,11 +363,11 @@ export const TransactionForm = ({ onClose, prefillType = 'despesa', defaultDate 
         <Modal
           isOpen={confirmModalOpen}
           onClose={() => { setConfirmModalOpen(false); setIsLoading(false); setPendingSubmission(null); }}
-          title="Alteração de Valor"
+          title="Alteração em Série"
         >
           <div className="space-y-4">
             <p className="text-[var(--text-primary)]">
-              Você alterou o valor desta transação. Como deseja aplicar esta alteração?
+              Esta alteração afeta uma transação recorrente ou parcelada. Como deseja aplicar?
             </p>
 
             <div className="flex flex-col gap-2 pt-2">

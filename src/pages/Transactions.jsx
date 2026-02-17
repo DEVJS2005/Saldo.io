@@ -1,63 +1,53 @@
 import { useState } from 'react';
-import { Card } from '../components/ui/Card';
+import { useDate } from '../contexts/DateContext';
+import { useMasterData } from '../hooks/useMasterData';
 import { useBudget } from '../hooks/useBudget';
 import { useTransactions } from '../hooks/useTransactions';
-import { db } from '../db/db';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Plus, Eye, Edit2, Trash2, Search } from 'lucide-react';
 import { format } from 'date-fns';
-import { Trash2, Edit2, Eye, Plus } from 'lucide-react';
-
 import { MonthYearSelector } from '../components/ui/MonthYearSelector';
 import { TransactionForm } from '../components/transactions/TransactionForm';
-
 import { Modal } from '../components/ui/Modal';
-import { Button } from '../components/ui/Button';
-
-import { useDate } from '../contexts/DateContext';
 
 export default function Transactions() {
   const { selectedDate, setSelectedDate } = useDate();
-
-  // Create Modal State
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-
-  // Edit Modal State
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [transactionToEdit, setTransactionToEdit] = useState(null);
-
-  // View Modal State
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [transactionToView, setTransactionToView] = useState(null);
-
-  // Delete Modal State
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [transactionToDelete, setTransactionToDelete] = useState(null);
-
-  // Filters State
-  // Filters State
+  const [filterType, setFilterType] = useState('all');
   const [filterAccount, setFilterAccount] = useState('');
+  const [filterAccountMode, setFilterAccountMode] = useState('include'); // 'include' or 'exclude'
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [filterType, setFilterType] = useState('all'); // New State
   const [sortOrder, setSortOrder] = useState('date-desc');
 
-  const { transactions } = useBudget(selectedDate);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+
+  const [transactionToEdit, setTransactionToEdit] = useState(null);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
+  const [transactionToView, setTransactionToView] = useState(null);
+
+  const { transactions, refresh } = useBudget(selectedDate);
   const { deleteTransaction } = useTransactions();
 
   // Fetch Master Data
-  const categories = useLiveQuery(() => db.categories.toArray());
-  const accounts = useLiveQuery(() => db.accounts.toArray());
+  const { categories, accounts } = useMasterData();
 
-  const getCategoryName = (id) => categories?.find(c => c.id === id)?.name || id;
-  const getAccountName = (id) => accounts?.find(a => a.id === id)?.name || id;
+  const getCategoryName = (id) => categories?.find(c => c.id === id)?.name || '...'; // id is uuid now, might not match if loading
+  const getAccountName = (id) => accounts?.find(a => a.id === id)?.name || '...';
 
   // Filter Logic
   const filteredTransactions = transactions?.filter(t => {
-    const matchAccount = filterAccount ? t.accountId === Number(filterAccount) : true;
-    const matchCategory = filterCategory ? t.categoryId === Number(filterCategory) : true;
+    const matchAccount = filterAccount
+      ? (filterAccountMode === 'include' ? t.accountId === filterAccount : t.accountId !== filterAccount)
+      : true;
+    const matchCategory = filterCategory ? t.categoryId === filterCategory : true;
+    const matchType = filterType !== 'all' ? t.type === filterType : true;
     const matchStatus = filterStatus ? t.paymentStatus === filterStatus : true;
-    const matchType = filterType === 'all' ? true : t.type === filterType; // New Filter
-    return matchAccount && matchCategory && matchStatus && matchType;
+
+    return matchAccount && matchCategory && matchType && matchStatus;
   }).sort((a, b) => {
     if (sortOrder === 'amount-desc') return Number(b.amount) - Number(a.amount);
     if (sortOrder === 'amount-asc') return Number(a.amount) - Number(b.amount);
@@ -81,13 +71,14 @@ export default function Transactions() {
     setEditModalOpen(true);
   };
 
-  const handleDeleteClick = (t) => {
+  const handleDeleteClick = async (t) => {
     if (t.recurrenceId || t.installmentId) {
       setTransactionToDelete(t);
       setDeleteModalOpen(true);
     } else {
       if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
-        deleteTransaction(t.id);
+        await deleteTransaction(t.id);
+        refresh();
       }
     }
   };
@@ -97,6 +88,7 @@ export default function Transactions() {
       await deleteTransaction(transactionToDelete.id, mode);
       setDeleteModalOpen(false);
       setTransactionToDelete(null);
+      refresh();
     }
   };
 
@@ -132,9 +124,18 @@ export default function Transactions() {
               <option value="despesa">Apenas Despesas</option>
             </select>
           </div>
-          <div className="min-w-[150px] flex-1">
+          <div className="min-w-[150px] flex-1 flex gap-1">
+            <button
+              onClick={() => setFilterAccountMode(prev => prev === 'include' ? 'exclude' : 'include')}
+              className={`px-2 rounded-lg border transition-colors ${filterAccountMode === 'exclude'
+                ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'}`}
+              title={filterAccountMode === 'exclude' ? 'Excluindo conta selecionada' : 'Filtrando apenas conta selecionada'}
+            >
+              {filterAccountMode === 'exclude' ? 'Exceto' : 'Apenas'}
+            </button>
             <select
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--primary)]"
+              className={`w-full bg-[var(--bg-card)] border rounded-lg px-3 py-2 text-sm outline-none ${filterAccountMode === 'exclude' ? 'border-red-500/30' : 'border-[var(--border-color)] focus:border-[var(--primary)]'}`}
               value={filterAccount}
               onChange={e => setFilterAccount(e.target.value)}
             >
@@ -278,6 +279,7 @@ export default function Transactions() {
         <TransactionForm
           onClose={() => setCreateModalOpen(false)}
           defaultDate={selectedDate}
+          onSuccess={refresh}
         />
       </Modal>
 
@@ -291,6 +293,7 @@ export default function Transactions() {
           onClose={() => setEditModalOpen(false)}
           transactionToEdit={transactionToEdit}
           defaultDate={selectedDate}
+          onSuccess={refresh}
         />
       </Modal>
 
@@ -342,23 +345,18 @@ export default function Transactions() {
         <div className="space-y-4">
           <p>Esta é uma transação recorrente ou parcelada. Como deseja excluir?</p>
           <div className="flex flex-col gap-2">
-            <Button variant="secondary" onClick={() => confirmDelete('single')}>
-              Apenas esta transação
-            </Button>
-            {transactionToDelete?.recurrenceId && (
+            {transactionToDelete && (transactionToDelete.recurrenceId || transactionToDelete.installmentId) && (
               <>
+                <Button variant="secondary" onClick={() => confirmDelete('single')}>
+                  Apenas esta {transactionToDelete.installmentId ? 'parcela' : 'transação'}
+                </Button>
                 <Button variant="secondary" onClick={() => confirmDelete('future')}>
                   Esta e as futuras
                 </Button>
                 <Button variant="danger" onClick={() => confirmDelete('all')}>
-                  Todas (Série completa)
+                  Todas as {transactionToDelete.installmentId ? 'parcelas' : 'ocorrências'}
                 </Button>
               </>
-            )}
-            {transactionToDelete?.installmentId && (
-              <Button variant="danger" onClick={() => confirmDelete('all')}>
-                Todas as parcelas
-              </Button>
             )}
           </div>
         </div>

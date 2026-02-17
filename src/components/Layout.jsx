@@ -1,30 +1,58 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, PieChart, Settings, Wallet } from 'lucide-react';
+import { LayoutDashboard, Receipt, PieChart, Settings, Wallet, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuth } from '../contexts/AuthContext';
 
-const NavItem = ({ to, icon: Icon, label, active }) => (
-  <Link
-    to={to}
-    className={clsx(
-      'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-      active
-        ? 'bg-[var(--primary)] text-white shadow-lg shadow-violet-500/20'
-        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]'
-    )}
-  >
-    <Icon size={20} />
-    <span className="font-medium">{label}</span>
-  </Link>
-);
+const NavItem = ({ to, icon: Icon, label, active, onClick }) => {
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className={clsx(
+          'flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left',
+          active
+            ? 'bg-[var(--primary)] text-white shadow-lg shadow-violet-500/20'
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]'
+        )}
+      >
+        <Icon size={20} />
+        <span className="font-medium">{label}</span>
+      </button>
+    );
+  }
+  return (
+    <Link
+      to={to}
+      className={clsx(
+        'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+        active
+          ? 'bg-[var(--primary)] text-white shadow-lg shadow-violet-500/20'
+          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]'
+      )}
+    >
+      <Icon size={20} />
+      <span className="font-medium">{label}</span>
+    </Link>
+  );
+};
 
 export const Layout = ({ children }) => {
   const location = useLocation();
   const path = location.pathname;
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* Sidebar - Desktop */}
-      <aside className="w-64 hidden md:flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-card)] p-4 fixed h-full">
+      <aside className="w-64 hidden md:flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-card)] p-4 fixed h-full z-50">
         <div className="flex items-center gap-3 px-4 py-6 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg">
             <Wallet className="text-white" size={20} />
@@ -40,13 +68,14 @@ export const Layout = ({ children }) => {
           <NavItem to="/reports" icon={PieChart} label="Relatórios" active={path === '/reports'} />
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-[var(--border-color)]">
+        <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2">
           <NavItem to="/settings" icon={Settings} label="Configurações" active={path === '/settings'} />
+          <NavItem icon={LogOut} label="Sair" onClick={handleLogout} />
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 md:ml-64 pb-20 md:pb-8 p-4 md:p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {children}
 
@@ -60,11 +89,12 @@ export const Layout = ({ children }) => {
       </main>
 
       {/* Mobile Nav - Bottom */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-color)] p-2 flex justify-around z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-color)] p-2 flex justify-around z-50 pb-safe shadow-lg">
         <NavItem to="/" icon={LayoutDashboard} label="" active={path === '/'} />
         <NavItem to="/transactions" icon={Receipt} label="" active={path === '/transactions'} />
         <NavItem to="/reports" icon={PieChart} label="" active={path === '/reports'} />
         <NavItem to="/settings" icon={Settings} label="" active={path === '/settings'} />
+        <NavItem icon={LogOut} label="" onClick={handleLogout} />
       </nav>
     </div>
   );

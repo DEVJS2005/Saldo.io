@@ -2,15 +2,14 @@ import { useMemo } from 'react';
 import { Card } from '../components/ui/Card';
 import { useDate } from '../contexts/DateContext';
 import { useBudget } from '../hooks/useBudget';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/db';
+import { useMasterData } from '../hooks/useMasterData';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { MonthYearSelector } from '../components/ui/MonthYearSelector';
 
 export default function Reports() {
     const { selectedDate, setSelectedDate } = useDate();
     const { transactions } = useBudget(selectedDate);
-    const accounts = useLiveQuery(() => db.accounts.toArray());
+    const { accounts } = useMasterData();
 
     const data = useMemo(() => {
         if (!transactions || !accounts) return [];

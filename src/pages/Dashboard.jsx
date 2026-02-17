@@ -46,14 +46,14 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card title="Saldo Projetado">
+        <Card title="Previsão (Fim do Mês)">
           <div className={`text-3xl font-bold ${balanceProjected >= 0 ? 'text-[var(--text-primary)]' : 'text-[var(--danger)]'}`}>
             {formatCurrency(balanceProjected)}
           </div>
-          <p className="text-xs text-[var(--text-secondary)] mt-1">Previsão final do mês</p>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">Considerando pendências do mês</p>
         </Card>
 
-        <Card title="Saldo Real (Hoje)">
+        <Card title="Saldo Atual">
           <div className={`text-3xl font-bold ${balanceReal >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
             {formatCurrency(balanceReal)}
           </div>
@@ -86,7 +86,11 @@ export default function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         title="Nova Transação"
       >
-        <TransactionForm onClose={() => setIsModalOpen(false)} defaultDate={selectedDate} />
+        <TransactionForm
+          onClose={() => setIsModalOpen(false)}
+          defaultDate={selectedDate}
+          onSuccess={useBudget(selectedDate).refresh}
+        />
       </Modal>
 
       <Modal

@@ -19,19 +19,34 @@ Tools to better organize finances.
 - [x] **Initial Reports**: Expenses by Account chart.
 - [x] **Maintenance Tools**: Validation and repair of inconsistent data.
 
-## 🚧 v0.3.0 - Intelligence & Recurrence (In Progress)
-Improving how we handle time-based events.
-- [ ] **Smart Editing**: When editing a recurring transaction, prompt to apply changes to just one or all future occurrences.
-- [ ] **Installments**: Refined logic for installment purchases.
-- [ ] **Advanced Filters**: Detailed search by date, type, and category in the list view.
+## ✅ v0.3.0 - Cloud & SaaS (Completed)
+Moving to the cloud and administrative features.
+- [x] **Supabase Migration**: Cloud database with authentication.
+- [x] **Authentication**: User Login and Registration.
+- [x] **Admin Panel**: View registered users and basic metrics.
+- [x] **Access Control**: User profiles (Admin vs User).
 
-## 📅 v0.4.0 - Vision & Analysis (Planned)
+## ✅ v0.4.0 - Intelligence & Recurrence (Completed)
+Improving how we handle time-based events.
+- [x] **Smart Editing**: Propagation of edits (only this, future, or all) for recurring transactions.
+- [x] **Refined Installments**: Correct logic for installment creation and deletion.
+- [x] **Enhanced Filters**: "Except" mode to exclude specific accounts from view.
+- [x] **Security**: Protection against deleting accounts with linked transactions.
+
+## 🚧 v0.5.0 - Administration & Security (Planned)
+Focus on SaaS management and data protection.
+- [ ] **Dual Database**: Clear hybrid structure (Local Offline + Supabase Cloud).
+- [ ] **Admin Menu**: Visible only to users with permission.
+- [ ] **User Management**: Activate/Deactivate accounts and check permissions.
+- [ ] **Upload Control**: Specific permission to upload local data to the cloud.
+
+## 📅 v0.6.0 - Vision & Analysis (Planned)
 Deep understanding of the numbers.
 - [ ] **Flow Reports**: Bar/line charts for monthly expense evolution.
 - [ ] **Comparisons**: Income vs Expenses month by month.
 - [ ] **Budgets**: Set spending limits by category and track progress.
 
-## 💾 v0.5.0 - Data Freedom (Planned)
+## 💾 v0.7.0 - Data Freedom (Planned)
 Your data belongs to you.
 - [ ] **Export**: Generate CSV/JSON files of transactions.
 - [ ] **Import**: Restore backup or import from other apps.

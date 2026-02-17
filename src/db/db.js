@@ -37,23 +37,10 @@ db.version(3).stores({
   `
 });
 
+import { initialCategories, initialAccounts } from './initialData';
+
 // Helper to check if DB is empty and seed initial data
 db.on('populate', () => {
-  db.categories.bulkAdd([
-    { name: 'Salário', type: 'receita' },
-    { name: 'Extra', type: 'receita' },
-    { name: 'Alimentação', type: 'despesa' },
-    { name: 'Moradia', type: 'despesa' },
-    { name: 'Transporte', type: 'despesa' },
-    { name: 'Lazer', type: 'despesa' },
-    { name: 'Saúde', type: 'despesa' },
-    { name: 'Educação', type: 'despesa' },
-    { name: 'Assinaturas', type: 'despesa' },
-  ]);
-
-  db.accounts.bulkAdd([
-    { name: 'Conta Salário', type: 'bank', limit: 0 },
-    { name: 'Ticket Alimentação', type: 'ticket', limit: 0 },
-    { name: 'Cartão de Crédito', type: 'credit', limit: 2000 },
-  ]);
+  db.categories.bulkAdd(initialCategories);
+  db.accounts.bulkAdd(initialAccounts);
 });

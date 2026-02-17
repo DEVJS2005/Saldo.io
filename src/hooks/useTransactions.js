@@ -1,432 +1,327 @@
-import { db } from '../db/db';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { addMonths, format, startOfMonth, endOfMonth } from 'date-fns';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { addMonths, startOfMonth, endOfMonth, format } from 'date-fns';
+import { useState, useCallback, useEffect } from 'react';
 
 export function useTransactions() {
+  const { user } = useAuth();
+
   const addTransaction = async (data) => {
+    if (!user) throw new Error('Usuário não autenticado');
+
     const {
       amount,
-      date, // Date object or ISO string
+      date, 
       description,
       categoryId,
       accountId,
-      type, // 'receita', 'despesa', 'transferencia'
+      type,
       isRecurring,
       installments = 1,
     } = data;
 
-    // Fix: Appending T12:00:00 ensures we stay in the same day regardless of timezone (unless offset > 12h)
-    // Alternatively, treat YYYY-MM-DD as local.
-    const startDate = new Date(date + 'T12:00:00');
+    const startDate = new Date(date); 
+    startDate.setUTCHours(12, 0, 0, 0); // Force Noon UTC to prevent timezone shift
     const totalAmount = parseFloat(amount);
     
-    // VALIDATION
     if (!amount || !date || !categoryId || !accountId) {
-      throw new Error('Todos os campos obrigatórios devem ser preenchidos.');
+      throw new Error('Campos obrigatórios faltando.');
     }
 
-    // Base transaction object for common properties
     const baseTransaction = {
+      user_id: user.id,
       type,
-      categoryId,
-      accountId,
+      category_id: categoryId,
+      account_id: accountId,
       amount: totalAmount,
       description,
-      paymentStatus: data.paymentStatus || 'pending', // Default to pending if not provided
+      payment_status: data.paymentStatus || 'pending',
     };
+
+    let transactionsToAdd = [];
 
     // HANDLE RECURRING
     if (data.isRecurring) {
-      // 1. Current Month
-      const current = {
-        ...baseTransaction,
-        date: startDate,
-        month: startDate.getMonth(),
-        year: startDate.getFullYear(),
-        recurrenceId: crypto.randomUUID(),
-        isRecurring: true
-      };
+      const recurrenceId = crypto.randomUUID();
       
-      const transactionsToAdd = [current];
-
-      // 2. Future Months (Generate next 11 months for projection - user can then "import" them later or we just show them)
-      // Actually, standard pattern: Create just ONE with isRecurring=true (the one acting as "Model").
-      // OR Create for next X months.
-      
-      // Decision: Let's create current + next 11 months to populate the year.
-      for (let i = 1; i < 12; i++) {
+      // Current + Next 11 months
+      for (let i = 0; i < 12; i++) {
         const nextDate = addMonths(startDate, i);
         transactionsToAdd.push({
           ...baseTransaction,
-          date: nextDate,
+          date: nextDate.toISOString(),
           month: nextDate.getMonth(),
           year: nextDate.getFullYear(),
-          recurrenceId: current.recurrenceId,
-          isRecurring: true,
-          paymentStatus: 'pending' // Future ones are pending by default
+          recurrence_id: recurrenceId,
+          is_recurring: true,
+          payment_status: i === 0 ? (data.paymentStatus || 'pending') : 'pending' // Only first set by user
         });
       }
-
-      await db.transactions.bulkAdd(transactionsToAdd);
     } 
-    // HANDLE INSTALLMENTS (Despesa only)
+    // HANDLE INSTALLMENTS
     else if (type === 'despesa' && installments > 1) {
       const installmentId = crypto.randomUUID();
-      const baseValue = Math.floor((totalAmount / installments) * 100) / 100;
-      let currentSum = 0;
-      const transactionsToAdd = [];
-      const startParcel = data.currentInstallment || 1;
-      const countToGenerate = installments - startParcel + 1;
+      const startInstallment = data.currentInstallment || 1;
+      const totalInstallments = Number(installments) || 1; // Default to 1 to avoid /0
+      
+      // Calculate individual parcel value based on TOTAL amount and TOTAL installments
+      // Note: If user enters "Total Value", we divide. If "Parcel Value", logic in Form multiplies it back to Total.
+      // Ideally, we should base this on the "Remaining Value" if starting mid-way, 
+      // but for simplicity and standard app behavior:
+      // We assume 'amount' passed here IS the TOTAL amount for the whole series.
+      // So checking "Parcel Value" checkbox in form handles the math before sending here.
+      
+      const baseValue = Math.floor((totalAmount / totalInstallments) * 100) / 100;
+      
+      // We only create records from startInstallment to totalInstallments
+      // e.g. Total 10, Start 3. We create 3, 4 ... 10.
+      const loopCount = Math.max(0, totalInstallments - startInstallment + 1);
 
-      for (let i = 0; i < countToGenerate; i++) {
-        const parcelNumber = startParcel + i;
-        const isLast = parcelNumber === Number(installments);
-        
-        // Fix precision
-        // Calculation logic:
-        // Value of ONE parcel = total / totalInstallments.
-        // We are generating 'countToGenerate' items.
-        // The last item of the WHOLE series absorbs the rounding diff.
-        
-        const finalParcelValue = isLast 
-            ? Number((totalAmount - (baseValue * (Number(installments) - 1))).toFixed(2)) 
+      for (let i = 0; i < loopCount; i++) {
+         const parcelNumber = startInstallment + i;
+         
+         const isLast = parcelNumber === totalInstallments;
+         const finalParcelValue = isLast 
+            ? Number((totalAmount - (baseValue * (totalInstallments - 1))).toFixed(2)) 
             : baseValue;
+         
+         const parcelDate = addMonths(startDate, i);
 
-        const parcelDate = addMonths(startDate, i); // i=0 is today (or selected date)
-
-        transactionsToAdd.push({
-          date: parcelDate,
-          month: parcelDate.getMonth(),
-          year: parcelDate.getFullYear(),
-          type,
-          categoryId,
-          accountId,
-          amount: finalParcelValue,
-          description: `${description} (${parcelNumber}/${installments})`,
-          paymentStatus: 'pending',
-          installmentId,
-          installmentNumber: parcelNumber,
-          totalInstallments: Number(installments),
-          isRecurring: false,
-        });
+         transactionsToAdd.push({
+            user_id: user.id,
+            type,
+            category_id: categoryId,
+            account_id: accountId,
+            amount: finalParcelValue,
+            description: `${description} (${parcelNumber}/${totalInstallments})`,
+            payment_status: 'pending',
+            date: parcelDate.toISOString(),
+            month: parcelDate.getUTCMonth(),
+            year: parcelDate.getUTCFullYear(),
+            installment_id: installmentId,
+            installment_number: parcelNumber,
+            total_installments: totalInstallments,
+            is_recurring: false
+         });
       }
-
-      await db.transactions.bulkAdd(transactionsToAdd);
-    } 
-    // 6. Single Ordinary Transaction
+    }
+    // SINGLE
     else {
-      await db.transactions.add({
-        date: startDate,
-        month: startDate.getMonth(),
-        year: startDate.getFullYear(),
-        type,
-        categoryId,
-        accountId,
-        amount: totalAmount,
-        description,
-        paymentStatus: data.paymentStatus || 'pending',
-        isRecurring: false,
+      transactionsToAdd.push({
+        ...baseTransaction,
+        date: startDate.toISOString(),
+        month: startDate.getUTCMonth(),
+        year: startDate.getUTCFullYear(),
+        is_recurring: false
       });
     }
+
+    if (transactionsToAdd.length === 0) {
+        // This might happen if user starts at installment > totalInstallments
+        // Just return silently or throw error?
+        // Let's assume it's a no-op but warn
+        console.warn('Nenhuma transação gerada para adicionar. Verifique os parâmetros de parcelamento.');
+        return;
+    }
+
+    const { error } = await supabase.from('transactions').insert(transactionsToAdd);
+    if (error) throw error;
   };
 
   const deleteTransaction = async (id, deleteMode = 'single') => {
-    // deleteMode: 'single' | 'future' | 'all'
-    const transaction = await db.transactions.get(id);
-    if (!transaction) return;
+    if (!user) return;
 
-    if (transaction.recurrenceId) {
+    if (deleteMode === 'single') {
+        await supabase.from('transactions').delete().eq('id', id);
+        return;
+    }
+
+    // Fetch transaction to get recurrence/installment ID
+    const { data: t } = await supabase.from('transactions').select().eq('id', id).single();
+    if (!t) return;
+
+    if (t.recurrence_id) {
+        let query = supabase.from('transactions').delete().eq('recurrence_id', t.recurrence_id);
+        if (deleteMode === 'future') {
+            query = query.gte('date', t.date);
+        }
+        await query;
+    } else if (t.installment_id) {
         if (deleteMode === 'all') {
-            await db.transactions.where('recurrenceId').equals(transaction.recurrenceId).delete();
+            await supabase.from('transactions').delete().eq('installment_id', t.installment_id);
         } else if (deleteMode === 'future') {
-            // Delete this and all future ones with same recurrenceId
-            await db.transactions
-                .where('recurrenceId').equals(transaction.recurrenceId)
-                .and(t => t.date >= transaction.date)
-                .delete();
+             await supabase.from('transactions')
+                .delete()
+                .eq('installment_id', t.installment_id)
+                .gte('date', t.date);
         } else {
-            await db.transactions.delete(id);
+            await supabase.from('transactions').delete().eq('id', id);
         }
-    } else if (transaction.installmentId) {
-         // Should we support deleting single installment? Usually yes.
-         // If user wants to delete ALL installments, we should probably support that too.
-         // For now, let's keep simple delete for installments unless requested otherwise.
-         if (deleteMode === 'all') {
-             await db.transactions.where('installmentId').equals(transaction.installmentId).delete();
-         } else {
-             await db.transactions.delete(id);
-         }
     } else {
-        await db.transactions.delete(id);
+        await supabase.from('transactions').delete().eq('id', id);
     }
   };
 
-  const getTransactionsByMonth = (date) => {
-    // This expects a Date object
-    const start = startOfMonth(date);
-    const end = endOfMonth(date);
-    return useLiveQuery(() => 
-      db.transactions
-        .where('date')
-        .between(start, end, true, true)
-        .reverse()
-        .sortBy('date')
-    );
-  };
-
-  const fixRecurrences = async () => {
-      // 1. Find all recurring transactions without ID
-      const legacy = await db.transactions
-        .filter(t => t.isRecurring && !t.recurrenceId)
-        .toArray();
-
-      if (legacy.length === 0) return { count: 0, message: 'Nenhuma recorrência antiga encontrada.' };
-
-      let updatedCount = 0;
-      let createdCount = 0;
-
-      await db.transaction('rw', db.transactions, async () => {
-          for (const t of legacy) {
-              const newId = crypto.randomUUID();
-              
-              // Update the source transaction
-              await db.transactions.update(t.id, { recurrenceId: newId });
-              updatedCount++;
-
-              // Check/Create for next 12 months
-              const startDate = new Date(t.date);
-
-              for (let i = 1; i <= 12; i++) {
-                  const nextDate = addMonths(startDate, i);
-                  const nextMonth = nextDate.getMonth();
-                  const nextYear = nextDate.getFullYear();
-
-                  // Check collisions (same description, same month/year, same type)
-                  const collision = await db.transactions
-                    .where({ 
-                        month: nextMonth, 
-                        year: nextYear, 
-                        description: t.description,
-                        type: t.type 
-                    })
-                    .first();
-
-                  if (collision) {
-                      // Found existing copy (from old Import). Link it!
-                      if (!collision.recurrenceId) {
-                          await db.transactions.update(collision.id, { recurrenceId: newId, isRecurring: true });
-                          updatedCount++;
-                      }
-                  } else {
-                      // Create new future transaction
-                      await db.transactions.add({
-                        ...t,
-                        date: nextDate,
-                        month: nextMonth,
-                        year: nextYear,
-                        // Remove id to auto-increment
-                        id: undefined, 
-                        // Set new recurrenceId
-                        recurrenceId: newId,
-                        paymentStatus: 'pending' // Futures are pending
-                      });
-                      createdCount++;
-                  }
-              }
-          }
-      });
-
-      return { count: legacy.length, message: `Migração completa! ${legacy.length} originais processados. ${createdCount} novas geradas, ${updatedCount} atualizadas.` };
-  };
-
-  /* 
-   * Update Transaction with Propagation Support
-   * mode: 'single' | 'future' | 'all'
-   */
   const updateTransaction = async (id, data, mode = 'single') => {
-    // Exclude special fields that shouldn't change blindly if passed improperly
-    const { currentInstallment, ...validData } = data;
+      const updateData = {};
+      if (data.amount !== undefined) updateData.amount = data.amount;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.categoryId !== undefined) updateData.category_id = data.categoryId;
+      if (data.accountId !== undefined) updateData.account_id = data.accountId;
+      if (data.type !== undefined) updateData.type = data.type;
+      if (data.paymentStatus !== undefined) updateData.payment_status = data.paymentStatus;
+      if (data.currentInstallment !== undefined) updateData.installment_number = data.currentInstallment;
+      if (data.installments !== undefined) updateData.total_installments = data.installments;
+      
+      if (data.date) {
+         // Force Noon UTC to avoid timezone shifts (e.g. 2026-03-01T00:00Z -> 2026-02-28T21:00 Local)
+         // We want "Accounting Date" to be stable.
+         const d = new Date(data.date);
+         d.setUTCHours(12, 0, 0, 0); 
 
-    // Ensure date is a Date object if present
-    if (validData.date) {
-        let newDate = validData.date;
+         updateData.date = d.toISOString();
+         updateData.month = d.getUTCMonth(); // 0-11
+         updateData.year = d.getUTCFullYear();
+      }
 
-        // If it's a string (YYYY-MM-DD), append time to avoid timezone shifts
-        if (typeof newDate === 'string') {
-             const isFullISO = newDate.includes('T');
-             newDate = new Date(isFullISO ? newDate : newDate + 'T12:00:00');
-        }
+      // Handle Recurrence Toggling
+      if (typeof data.isRecurring === 'boolean') {
+          updateData.is_recurring = data.isRecurring;
 
-        // Validate date
-        if (!isNaN(newDate.getTime())) {
-             validData.date = newDate;
-             validData.month = newDate.getMonth();
-             validData.year = newDate.getFullYear();
-        }
-    }
-
-    // HANDLE TOGGLING RECURRENCE ON EDIT (Logic remains the same for single conversion)
-    // If user sets isRecurring=true, we might need to generate future items if they don't exist
-    if (validData.isRecurring) {
-        const original = await db.transactions.get(id);
-        
-        // If it wasn't recurring before (or didn't have a recurrenceId), we treat it as a new series
-        if (original && !original.recurrenceId) {
-            const recurrenceId = crypto.randomUUID();
-            validData.recurrenceId = recurrenceId;
-
-            // Generate for next 11 months
-            const transactionsToAdd = [];
-            const startDate = validData.date || original.date;
-            
-            const baseData = { ...original, ...validData, recurrenceId };
-
-            for (let i = 1; i < 12; i++) {
+          // If changing from Single -> Recurring (and we don't have a recurrenceId in data implies it was single)
+          // We check if it truly didn't have one before via the passed data or by fetching (safer to fetch but expensive).
+          // For now, let's assume if the UI allows it, we do it.
+          if (data.isRecurring && !data.recurrenceId) {
+             const newRecurrenceId = crypto.randomUUID();
+             updateData.recurrence_id = newRecurrenceId;
+             
+             // Generate Future Transactions
+             const startDate = new Date(data.date || new Date());
+             startDate.setUTCHours(12, 0, 0, 0); // Force Noon UTC for recurring series too
+             const transactionsToAdd = [];
+             
+             // Add next 11 months
+             for (let i = 1; i < 12; i++) {
                 const nextDate = addMonths(startDate, i);
                 transactionsToAdd.push({
-                    ...baseData,
-                    id: undefined, // Create new lines
-                    date: nextDate,
-                    month: nextDate.getMonth(),
-                    year: nextDate.getFullYear(),
-                    isRecurring: true,
-                    paymentStatus: 'pending', // Future ones are pending
-                    recurrenceId
+                  user_id: user.id,
+                  type: data.type,
+                  category_id: data.categoryId,
+                  account_id: data.accountId,
+                  amount: data.amount,
+                  description: data.description,
+                  payment_status: 'pending',
+                  date: nextDate.toISOString(),
+                  month: nextDate.getMonth(),
+                  year: nextDate.getFullYear(),
+                  recurrence_id: newRecurrenceId,
+                  is_recurring: true
                 });
+             }
+             
+             if (transactionsToAdd.length > 0) {
+                 const { error: insertError } = await supabase.from('transactions').insert(transactionsToAdd);
+                 if (insertError) console.error('Error creating future recurring transactions:', insertError);
+             }
+          }
+      }
+
+      // If updating a series
+      // If updating a series
+      if (mode === 'future' || mode === 'all') {
+         // Fetch recurrence_id OR installment_id if not in data
+         let recurrenceId = data.recurrenceId;
+         let installmentId = data.installmentId;
+         let currentInstallmentNumber = data.currentInstallment; // From form
+
+         if (!recurrenceId && !installmentId) {
+            const { data: t } = await supabase.from('transactions').select('recurrence_id, installment_id, installment_number').eq('id', id).single();
+            recurrenceId = t?.recurrence_id;
+            installmentId = t?.installment_id;
+            if (t?.installment_number && !currentInstallmentNumber) {
+                currentInstallmentNumber = t.installment_number;
             }
-            await db.transactions.bulkAdd(transactionsToAdd);
-            
-            // Update the original to have the ID too
-            await db.transactions.update(id, validData);
-            return; // Exit here as we converted a single to recurring, standard flow.
-        }
-    }
+         }
 
-    // HANDLE PROPAGATION
-    const original = await db.transactions.get(id);
-    if (!original) return;
+         if (recurrenceId) {
+             const query = supabase.from('transactions').update(updateData).eq('recurrence_id', recurrenceId);
+             if (mode === 'future') {
+                 // For recurrence, date is the best proxy we have
+                 query.gte('date', updateData.date || new Date().toISOString()); 
+             }
+             await query;
+             return; 
+         } else if (installmentId) {
+             const query = supabase.from('transactions').update(updateData).eq('installment_id', installmentId);
+             if (mode === 'future') {
+                 // For installments, use installment_number for precision
+                 if (currentInstallmentNumber) {
+                    query.gte('installment_number', currentInstallmentNumber);
+                 } else {
+                    // Fallback to date if number missing (shouldn't happen)
+                    query.gte('date', updateData.date || new Date().toISOString());
+                 }
+             }
+             await query;
+             return;
+         }
+      }
 
-    // Helper to get query for series
-    const updateSeries = async (queryFilter) => {
-        // Find all matching transactions
-        const related = await db.transactions.filter(queryFilter).toArray();
-        
-        // Update them
-        // We must be careful NOT to update fields that are unique to each transaction (like Date, unless shifted?)
-        // For this feature request: "Change Category, Account, Description etc."
-        // We should probably NOT change Date or Amount (unless explicitly requested, but amount is handled by caller passing it in validData)
-        // actually, validData DOES contain the new amount if changed.
-        
-        // Fields to propagate:
-        // Description (maybe? usually yes if fixing a typo), Category, Account, Type.
-        // PaymentStatus? Maybe not.
-        // Amount? Yes, if passed.
-        
-        // If we represent a "shift" in date, that's complex. For now assuming date stays relative or is untouched if not logic implemented.
-        // But wait, validData.date IS the new date of THIS transaction.
-        // If I change Jan 15 to Jan 20, should Feb 15 become Feb 20? 
-        // User didn't ask for date shift explicitely, mainly Category/Account.
-        // Let's stick to updating "metadata" fields and Amount.
-        
-        // If we are updating 'future', and we changed the Date of the CURRENT ONE...
-        // It's safer to NOT propagate Date changes to the series automatically unless we calculate offsets.
-        // For MVP: Do NOT propagate Date. Propagate: description, amount, categoryId, accountId, type, isRecurring.
-
-        const fieldsToUpdate = { ...validData };
-        delete fieldsToUpdate.id;
-        delete fieldsToUpdate.date; // Don't sync dates to single value
-        delete fieldsToUpdate.month;
-        delete fieldsToUpdate.year;
-        delete fieldsToUpdate.paymentStatus; // Don't reset status of others? Or should we?
-        // " A alteração de categoria deve se propagar... mudança de conta... menos a edição do valor"
-        // If mode is 'future'/'all' and we passed a new amount, we update amount.
-
-        // If 'paymentStatus' changed, do we propagate? User didn't explicitly say.
-        // Usually if I mark "Paid", I don't mark all future as "Paid".
-        // So deleting paymentStatus from propagation seems correct.
-
-        await db.transaction('rw', db.transactions, async () => {
-            for (const t of related) {
-                // If we are updating installments, and amount is changed, we update all installments?
-                // Or if we are updating recurrence.
-                if (t.id === id) continue; // Skip self, will be updated at end
-
-                await db.transactions.update(t.id, fieldsToUpdate);
-            }
-        });
-    };
-
-    if (mode === 'all' || mode === 'future') {
-        if (original.recurrenceId) {
-            await updateSeries(t => {
-                const matchId = t.recurrenceId === original.recurrenceId;
-                if (!matchId) return false;
-                if (mode === 'future') return t.date >= original.date;
-                return true;
-            });
-        } else if (original.installmentId) {
-             await updateSeries(t => {
-                const matchId = t.installmentId === original.installmentId;
-                if (!matchId) return false;
-                // For installments, "future" usually means parcels forward.
-                // But typically changing category/account affects ALL parcels.
-                // If user selected 'future', we respect it.
-                if (mode === 'future') return t.installmentNumber >= original.installmentNumber;
-                return true;
-            });
-        }
-    }
-
-    // Update the target transaction itself (including Date/Status which were skipped in spread)
-    await db.transactions.update(id, validData);
+      const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
+      if (error) throw error;
   };
 
-  const validateAndRepairTransactions = async () => {
-      const all = await db.transactions.toArray();
-      let fixedCount = 0;
-      
-      await db.transaction('rw', db.transactions, async () => {
-          for (const t of all) {
-              let needsUpdate = false;
-              let newDate = t.date;
-              
-              // Case 1: Date is stored as string
-              if (typeof t.date === 'string') {
-                  const isFullISO = t.date.includes('T');
-                  newDate = new Date(isFullISO ? t.date : t.date + 'T12:00:00');
-                  needsUpdate = true;
-              }
-              
-              // Case 2: Month/Year is NaN/Invalid or mismatch
-              // Ensure we have a valid date object before checking methods
-              if (newDate instanceof Date && !isNaN(newDate)) {
-                  const expectedMonth = newDate.getMonth();
-                  const expectedYear = newDate.getFullYear();
-                  
-                  if (t.month !== expectedMonth || t.year !== expectedYear || Number.isNaN(t.month)) {
-                      needsUpdate = true;
-                  }
+  // React Hook for fetching
+  const useTransactionsQuery = (date) => {
+      const [transactions, setTransactions] = useState([]);
+      const [loading, setLoading] = useState(true);
 
-                  if (needsUpdate) {
-                      await db.transactions.update(t.id, {
-                          date: newDate,
-                          month: expectedMonth,
-                          year: expectedYear
-                      });
-                      fixedCount++;
-                  }
-              }
+      const fetchTransactions = useCallback(async () => {
+          if (!user || !date) return;
+          setLoading(true);
+          
+          const start = startOfMonth(date).toISOString();
+          const end = endOfMonth(date).toISOString();
+
+          const { data, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .gte('date', start)
+            .lte('date', end)
+            .order('date', { ascending: false });
+          
+          if (error) console.error('Error fetching transactions:', error);
+          else {
+              // Map back to camelCase for UI consumption
+              const mapped = data.map(t => ({
+                  ...t,
+                  categoryId: t.category_id,
+                  accountId: t.account_id,
+                  paymentStatus: t.payment_status,
+                  createdAt: t.created_at,
+                  recurrenceId: t.recurrence_id,
+                  installmentId: t.installment_id,
+                  // Convert amount to number just in case
+                  amount: Number(t.amount)
+              }));
+              setTransactions(mapped);
           }
-      });
-      return { count: fixedCount, message: `Reparo concluído! ${fixedCount} transações corrigidas.` };
+          setLoading(false);
+      }, [user, date]);
+
+      useEffect(() => {
+          fetchTransactions();
+      }, [fetchTransactions]);
+
+      // Realtime subscription could go here
+      return transactions;
   };
 
   return {
     addTransaction,
     deleteTransaction,
     updateTransaction,
-    getTransactionsByMonth,
-    fixRecurrences,
-    validateAndRepairTransactions
+    useTransactionsQuery, // Replaces getTransactionsByMonth logic in components
+    validateAndRepairTransactions: async () => ({ message: 'Not needed in Cloud' })
   };
 }

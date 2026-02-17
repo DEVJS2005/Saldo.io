@@ -1,37 +1,42 @@
 import { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/db';
-import { useTransactions } from '../hooks/useTransactions'; // Import hook
+import { useMasterData } from '../hooks/useMasterData';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { useTransactions } from '../hooks/useTransactions';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Wrench } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Wrench, Download, Upload, RefreshCw, CloudUpload } from 'lucide-react';
+import { migrateLocalData } from '../lib/migration';
+import { resetCloudData } from '../lib/reset';
+
 
 export default function Settings() {
-    const { validateAndRepairTransactions } = useTransactions(); // Get function
-    const categories = useLiveQuery(() => db.categories.toArray());
-    const accounts = useLiveQuery(() => db.accounts.toArray());
+    const { validateAndRepairTransactions } = useTransactions();
+    const { categories, accounts } = useMasterData();
+    const { user } = useAuth();
 
+    // Local state for inputs
     const [newCatName, setNewCatName] = useState('');
     const [newCatType, setNewCatType] = useState('despesa');
-
-    // Account Creation State
     const [newAccName, setNewAccName] = useState('');
     const [newAccType, setNewAccType] = useState('bank');
     const [newAccLimit, setNewAccLimit] = useState('');
-
-    // Account Limit Edits
     const [limitEdits, setLimitEdits] = useState({});
 
     // --- Actions ---
 
     const handleAddCategory = async (e) => {
         e.preventDefault();
-        console.log("Submitting Category:", newCatName);
-        if (!newCatName.trim()) return;
+        if (!newCatName.trim() || !user) return;
 
         try {
-            await db.categories.add({ name: newCatName, type: newCatType });
+            const { error } = await supabase.from('categories').insert({
+                user_id: user.id,
+                name: newCatName,
+                type: newCatType
+            });
+            if (error) throw error;
             setNewCatName('');
         } catch (err) {
             console.error(err);
@@ -40,21 +45,24 @@ export default function Settings() {
     };
 
     const handleDeleteCategory = async (id) => {
-        if (confirm('Excluir esta categoria? Transações antigas manterão o ID mas ficarão sem nome visual.')) {
-            await db.categories.delete(id);
+        if (confirm('Excluir esta categoria?')) {
+            const { error } = await supabase.from('categories').delete().eq('id', id);
+            if (error) alert('Erro ao excluir: ' + error.message);
         }
     };
 
     const handleAddAccount = async (e) => {
         e.preventDefault();
-        if (!newAccName.trim()) return;
+        if (!newAccName.trim() || !user) return;
 
         try {
-            await db.accounts.add({
+            const { error } = await supabase.from('accounts').insert({
+                user_id: user.id,
                 name: newAccName,
                 type: newAccType,
                 limit: newAccType === 'credit' ? parseFloat(newAccLimit || 0) : 0
             });
+            if (error) throw error;
             setNewAccName('');
             setNewAccLimit('');
         } catch (err) {
@@ -70,23 +78,56 @@ export default function Settings() {
     const saveLimit = async (id) => {
         const val = limitEdits[id];
         if (val !== undefined) {
-            await db.accounts.update(id, { limit: parseFloat(val) });
-            const newEdits = { ...limitEdits };
-            delete newEdits[id];
-            setLimitEdits(newEdits);
-            alert('Limite atualizado!');
+            const { error } = await supabase.from('accounts').update({ limit: parseFloat(val) }).eq('id', id);
+            if (error) alert('Erro ao atualizar: ' + error.message);
+            else {
+                const newEdits = { ...limitEdits };
+                delete newEdits[id];
+                setLimitEdits(newEdits);
+                alert('Limite atualizado!');
+            }
         }
     };
 
     const handleRepairTransactions = async () => {
-        if (confirm('Isso irá verificar todas as transações em busca de datas inválidas e corrigi-las. Deseja continuar?')) {
+        alert('Esta função não é necessária na nuvem.');
+    };
+
+    const handleExportData = async () => {
+        // Export from Supabase
+        alert('Funcionalidade de exportação em desenvolvimento para versão Cloud.');
+    };
+
+    const handleImportData = async (e) => {
+        alert('Funcionalidade de importação em desenvolvimento para versão Cloud.');
+    };
+
+    const handleResetApp = async () => {
+        if (confirm('PERIGO: Isso irá APAGAR TODOS os seus dados no servidor. Tem certeza?')) {
             try {
-                const result = await validateAndRepairTransactions();
-                alert(result.message);
+                await resetCloudData();
+                window.location.reload();
             } catch (err) {
-                console.error(err);
-                alert('Erro ao reparar: ' + err.message);
+                alert('Erro ao resetar: ' + err.message);
             }
+        }
+    };
+
+    const [migrating, setMigrating] = useState(false);
+
+    const handleMigrateLocalData = async () => {
+        if (!confirm('Esta ação copiará todos os dados do seu navegador (versão antiga) para a nuvem. Isso pode criar duplicatas se você já fez isso antes. Deseja continuar?')) return;
+
+        setMigrating(true);
+        try {
+            const result = await migrateLocalData(user.id);
+            alert(`Migração concluída!\n\nCategorias: ${result.categories}\nContas: ${result.accounts}\nTransações: ${result.transactions}\nErros: ${result.errors.length}\n\nDetalhes dos Erros:\n${result.errors.slice(0, 10).join('\n')}`);
+            if (result.errors.length > 10) alert(`Foram mostrados os primeiros 10 erros de ${result.errors.length}. Verifique o console para mais detalhes.`);
+            window.location.reload();
+        } catch (err) {
+            alert('Erro crítico na migração: ' + err.message);
+        } finally {
+            setMigrating(false);
         }
     };
 
@@ -100,11 +141,45 @@ export default function Settings() {
         }
     };
 
+    const handleDeleteAccount = async (id, name) => {
+        if (!confirm(`Tem certeza que deseja excluir a conta "${name}"?`)) return;
+
+        try {
+            // Check for linked transactions
+            const { count, error: countError } = await supabase
+                .from('transactions')
+                .select('*', { count: 'exact', head: true })
+                .eq('account_id', id);
+
+            if (countError) throw countError;
+
+            if (count > 0) {
+                alert(`Não é possível excluir a conta "${name}".\n\nMotivo: Existem ${count} transações vinculadas a ela.\n\nVocê deve excluir ou reatribuir essas transações antes de apagar a conta.`);
+                return;
+            }
+
+            // Proceed with deletion
+            const { error: deleteError } = await supabase
+                .from('accounts')
+                .delete()
+                .eq('id', id);
+
+            if (deleteError) throw deleteError;
+
+            alert('Conta excluída com sucesso!');
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao excluir conta: ' + err.message);
+        }
+    };
+
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold">Configurações</h1>
-                <p className="text-[var(--text-secondary)]">Gerencie suas categorias e contas</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold">Configurações</h1>
+                    <p className="text-[var(--text-secondary)]">Gerencie suas categorias e contas</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -196,7 +271,7 @@ export default function Settings() {
 
                         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                             {accounts?.map(acc => (
-                                <div key={acc.id} className="bg-[var(--bg-input)]/30 p-3 rounded-lg flex flex-col gap-2 border border-[var(--border-color)]/50">
+                                <div key={acc.id} className="bg-[var(--bg-input)]/30 p-3 rounded-lg flex flex-col gap-2 border border-[var(--border-color)]/50 group">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="bg-[var(--bg-card)] p-2 rounded-full border border-[var(--border-color)]">
@@ -207,6 +282,13 @@ export default function Settings() {
                                                 <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider">{acc.type}</p>
                                             </div>
                                         </div>
+                                        <button
+                                            onClick={() => handleDeleteAccount(acc.id, acc.name)}
+                                            className="text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
+                                            title="Excluir Conta"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
 
                                     {acc.type === 'credit' && (
@@ -231,23 +313,79 @@ export default function Settings() {
                         </div>
                     </Card>
                 </div>
-                {/* Maintenance Section */}
-                <div className="space-y-4 md:col-span-2">
-                    <h2 className="text-xl font-semibold">Manutenção</h2>
-                    <Card className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            </div>
+            {/* Maintenance Section */}
+            <div className="space-y-4 md:col-span-2">
+                <h2 className="text-xl font-semibold">Manutenção e Dados</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="p-4 flex flex-col gap-4">
                         <div>
-                            <h3 className="font-medium text-lg">Reparar Transações</h3>
-                            <p className="text-sm text-[var(--text-secondary)]">
-                                Se alguma transação sumiu ou está com data incorreta, utilize esta ferramenta para corrigir o banco de dados.
+                            <h3 className="font-medium text-lg flex items-center gap-2">
+                                <Download size={20} className="text-blue-400" /> Backup e Restauração
+                            </h3>
+                            <p className="text-sm text-[var(--text-secondary)] mt-1">
+                                Salve seus dados em um arquivo ou restaure de um backup. Útil ao trocar de navegador ou computador.
                             </p>
                         </div>
-                        <Button onClick={handleRepairTransactions} variant="secondary">
-                            <Wrench size={18} className="mr-2" />
-                            Verificar e Reparar
+                        <div className="flex gap-2 mt-auto">
+                            <Button onClick={handleExportData} variant="secondary" className="flex-1">
+                                <Download size={16} className="mr-2" />
+                                Exportar
+                            </Button>
+                            <div className="relative flex-1">
+                                <Button variant="secondary" className="w-full">
+                                    <Upload size={16} className="mr-2" />
+                                    Importar
+                                </Button>
+                                <input
+                                    type="file"
+                                    accept=".json"
+                                    onChange={handleImportData}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card className="p-4 flex flex-col gap-4 border-blue-500/20">
+                        <div>
+                            <h3 className="font-medium text-lg flex items-center gap-2 text-blue-400">
+                                <CloudUpload size={20} /> Migrar Dados Antigos
+                            </h3>
+                            <p className="text-sm text-[var(--text-secondary)] mt-1">
+                                Envia seus dados locais (offline) para sua conta na nuvem.
+                            </p>
+                        </div>
+                        <Button onClick={handleMigrateLocalData} disabled={migrating} className="w-full justify-start bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border-blue-500/20">
+                            <CloudUpload size={16} className="mr-2" />
+                            {migrating ? 'Migrando...' : 'Sincronizar Dados Locais'}
                         </Button>
+                    </Card>
+
+                    <Card className="p-4 flex flex-col gap-4 border-red-500/20">
+                        <div>
+                            <h3 className="font-medium text-lg flex items-center gap-2 text-red-400">
+                                <RefreshCw size={20} /> Zona de Perigo
+                            </h3>
+                            <p className="text-sm text-[var(--text-secondary)] mt-1">
+                                Ações destrutivas. Tenha cuidado.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2 mt-auto">
+                            <Button onClick={handleRepairTransactions} variant="secondary" className="w-full justify-start">
+                                <Wrench size={16} className="mr-2" />
+                                Reparar Transações (Datas)
+                            </Button>
+                            <Button onClick={handleResetApp} className="w-full justify-start bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20">
+                                <Trash2 size={16} className="mr-2" />
+                                Resetar App (Apagar Tudo)
+                            </Button>
+                        </div>
                     </Card>
                 </div>
             </div>
         </div>
+
     );
 }
