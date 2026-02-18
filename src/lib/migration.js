@@ -12,6 +12,22 @@ export async function migrateLocalData(userId) {
   };
 
   try {
+    // 0. Permission Check
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('can_upload_local_data')
+        .eq('id', userId)
+        .single();
+    
+    if (profileError) {
+        console.error('Error checking permissions:', profileError);
+        throw new Error('Falha ao verificar permissões de upload.');
+    }
+
+    if (!profile?.can_upload_local_data) {
+        throw new Error('Upload bloqueado pelo administrador. Entre em contato com o suporte.');
+    }
+
     // 1. Fetch Local Data
     const localCategories = await db.categories.toArray();
     const localAccounts = await db.accounts.toArray();

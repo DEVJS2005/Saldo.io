@@ -9,6 +9,7 @@ import Admin from './pages/Admin';
 
 // Clean App component
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { DialogProvider } from './contexts/DialogContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Navigate } from 'react-router-dom';
@@ -17,6 +18,13 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   if (!user) return <Navigate to="/login" />;
+  return children;
+}
+
+function ProtectedAdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  if (!user || user.role !== 'admin') return <Navigate to="/" />;
   return children;
 }
 
@@ -34,7 +42,11 @@ function AppContent() {
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin" element={
+                <ProtectedAdminRoute>
+                  <Admin />
+                </ProtectedAdminRoute>
+              } />
             </Routes>
           </Layout>
         </ProtectedRoute>
@@ -43,13 +55,17 @@ function AppContent() {
   );
 }
 
+
+
 function App() {
   return (
     <AuthProvider>
       <DateProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
+        <DialogProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </DialogProvider>
       </DateProvider>
     </AuthProvider>
   );

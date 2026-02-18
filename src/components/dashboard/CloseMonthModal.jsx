@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useBudget } from '../../hooks/useBudget';
 import { useTransactions } from '../../hooks/useTransactions';
-import { db } from '../../db/db';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useMasterData } from '../../hooks/useMasterData';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 export const CloseMonthModal = ({ onClose, selectedDate }) => {
-    const { balanceReal, accountBalances } = useBudget(selectedDate); // Uses global balance
+    const { accountBalances } = useBudget(selectedDate);
     const { addTransaction } = useTransactions();
-    const accounts = useLiveQuery(() => db.accounts.toArray());
+    const { accounts, categories } = useMasterData();
 
     // State for selected accounts (Array of IDs)
     const [selectedAccounts, setSelectedAccounts] = useState([]);
@@ -37,6 +36,16 @@ export const CloseMonthModal = ({ onClose, selectedDate }) => {
 
     const handleCloseMonth = async () => {
         if (selectedAccounts.length === 0) return;
+
+        // Find a fallback category for adjustment
+        // Try 'Ajustes', 'Outros', or just the first one.
+        const adjustmentCategory = categories?.find(c => c.name === 'Ajustes' || c.name === 'Outros') || categories?.[0];
+
+        if (!adjustmentCategory) {
+            alert('Erro: Nenhuma categoria encontrada para lançar o ajuste. Crie uma categoria primeiro.');
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -56,8 +65,8 @@ export const CloseMonthModal = ({ onClose, selectedDate }) => {
                     amount,
                     date: new Date(), // Current date
                     type,
-                    categoryId: 1, // Ideally we should have a 'System' or 'Adjustment' category. Using 1 for now.
-                    accountId: Number(accountId),
+                    categoryId: adjustmentCategory.id,
+                    accountId: accountId,
                     paymentStatus: 'paid', // Must be paid to affect real balance
                     installments: 1,
                     isRecurring: false
@@ -108,8 +117,8 @@ export const CloseMonthModal = ({ onClose, selectedDate }) => {
                             key={acc.id}
                             onClick={() => toggleAccount(acc.id)}
                             className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${isSelected
-                                    ? 'border-[var(--primary)] bg-[var(--primary)]/5'
-                                    : 'border-[var(--border-color)] hover:bg-[var(--bg-input)]'
+                                ? 'border-[var(--primary)] bg-[var(--primary)]/5'
+                                : 'border-[var(--border-color)] hover:bg-[var(--bg-input)]'
                                 }`}
                         >
                             <div className="flex items-center gap-3">

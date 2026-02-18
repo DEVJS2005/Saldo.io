@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase'; // Access direct for extra profile logic if needed
+import { useDialog } from '../contexts/DialogContext'; // Import useDialog
+import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -8,23 +9,24 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export default function Register() {
     const { signUp } = useAuth();
+    const { alert } = useDialog(); // Get alert
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // const [error, setError] = useState(null); // Remove error state
     const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (password !== confirmPassword) {
-            return setError('As senhas não coincidem.');
+            return alert('As senhas não coincidem.', 'Erro de Validação', 'error');
         }
 
         setLoading(true);
-        setError(null);
+        // setError(null);
 
         try {
             const { error: signUpError } = await signUp(email, password);
@@ -32,7 +34,8 @@ export default function Register() {
 
             setSuccess(true);
         } catch (err) {
-            setError(err.message);
+            // setError(err.message);
+            await alert(err.message || 'Erro ao criar conta', 'Erro de Cadastro', 'error');
         } finally {
             setLoading(false);
         }
@@ -46,11 +49,7 @@ export default function Register() {
                     <p className="text-[var(--text-secondary)]">Crie sua conta gratuita</p>
                 </div>
 
-                {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg mb-4 text-sm">
-                        {error}
-                    </div>
-                )}
+                {/* Error div removed */}
 
                 {success ? (
                     <div className="text-center">

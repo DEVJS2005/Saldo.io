@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import { db } from '../db/db';
 
 export function useBudget(monthDate = new Date()) {
   const { user } = useAuth();
@@ -20,30 +21,65 @@ export function useBudget(monthDate = new Date()) {
     const start = startOfMonth(monthDate).toISOString();
     const end = endOfMonth(monthDate).toISOString();
 
-    // 1. Fetch Monthly Transactions (for list and monthly stats)
-    const { data: monthlyData, error: monthlyError } = await supabase
-      .from('transactions')
-      .select('*')
-      .gte('date', start)
-      .lte('date', end)
-      .order('date', { ascending: false });
+    let monthlyData = [];
+    let globalRealBalance = 0;
+    const accountBalances = {};
 
-    if (monthlyError) {
-        console.error('Error fetching monthly budget:', monthlyError);
-        return;
-    }
+    if (user.canSync) {
+        // --- CLOUD MODE (Supabase) ---
+        const { data, error: monthlyError } = await supabase
+          .from('transactions')
+          .select('*')
+          .gte('date', start)
+          .lte('date', end)
+          .order('date', { ascending: false });
 
-    // 2. Fetch Global Balance (All Paid Transactions)
-    // Optimization: In robust apps, use a Postgres function (RPC) or materialized view.
-    // For now, we select 'amount, type, account_id' where status='paid'
-    const { data: globalData, error: globalError } = await supabase
-        .from('transactions')
-        .select('amount, type, account_id')
-        .eq('payment_status', 'paid');
+        if (monthlyError) console.error('Error fetching monthly budget:', monthlyError);
+        else monthlyData = data || [];
 
-    if (globalError) {
-        console.error('Error fetching global balance:', globalError);
-        return;
+        // Fetch Global Balance (RPC)
+        const { data: summaryData, error: summaryError } = await supabase
+            .rpc('get_financial_summary', { p_user_id: user.id });
+
+        if (summaryError) {
+            console.error('Error fetching financial summary:', summaryError);
+        } else if (summaryData) {
+            globalRealBalance = Number(summaryData.total_balance) || 0;
+            const accBals = summaryData.accounts_balance || {};
+            for (const [accId, bal] of Object.entries(accBals)) {
+                accountBalances[accId] = Number(bal);
+            }
+        }
+    } else {
+        // --- LOCAL MODE (Dexie) ---
+        try {
+            // 1. Monthly Data
+            monthlyData = await db.transactions
+                .where('date').between(start, end, true, true)
+                .reverse().sortBy('date');
+
+            // 2. Global Balance Calculation (Client-side)
+            const allTxs = await db.transactions.toArray();
+            
+            allTxs.forEach(t => {
+                const val = Number(t.amount);
+                const accId = String(t.accountId);
+                
+                if (accountBalances[accId] === undefined) accountBalances[accId] = 0;
+                
+                if (t.paymentStatus === 'paid') {
+                    if (t.type === 'receita') {
+                        globalRealBalance += val;
+                        accountBalances[accId] += val;
+                    } else if (t.type === 'despesa') {
+                        globalRealBalance -= val;
+                        accountBalances[accId] -= val;
+                    }
+                }
+            });
+        } catch (err) {
+            console.error('Error in local budget calculation:', err);
+        }
     }
 
     // Process Monthly Stats
@@ -54,12 +90,12 @@ export function useBudget(monthDate = new Date()) {
 
     const transactions = monthlyData.map(t => ({
         ...t,
-        categoryId: t.category_id,
-        accountId: t.account_id,
-        paymentStatus: t.payment_status,
-        createdAt: t.created_at,
-        recurrenceId: t.recurrence_id,
-        installmentId: t.installment_id,
+        categoryId: t.category_id || t.categoryId,
+        accountId: t.account_id || t.accountId,
+        paymentStatus: t.payment_status || t.paymentStatus,
+        createdAt: t.created_at || t.createdAt,
+        recurrenceId: t.recurrence_id || t.recurrenceId,
+        installmentId: t.installment_id || t.installmentId,
         amount: Number(t.amount)
     }));
 
@@ -72,25 +108,6 @@ export function useBudget(monthDate = new Date()) {
           expense += val;
           if (t.paymentStatus !== 'paid') pendingExpense += val;
       }
-    });
-
-    // Process Global Balance
-    let globalRealBalance = 0;
-    const accountBalances = {};
-
-    globalData.forEach(t => {
-        const val = Number(t.amount);
-        const accId = t.account_id;
-        
-        if (!accountBalances[accId]) accountBalances[accId] = 0;
-
-        if (t.type === 'receita') {
-            globalRealBalance += val;
-            accountBalances[accId] += val;
-        } else if (t.type === 'despesa') {
-            globalRealBalance -= val;
-            accountBalances[accId] -= val;
-        }
     });
 
     setStats({

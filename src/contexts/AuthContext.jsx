@@ -9,19 +9,51 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchProfile = async (sessionUser) => {
+        if (!sessionUser) return null;
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('role, is_active, can_sync')
+                .eq('id', sessionUser.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching profile:', error);
+            }
+
+            // Check if user is active
+            if (data && data.is_active === false) {
+                await supabase.auth.signOut();
+                alert('Sua conta está desativada. Entre em contato com o suporte.');
+                return null;
+            }
+
+            // Return user with role appended
+            return {
+                ...sessionUser,
+                role: data?.role || 'user',
+                canSync: data?.can_sync || false
+            };
+        } catch (err) {
+            console.error(err);
+            return sessionUser;
+        }
+    };
+
     useEffect(() => {
         // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             const currentUser = session?.user ?? null;
-            setUser(currentUser);
-            // if (currentUser) seedUserData(currentUser.id); // Disabled per user request
+            const userWithRole = await fetchProfile(currentUser);
+            setUser(userWithRole);
             setLoading(false);
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             const currentUser = session?.user ?? null;
-            setUser(currentUser);
-            // if (currentUser && _event === 'SIGNED_IN') seedUserData(currentUser.id); // Disabled
+            const userWithRole = await fetchProfile(currentUser);
+            setUser(userWithRole);
             setLoading(false);
         });
 

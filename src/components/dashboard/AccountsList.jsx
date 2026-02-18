@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 import { Card } from '../ui/Card';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../db/db';
+import { useMasterData } from '../../hooks/useMasterData';
 import { Wallet, CreditCard, Building2, Utensils, PiggyBank } from 'lucide-react';
 
 export const AccountsList = ({ transactions, globalBalances }) => {
-    const accounts = useLiveQuery(() => db.accounts.toArray());
+    const { accounts } = useMasterData();
 
     // Calculate Monthly Balances (Specifically for Credit Cards "Invoice")
     const monthlyBalances = useMemo(() => {

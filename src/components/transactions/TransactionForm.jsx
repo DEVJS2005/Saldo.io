@@ -33,7 +33,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         paymentStatus: transactionToEdit.paymentStatus,
         installments: transactionToEdit.totalInstallments || 1,
         currentInstallment: transactionToEdit.installmentNumber || 1,
-        isRecurring: transactionToEdit.isRecurring,
+        isRecurring: transactionToEdit.isRecurring || !!transactionToEdit.recurrenceId,
         // If editing a parcel, we are looking at the parcel value.
         // So "Is Installment Value" should be true.
         isInstallmentValue: (transactionToEdit.totalInstallments || 1) > 1,
@@ -129,15 +129,19 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           ...formData,
           amount: finalAmount,
           paymentStatus: finalStatus,
-          recurrenceId: transactionToEdit.recurrenceId,
+          recurrenceId: formData.isRecurring ? transactionToEdit.recurrenceId : null,
           installmentId: transactionToEdit.installmentId,
           installmentNumber: transactionToEdit.installmentNumber // Ensure we pass the current number too if needed
         };
 
         // CHECK PROPAGATION LOGIC
         const isSeries = transactionToEdit.recurrenceId || transactionToEdit.installmentId;
+        // Also consider if we are toggling recurrence ON/OFF for a transaction that WAS part of a series
+        const wasRecurring = !!transactionToEdit.recurrenceId;
+        const isNowRecurring = formData.isRecurring;
+        const recurrenceChanged = wasRecurring !== isNowRecurring;
 
-        if (isSeries) {
+        if (isSeries || recurrenceChanged) {
           // Check if ANY significant field changed
           const amountChanged = Math.abs(finalAmount - transactionToEdit.amount) > 0.01;
           const categoryChanged = transactionToEdit.categoryId !== updateData.categoryId;
@@ -147,7 +151,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           const dateChanged = transactionToEdit.date !== updateData.date; // simplified check
           const statusChanged = transactionToEdit.paymentStatus !== updateData.paymentStatus;
 
-          if (amountChanged || categoryChanged || accountChanged || descChanged || typeChanged || dateChanged || statusChanged) {
+          if (amountChanged || categoryChanged || accountChanged || descChanged || typeChanged || dateChanged || statusChanged || recurrenceChanged) {
             // Store pending data and open modal for ANY change in a series
             setPendingSubmission({ id: transactionToEdit.id, data: updateData });
             setConfirmModalOpen(true);
@@ -265,7 +269,9 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           onChange={e => setFormData({ ...formData, accountId: e.target.value })}
           options={[
             { value: '', label: 'Selecione...' },
-            ...(accounts || []).map(a => ({ value: a.id, label: a.name }))
+            ...(accounts || [])
+              .filter(a => formData.type === 'receita' ? a.type !== 'credit' : true)
+              .map(a => ({ value: a.id, label: a.name }))
           ]}
           required
         />

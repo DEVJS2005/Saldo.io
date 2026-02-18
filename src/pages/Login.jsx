@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext'; // Import useDialog
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -7,22 +8,24 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export default function Login() {
     const { signIn } = useAuth();
+    const { alert } = useDialog(); // Get alert
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // const [error, setError] = useState(null); // Remove error state
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
+        // setError(null);
         try {
             const { error } = await signIn(email, password);
             if (error) throw error;
             navigate('/');
         } catch (err) {
-            setError(err.message);
+            // setError(err.message);
+            await alert(err.message || 'Erro ao fazer login', 'Erro de Acesso', 'error');
         } finally {
             setLoading(false);
         }
@@ -36,11 +39,7 @@ export default function Login() {
                     <p className="text-[var(--text-secondary)]">Entre para acessar suas finanças</p>
                 </div>
 
-                {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg mb-4 text-sm">
-                        {error}
-                    </div>
-                )}
+                {/* Error div removed */}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -62,7 +61,7 @@ export default function Login() {
                         />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button type="submit" className="w-full" disabled={loading} data-testid="login-submit-button">
                         {loading ? 'Entrando...' : 'Entrar'}
                     </Button>
                 </form>

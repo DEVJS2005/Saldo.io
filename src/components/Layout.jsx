@@ -1,7 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, PieChart, Settings, Wallet, LogOut } from 'lucide-react';
+import { LayoutDashboard, Receipt, PieChart, Settings, Wallet, LogOut, ShieldCheck, DownloadCloud } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
+import { syncCloudToLocal } from '../lib/syncService';
+import { useState, useEffect } from 'react';
 
 const NavItem = ({ to, icon: Icon, label, active, onClick }) => {
   if (onClick) {
@@ -9,7 +12,7 @@ const NavItem = ({ to, icon: Icon, label, active, onClick }) => {
       <button
         onClick={onClick}
         className={clsx(
-          'flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left',
+          'flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left cursor-pointer relative z-10',
           active
             ? 'bg-[var(--primary)] text-white shadow-lg shadow-violet-500/20'
             : 'text-[var(--text-secondary)] hover:bg-[var(--bg-input)] hover:text-[var(--text-primary)]'
@@ -39,15 +42,65 @@ const NavItem = ({ to, icon: Icon, label, active, onClick }) => {
 export const Layout = ({ children }) => {
   const location = useLocation();
   const path = location.pathname;
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { alert } = useDialog();
+  const [isMigrating, setIsMigrating] = useState(false);
+
+  useEffect(() => {
+    const checkDowngrade = async () => {
+      if (!user) return;
+
+      const hadCloudAccess = localStorage.getItem('has_cloud_access') === 'true';
+
+      if (user.canSync) {
+        if (!hadCloudAccess) localStorage.setItem('has_cloud_access', 'true');
+      } else if (hadCloudAccess) {
+        setIsMigrating(true);
+        try {
+          const result = await syncCloudToLocal(user.id);
+          if (result.success) {
+            localStorage.setItem('has_cloud_access', 'false');
+            setIsMigrating(false); // Stop loading before alert
+            await alert(
+              'Seu plano Premium expirou. Baixamos seus dados mais recentes da nuvem para este dispositivo. Você pode continuar usando o sistema em Modo Local.',
+              'Modo Local Ativado',
+              'info'
+            );
+          } else {
+            setIsMigrating(false);
+            console.error(result.error);
+            await alert('Falha ao baixar backup da nuvem. Entre em contato com o suporte.', 'Erro', 'error');
+          }
+        } catch (e) {
+          setIsMigrating(false);
+          console.error(e);
+        }
+      }
+    };
+
+    checkDowngrade();
+  }, [user]);
 
   const handleLogout = async () => {
+    console.log('Logout clicked'); // Debug
     try {
       await signOut();
+      console.log('SignOut successful'); // Debug
+      window.location.href = '/login'; // Force redirect to ensure state clear
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
+
+  if (isMigrating) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+        <h2 className="text-xl font-bold animate-pulse">Sincronizando dados...</h2>
+        <p className="text-[var(--text-secondary)]">Baixando backup da nuvem para uso offline.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
@@ -66,6 +119,9 @@ export const Layout = ({ children }) => {
           <NavItem to="/" icon={LayoutDashboard} label="Dashboard" active={path === '/'} />
           <NavItem to="/transactions" icon={Receipt} label="Transações" active={path === '/transactions'} />
           <NavItem to="/reports" icon={PieChart} label="Relatórios" active={path === '/reports'} />
+          {user?.role === 'admin' && (
+            <NavItem to="/admin" icon={ShieldCheck} label="Admin" active={path === '/admin'} />
+          )}
         </nav>
 
         <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2">
@@ -93,6 +149,9 @@ export const Layout = ({ children }) => {
         <NavItem to="/" icon={LayoutDashboard} label="" active={path === '/'} />
         <NavItem to="/transactions" icon={Receipt} label="" active={path === '/transactions'} />
         <NavItem to="/reports" icon={PieChart} label="" active={path === '/reports'} />
+        {user?.role === 'admin' && (
+          <NavItem to="/admin" icon={ShieldCheck} label="" active={path === '/admin'} />
+        )}
         <NavItem to="/settings" icon={Settings} label="" active={path === '/settings'} />
         <NavItem icon={LogOut} label="" onClick={handleLogout} />
       </nav>

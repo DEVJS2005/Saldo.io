@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Card } from '../ui/Card';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../db/db';
+import { useMasterData } from '../../hooks/useMasterData';
 import { format } from 'date-fns';
 
 const COLORS = ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#6366f1', '#14b8a6'];
 
 export const Charts = ({ transactions }) => {
-    const categories = useLiveQuery(() => db.categories.toArray());
+    const { categories } = useMasterData();
 
     const categoryData = useMemo(() => {
         if (!transactions || !categories) return [];
