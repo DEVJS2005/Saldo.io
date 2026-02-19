@@ -32,12 +32,13 @@ export default function Dashboard() {
           <MonthYearSelector selectedDate={selectedDate} onChange={setSelectedDate} />
 
           <div className="flex gap-2">
-            {Object.values(accountBalances || {}).some(bal => Math.abs(bal) > 0.01) && (
-              <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real">
-                <WalletMinimal size={18} className="mr-1" />
-                Fechar Mês
-              </Button>
-            )}
+            {!transactions.some(t => t.description.includes('Fechamento de Mês')) &&
+              Object.values(accountBalances || {}).some(bal => Math.abs(bal) > 0.01) && (
+                <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real">
+                  <WalletMinimal size={18} className="mr-1" />
+                  Fechar Mês
+                </Button>
+              )}
             <Button onClick={() => setIsModalOpen(true)} size="sm">
               <Plus size={18} className="mr-1" />
               Nova

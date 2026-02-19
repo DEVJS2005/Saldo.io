@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useBudget } from '../../hooks/useBudget';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useMasterData } from '../../hooks/useMasterData';
+import { endOfMonth } from 'date-fns';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
@@ -63,7 +64,7 @@ export const CloseMonthModal = ({ onClose, selectedDate }) => {
                 await addTransaction({
                     description,
                     amount,
-                    date: new Date(), // Current date
+                    date: new Date() < endOfMonth(selectedDate) ? new Date() : endOfMonth(selectedDate),
                     type,
                     categoryId: adjustmentCategory.id,
                     accountId: accountId,
