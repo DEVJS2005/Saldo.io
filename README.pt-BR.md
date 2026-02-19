@@ -1,47 +1,91 @@
 # 💰 Saldo.io
 
-**Saldo.io** é um app de finanças pessoais focado em **clareza, simplicidade e automação**.
+> **Controle financeiro inteligente, seguro e híbrido (SaaS).**
+> *Desenvolvido com **Antigravity - Gemini 3 Pro***
 
-A proposta é ajudar você a **entender para onde seu dinheiro está indo**, sem planilhas complicadas ou interfaces confusas.
+O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combina a velocidade de um app local com a segurança da nuvem. Desenvolvido com **React 19** e **Supabase**, ele oferece uma experiência premium para organizar suas finanças.
 
----
-
-## ✨ Objetivos do projeto
-- 📊 Visualizar saldo, entradas e saídas em tempo real
-- 🧠 Organizar gastos por categorias
-- ⚡ Interface rápida, limpa e intuitiva
-- 🔒 Segurança e privacidade em primeiro lugar
+![Status](https://img.shields.io/badge/Status-v0.5.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 
-## 🚀 Funcionalidades (em desenvolvimento)
-- Dashboard financeiro
-- Cadastro de despesas e receitas
-- Categorias personalizáveis
-- Relatórios visuais (mensal / semanal)
-- Estrutura preparada para integrações futuras
+## ✨ Principais Funcionalidades
+
+### 🔄 Arquitetura Híbrida (Dual Database)
+- **Modo Offline (Grátis)**: Seus dados ficam salvos apenas no seu dispositivo (IndexedDB). Privacidade total, zero custo.
+- **Modo Nuvem (Premium)**: Sincronização automática com a nuvem (Supabase) para acessar de qualquer lugar.
+
+### 📊 Gestão Completa
+- **Dashboard Intuitivo**: Visão clara de previsões, saldo atual, receitas e despesas.
+- **Transações Inteligentes**:
+  - Parcelamentos automáticos.
+  - Recorrências (fixas ou variáveis) com propagação de edições.
+- **Múltiplas Contas**: Carteira, Bancos, Vale Alimentação e Cartões de Crédito (com controle de faturas).
+
+### 🛡️ Segurança de Acesso
+- **Autenticação Robusta**: Login seguro via e-mail.
+- **Proteção de Dados**: Políticas RLS (Row Level Security) garantem que apenas você acesse seus dados.
+- **Anti-Falhas**: Sistema de logout seguro e proteção contra perda de conexão.
+
+### ⚙️ Painel Administrativo (SaaS)
+- Gestão de usuários e permissões.
+- Controle de acesso a recursos Premium (Sync).
+- Auditoria e métricas de sistema.
 
 ---
 
-## 🛠️ Stack
-- Frontend moderno e responsivo
-- Backend focado em performance
-- Arquitetura pensada para escalar
+## 🛠️ Tecnologias Utilizadas
+
+Este projeto utiliza o que há de mais moderno no ecossistema web:
+
+- **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/)
+- **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) (Ícones)
+- **Dados Locais**: [Dexie.js](https://dexie.org/) (IndexedDB Wrapper)
+- **Backend / Nuvem**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, RPC)
+- **Deploy**: Vercel / Cloudflare Pages
 
 ---
 
-## 🎯 Visão
-Dar **controle financeiro real** para pessoas comuns, sem complicação.
+## 🚀 Como Rodar Localmente
 
-Porque cuidar do seu dinheiro deveria ser simples.
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/seu-usuario/saldo.io.git
+   cd saldo.io
+   ```
+
+2. **Instale as dependências**
+   ```bash
+   npm install
+   ```
+
+3. **Configure as Variáveis de Ambiente**
+   Crie um arquivo `.env` na raiz e adicione suas chaves do Supabase:
+   ```env
+   VITE_SUPABASE_URL=sua_url_aqui
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima_aqui
+   ```
+
+4. **Inicie o servidor de desenvolvimento**
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-## 📌 Status do projeto
-🚧 Em desenvolvimento ativo
+## 🗺️ Roadmap
 
-Confira nosso [Roadmap](ROADMAP.pt-BR.md) para ver o que vem por aí.
+Confira nosso [Roadmap Detalhado](ROADMAP.pt-BR.md) para ver os planos para o futuro, incluindo:
+- [ ] Relatórios Avançados e Gráficos
+- [ ] Integração Bancária (Open Finance)
+- [ ] Exportação de Dados
 
-Contribuições, ideias e feedbacks são bem-vindos!
+---
 
-> **Saldo.io** — saiba exatamente onde está o seu dinheiro.
+## 🤝 Contribuição
+
+Contribuições são bem-vindas! Sinta-se à vontade para abrir **Issues** ou enviar **Pull Requests**.
+
+---
+
+Desenvolvido com 💜 por **Você**.
