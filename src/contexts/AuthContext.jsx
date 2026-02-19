@@ -43,18 +43,29 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Check active session
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            const currentUser = session?.user ?? null;
-            const userWithRole = await fetchProfile(currentUser);
-            setUser(userWithRole);
+        const initSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const userWithRole = await fetchProfile(session.user);
+                setUser(userWithRole);
+            } else {
+                setUser(null);
+            }
             setLoading(false);
-        });
+        };
+        initSession();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            const currentUser = session?.user ?? null;
-            const userWithRole = await fetchProfile(currentUser);
-            setUser(userWithRole);
-            setLoading(false);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setLoading(false);
+            } else if (session?.user) {
+                const userWithRole = await fetchProfile(session.user);
+                setUser(userWithRole);
+                setLoading(false);
+            } else {
+                setLoading(false);
+            }
         });
 
         return () => subscription.unsubscribe();
