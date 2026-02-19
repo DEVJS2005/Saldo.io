@@ -61,7 +61,15 @@ export function AuthProvider({ children }) {
                 setLoading(false);
             } else if (session?.user) {
                 const userWithRole = await fetchProfile(session.user);
-                setUser(userWithRole);
+                setUser(prev => {
+                    if (prev?.id === userWithRole.id &&
+                        prev?.role === userWithRole.role &&
+                        prev?.canSync === userWithRole.canSync &&
+                        prev?.email === userWithRole.email) {
+                        return prev;
+                    }
+                    return userWithRole;
+                });
                 setLoading(false);
             } else {
                 setLoading(false);

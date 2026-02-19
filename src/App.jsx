@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DialogProvider } from './contexts/DialogContext';
 import { Suspense, lazy } from 'react';
 import Loading from './components/ui/Loading';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy Load Pages
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -65,9 +66,11 @@ function App() {
     <AuthProvider>
       <DateProvider>
         <DialogProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <ErrorBoundary>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </ErrorBoundary>
         </DialogProvider>
       </DateProvider>
     </AuthProvider>
