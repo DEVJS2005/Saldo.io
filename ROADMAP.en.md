@@ -33,12 +33,14 @@ Improving how we handle time-based events.
 - [x] **Enhanced Filters**: "Except" mode to exclude specific accounts from view.
 - [x] **Security**: Protection against deleting accounts with linked transactions.
 
-## 🚧 v0.5.0 - Administration & Security (Planned)
-Focus on SaaS management and data protection.
-- [ ] **Dual Database**: Clear hybrid structure (Local Offline + Supabase Cloud).
-- [ ] **Admin Menu**: Visible only to users with permission.
-- [ ] **User Management**: Activate/Deactivate accounts and check permissions.
-- [ ] **Upload Control**: Specific permission to upload local data to the cloud.
+## ✅ v0.5.0 - SaaS, Stability & Performance (Completed)
+Focus on SaaS management, data protection, and robustness.
+- [x] **Dual Database**: Clear hybrid structure (Local Offline + Supabase Cloud).
+- [x] **Admin Menu**: Visible only to users with permission.
+- [x] **User Management**: Activate/Deactivate accounts and check sync permissions.
+- [x] **Upload Control**: Specific permission to upload local data to the cloud.
+- [x] **Performance**: Lazy loading, Skeletons, and server-side calculations (RPC).
+- [x] **Robust Deploy**: Configuration for Vercel/Cloudflare and network failure protection.
 
 ## 📅 v0.6.0 - Vision & Analysis (Planned)
 Deep understanding of the numbers.
@@ -51,6 +53,21 @@ Your data belongs to you.
 - [ ] **Export**: Generate CSV/JSON files of transactions.
 - [ ] **Import**: Restore backup or import from other apps.
 - [ ] **Local Backup**: Download full database file.
+
+## 🔮 v0.8.0 - SaaS Administration (Planned)
+Advanced tools for business management.
+- [ ] **Business Metrics**:
+    - [ ] Real Financial Counter (Total balance sum).
+    - [ ] Active Users (DAU/MAU).
+    - [ ] Transaction Volume (New entries per period).
+- [ ] **Advanced Support**:
+    - [ ] User Search by Email.
+    - [ ] Manual Password Reset (Forced email send).
+    - [ ] Action Logs (Security audit).
+- [ ] **System Control**:
+    - [ ] Maintenance Mode (Lock login except Admin).
+    - [ ] Global Announcements (Dashboard message for all).
+    - [ ] Database Monitoring (Size and health).
 
 ## 🔮 Future
 Long-term ideas.

@@ -54,6 +54,21 @@ Seus dados são seus.
 - [ ] **Importação**: Restaurar backup ou importar de outros apps.
 - [ ] **Backup Local**: Baixar arquivo completo do banco de dados.
 
+## 🔮 v0.8.0 - Administração SaaS (Planejado)
+Ferramentas avançadas para gestão do negócio.
+- [ ] **Métricas de Negócio**:
+    - [ ] Contador Financeiro Real (Soma total dos saldos).
+    - [ ] Usuários Ativos (DAU/MAU).
+    - [ ] Volume de Transações (Novas entradas por período).
+- [ ] **Suporte Avançado**:
+    - [ ] Busca de usuários por E-mail.
+    - [ ] Reset de Senha Manual (Envio de e-mail forçado).
+    - [ ] Logs de Ação (Auditoria de segurança).
+- [ ] **Controle do Sistema**:
+    - [ ] Modo Manutenção (Travar login exceto Admin).
+    - [ ] Avisos Globais (Mensagem no dashboard de todos).
+    - [ ] Monitoramento de Banco de Dados (Tamanho e saúde).
+
 ## 🔮 Futuro
 Ideias para longo prazo.
 - [ ] **Suporte Multi-moeda**: Para viagens e contas internacionais.
