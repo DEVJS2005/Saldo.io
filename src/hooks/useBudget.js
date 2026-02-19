@@ -124,7 +124,9 @@ export function useBudget(monthDate = new Date()) {
 
   }, [user, monthDate]);
 
-  // ... useEffect ...
+  useEffect(() => {
+    fetchBudget();
+  }, [fetchBudget]);
 
   return { ...stats, loading, refresh: fetchBudget };
 }
