@@ -53,12 +53,21 @@ export default function Register() {
 
                 {success ? (
                     <div className="text-center">
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-4 rounded-lg mb-6">
-                            <h3 className="font-bold mb-2">Conta criada com sucesso!</h3>
-                            <p>Verifique seu e-mail para confirmar o cadastro.</p>
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-6 rounded-xl mb-6 shadow-sm">
+                            <h3 className="text-xl font-bold mb-3">Conta criada com sucesso!</h3>
+                            <p className="mb-4">
+                                Para sua segurança, enviamos um link de confirmação para o seu e-mail:
+                                <br />
+                                <strong className="text-emerald-600 block mt-2">{email}</strong>
+                            </p>
+                            <div className="bg-yellow-500/10 text-yellow-600 p-3 rounded-lg text-sm border border-yellow-500/20">
+                                ⚠️ <strong>Importante:</strong> Você precisa clicar no link do e-mail antes de fazer login.
+                            </div>
                         </div>
                         <Link to="/login">
-                            <Button className="w-full">Ir para Login</Button>
+                            <Button className="w-full" variant="outline">
+                                Já confirmei meu e-mail, ir para Login
+                            </Button>
                         </Link>
                     </div>
                 ) : (
