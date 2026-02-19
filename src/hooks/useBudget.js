@@ -14,6 +14,7 @@ export function useBudget(monthDate = new Date()) {
     accountBalances: {},
     transactions: []
   });
+  const [loading, setLoading] = useState(true);
 
   const fetchBudget = useCallback(async () => {
     if (!user) return;
@@ -110,6 +111,7 @@ export function useBudget(monthDate = new Date()) {
       }
     });
 
+    // ... logic ...
     setStats({
         income,
         expense,
@@ -118,26 +120,11 @@ export function useBudget(monthDate = new Date()) {
         accountBalances,
         transactions
     });
+    setLoading(false);
 
   }, [user, monthDate]);
 
-  useEffect(() => {
-    fetchBudget();
-    
-    // Subscribe to changes to auto-update
-    // Note: This listens to ALL database changes. We could filter by user_id in RLS, but client filter is limited.
-    // Simple approach: Refresh on any change to 'transactions' table.
-    const subscription = supabase
-        .channel('budget_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
-            fetchBudget();
-        })
-        .subscribe();
+  // ... useEffect ...
 
-    return () => {
-        subscription.unsubscribe();
-    };
-  }, [fetchBudget]);
-
-  return { ...stats, refresh: fetchBudget };
+  return { ...stats, loading, refresh: fetchBudget };
 }
