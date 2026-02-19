@@ -82,13 +82,13 @@ export const Layout = ({ children }) => {
   }, [user]);
 
   const handleLogout = async () => {
-    console.log('Logout clicked'); // Debug
     try {
       await signOut();
-      console.log('SignOut successful'); // Debug
-      window.location.href = '/login'; // Force redirect to ensure state clear
     } catch (error) {
       console.error('Error signing out:', error);
+    } finally {
+      // Force redirect to ensure state clear, even if network fails
+      window.location.href = '/login';
     }
   };
 

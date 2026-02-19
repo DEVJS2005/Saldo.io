@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Plus, WalletMinimal } from 'lucide-react';
+import { Plus, WalletMinimal, CheckCircle } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { useBudget } from '../hooks/useBudget';
@@ -32,13 +32,17 @@ export default function Dashboard() {
           <MonthYearSelector selectedDate={selectedDate} onChange={setSelectedDate} />
 
           <div className="flex gap-2">
-            {!transactions.some(t => t.description.includes('Fechamento de Mês')) &&
-              Object.values(accountBalances || {}).some(bal => Math.abs(bal) > 0.01) && (
-                <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real">
-                  <WalletMinimal size={18} className="mr-1" />
-                  Fechar Mês
-                </Button>
-              )}
+            {transactions.some(t => t.description.includes('Fechamento de Mês')) ? (
+              <div className="flex items-center text-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--success)]/20">
+                <CheckCircle size={16} className="mr-2" />
+                Mês Fechado
+              </div>
+            ) : Object.values(accountBalances || {}).some(bal => Math.abs(bal) > 0.01) && (
+              <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real">
+                <WalletMinimal size={18} className="mr-1" />
+                Fechar Mês
+              </Button>
+            )}
             <Button onClick={() => setIsModalOpen(true)} size="sm">
               <Plus size={18} className="mr-1" />
               Nova
