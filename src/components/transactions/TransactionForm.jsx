@@ -217,6 +217,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         value={formData.description}
         onChange={e => setFormData({ ...formData, description: e.target.value })}
         required
+        maxLength={100}
       />
 
       <div className="grid grid-cols-2 gap-4">
@@ -229,6 +230,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
             value={formData.amount}
             onChange={e => setFormData({ ...formData, amount: e.target.value })}
             required
+            max={999999999}
           />
           {formData.type === 'despesa' && formData.installments > 1 && (
             <div className="flex items-center gap-2 mt-1">

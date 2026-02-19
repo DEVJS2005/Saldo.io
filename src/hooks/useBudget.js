@@ -40,7 +40,7 @@ export function useBudget(monthDate = new Date()) {
 
         // Fetch Global Balance (RPC)
         const { data: summaryData, error: summaryError } = await supabase
-            .rpc('get_financial_summary', { p_user_id: user.id });
+            .rpc('get_financial_summary');
 
         if (summaryError) {
             console.error('Error fetching financial summary:', summaryError);

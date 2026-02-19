@@ -33,14 +33,16 @@ Melhorando a forma como lidamos com o tempo.
 - [x] **Filtros Aprimorados**: Modo "Exceto" para excluir contas específicas da visualização.
 - [x] **Segurança**: Proteção contra exclusão de contas com transações vinculadas.
 
-## 🚧 v0.5.0 - Administração e Segurança (Planejado)
-Foco na gestão do sistema SaaS e proteção de dados.
-- [ ] **Dual Database**: Estrutura híbrida clara (Local Offline + Supabase Cloud).
-- [ ] **Menu Admin**: Visível apenas para usuários com permissão.
-- [ ] **Gestão de Usuários**: Ativar/Desativar contas e verificar permissões.
-- [ ] **Controle de Upload**: Permissão específica para enviar dados locais para a nuvem.
+## ✅ v0.5.0 - SaaS, Estabilidade e Performance (Concluído)
+Foco na gestão do sistema SaaS, proteção de dados e robustez.
+- [x] **Dual Database**: Estrutura híbrida clara (Local Offline + Supabase Cloud).
+- [x] **Menu Admin**: Visível apenas para usuários com permissão.
+- [x] **Gestão de Usuários**: Ativar/Desativar contas e verificar permissões de sync.
+- [x] **Controle de Upload**: Permissão específica para enviar dados locais para a nuvem.
+- [x] **Performance**: Lazy loading, Skeletons e cálculos no servidor (RPC).
+- [x] **Deploy Robusto**: Configuração para Vercel/Cloudflare e proteção contra falhas de rede.
 
-## 📅 v0.6.0 - Visão e Análise (Planejado)
+## 🚧 v0.6.0 - Visão e Análise (Planejado)
 Entendendo os números com profundidade.
 - [ ] **Relatórios de Fluxo**: Gráficos de barra/linha para evolução mensal de gastos.
 - [ ] **Comparativos**: Receitas vs Despesas mês a mês.
