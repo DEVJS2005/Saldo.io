@@ -64,6 +64,7 @@ Ferramentas avançadas para gestão do negócio.
     - [ ] Busca de usuários por E-mail.
     - [ ] Reset de Senha Manual (Envio de e-mail forçado).
     - [ ] Logs de Ação (Auditoria de segurança).
+    - [ ] **Conta de Teste Pública**: Login sem verificação de e-mail com reset de senha permitido.
 - [ ] **Controle do Sistema**:
     - [ ] Modo Manutenção (Travar login exceto Admin).
     - [ ] Avisos Globais (Mensagem no dashboard de todos).

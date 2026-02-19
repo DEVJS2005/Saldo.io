@@ -161,7 +161,8 @@ export default function Admin() {
             )}
 
             <Card className="p-0 overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Desktop Table */}
+                <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-[var(--bg-input)]/30 border-b border-[var(--border-color)]">
                             <tr>
@@ -177,7 +178,7 @@ export default function Admin() {
                         <tbody className="divide-y divide-[var(--border-color)]">
                             {profiles.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-[var(--text-secondary)]">
+                                    <td colSpan={7} className="p-8 text-center text-[var(--text-secondary)]">
                                         Nenhum perfil encontrado.
                                     </td>
                                 </tr>
@@ -266,6 +267,84 @@ export default function Admin() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="sm:hidden divide-y divide-[var(--border-color)]">
+                    {profiles.length === 0 ? (
+                        <div className="p-8 text-center text-[var(--text-secondary)]">
+                            Nenhum perfil encontrado.
+                        </div>
+                    ) : (
+                        profiles.map(profile => (
+                            <div key={profile.id} className="p-4 space-y-4 hover:bg-[var(--bg-input)]/20 transition-colors">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-medium text-[var(--text-primary)] break-all">{profile.email}</div>
+                                        <div className="text-xs text-[var(--text-secondary)] font-mono mt-1">ID: {profile.id.slice(0, 8)}...</div>
+                                        <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+                                            Criado: {format(new Date(profile.created_at), 'dd/MM/yyyy')}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${profile.role === 'admin'
+                                            ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+                                            : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                            }`}>
+                                            {profile.role}
+                                        </span>
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${profile.is_active !== false
+                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                            : 'bg-red-500/10 text-red-500 border-red-500/20'
+                                            }`}>
+                                            {profile.is_active !== false ? 'Ativo' : 'Inativo'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <button
+                                        onClick={() => toggleUploadPermission(profile.id, profile.can_upload_local_data)}
+                                        className={`px-3 py-2 rounded-lg border text-center transition-colors ${profile.can_upload_local_data
+                                            ? 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                            : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
+                                            }`}
+                                    >
+                                        {profile.can_upload_local_data ? 'Upload: ON' : 'Upload: OFF'}
+                                    </button>
+                                    <button
+                                        onClick={() => toggleSyncPermission(profile.id, profile.can_sync)}
+                                        className={`px-3 py-2 rounded-lg border text-center transition-colors ${profile.can_sync
+                                            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                            : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)]'
+                                            }`}
+                                    >
+                                        {profile.can_sync ? 'Premium: ON' : 'Premium: OFF'}
+                                    </button>
+                                </div>
+
+                                {profile.id !== user.id && (
+                                    <div className="flex gap-2 pt-2 border-t border-[var(--border-color)]">
+                                        <button
+                                            onClick={() => toggleRole(profile.id, profile.role)}
+                                            className="flex-1 px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] hover:bg-[var(--bg-input)] text-[var(--text-secondary)] transition-colors"
+                                        >
+                                            {profile.role === 'admin' ? 'Remover Admin' : 'Tornar Admin'}
+                                        </button>
+                                        <button
+                                            onClick={() => toggleStatus(profile.id, profile.is_active !== false)}
+                                            className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${profile.is_active !== false
+                                                ? 'border-red-500/30 text-red-500 hover:bg-red-500/10'
+                                                : 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10'
+                                                }`}
+                                        >
+                                            {profile.is_active !== false ? 'Bloquear Conta' : 'Ativar Conta'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
                 </div>
             </Card>
         </div>

@@ -204,90 +204,154 @@ export default function Transactions() {
             Nenhuma transação encontrada.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-[var(--border-color)] bg-[var(--bg-input)]/30">
-                  <th className="p-4 font-medium text-[var(--text-secondary)]">Data</th>
-                  <th className="p-4 font-medium text-[var(--text-secondary)]">Descrição</th>
-                  <th className="p-4 font-medium text-[var(--text-secondary)]">Categoria</th>
-                  <th className="p-4 font-medium text-[var(--text-secondary)]">Conta</th>
-                  <th className="p-4 font-medium text-[var(--text-secondary)]">Status</th>
-                  <th className="p-4 font-medium text-[var(--text-secondary)] text-right">Valor</th>
-                  <th className="p-4 font-medium text-[var(--text-secondary)] text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border-color)]">
-                {filteredTransactions.map((t) => (
-                  <tr key={t.id} className="last:border-0 hover:bg-[var(--bg-input)]/20 transition-colors">
-                    <td className="p-4 text-sm whitespace-nowrap">{format(new Date(t.date), 'dd/MM/yyyy')}</td>
-                    <td className="p-4">
-                      <div className="font-medium">{t.description}</div>
-                      {t.totalInstallments > 1 && (
-                        <div className="text-xs text-[var(--text-secondary)] inline-flex items-center gap-1 bg-[var(--bg-input)] px-1.5 py-0.5 rounded mt-1">
-                          Parcela {t.installmentNumber}/{t.totalInstallments}
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-[var(--border-color)] bg-[var(--bg-input)]/30">
+                    <th className="p-4 font-medium text-[var(--text-secondary)]">Data</th>
+                    <th className="p-4 font-medium text-[var(--text-secondary)]">Descrição</th>
+                    <th className="p-4 font-medium text-[var(--text-secondary)]">Categoria</th>
+                    <th className="p-4 font-medium text-[var(--text-secondary)]">Conta</th>
+                    <th className="p-4 font-medium text-[var(--text-secondary)]">Status</th>
+                    <th className="p-4 font-medium text-[var(--text-secondary)] text-right">Valor</th>
+                    <th className="p-4 font-medium text-[var(--text-secondary)] text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-color)]">
+                  {filteredTransactions.map((t) => (
+                    <tr key={t.id} className="last:border-0 hover:bg-[var(--bg-input)]/20 transition-colors">
+                      <td className="p-4 text-sm whitespace-nowrap">{format(new Date(t.date), 'dd/MM/yyyy')}</td>
+                      <td className="p-4">
+                        <div className="font-medium">{t.description}</div>
+                        {t.totalInstallments > 1 && (
+                          <div className="text-xs text-[var(--text-secondary)] inline-flex items-center gap-1 bg-[var(--bg-input)] px-1.5 py-0.5 rounded mt-1">
+                            Parcela {t.installmentNumber}/{t.totalInstallments}
+                          </div>
+                        )}
+                        {t.isRecurring && (
+                          <div className="text-xs text-blue-400 inline-flex items-center gap-1 bg-blue-400/10 px-1.5 py-0.5 rounded mt-1 ml-2">
+                            Recorrente
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 text-sm whitespace-nowrap opacity-80">{getCategoryName(t.categoryId)}</td>
+                      <td className="p-4 text-sm whitespace-nowrap opacity-80">{getAccountName(t.accountId)}</td>
+                      <td className="p-4 text-sm whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.paymentStatus === 'paid'
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : 'bg-amber-500/10 text-amber-500'
+                          }`}>
+                          {t.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right font-medium whitespace-nowrap">
+                        <span className={t.type === 'receita' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
+                          {t.type === 'receita' ? '+' : '-'} {formatMoney(t.amount)}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => { setTransactionToView(t); setViewModalOpen(true); }}
+                            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-2"
+                            title="Visualizar"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(t)}
+                            className="text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors p-2"
+                            title="Editar"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(t)}
+                            className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors p-2"
+                            title="Excluir"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
-                      )}
-                      {t.isRecurring && (
-                        <div className="text-xs text-blue-400 inline-flex items-center gap-1 bg-blue-400/10 px-1.5 py-0.5 rounded mt-1 ml-2">
-                          Recorrente
-                        </div>
-                      )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-[var(--bg-input)]/30 font-medium">
+                  <tr>
+                    <td colSpan={4} className="p-4 text-right text-[var(--text-secondary)]">Total Filtrado:</td>
+                    <td className={`p-4 text-right text-lg ${filteredTotal >= 0 ? 'text-[var(--text-primary)]' : 'text-[var(--danger)]'}`}>
+                      {formatMoney(filteredTotal)}
                     </td>
-                    <td className="p-4 text-sm whitespace-nowrap opacity-80">{getCategoryName(t.categoryId)}</td>
-                    <td className="p-4 text-sm whitespace-nowrap opacity-80">{getAccountName(t.accountId)}</td>
-                    <td className="p-4 text-sm whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.paymentStatus === 'paid'
-                        ? 'bg-emerald-500/10 text-emerald-500'
-                        : 'bg-amber-500/10 text-amber-500'
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden divide-y divide-[var(--border-color)]">
+              {filteredTransactions.map((t) => (
+                <div key={t.id} className="p-4 space-y-3 hover:bg-[var(--bg-input)]/20 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-[var(--text-primary)]">{t.description}</div>
+                      <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+                        {format(new Date(t.date), 'dd/MM/yyyy')} • {getCategoryName(t.categoryId)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-medium ${t.type === 'receita' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                        {t.type === 'receita' ? '+' : '-'} {formatMoney(t.amount)}
+                      </div>
+                      <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+                        {getAccountName(t.accountId)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex gap-2">
+                      <span className={`px-2 py-0.5 rounded-full font-medium ${t.paymentStatus === 'paid'
+                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                         }`}>
                         {t.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
                       </span>
-                    </td>
-                    <td className="p-4 text-right font-medium whitespace-nowrap">
-                      <span className={t.type === 'receita' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
-                        {t.type === 'receita' ? '+' : '-'} {formatMoney(t.amount)}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => { setTransactionToView(t); setViewModalOpen(true); }}
-                          className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-2"
-                          title="Visualizar"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(t)}
-                          className="text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors p-2"
-                          title="Editar"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(t)}
-                          className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors p-2"
-                          title="Excluir"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-[var(--bg-input)]/30 font-medium">
-                <tr>
-                  <td colSpan={4} className="p-4 text-right text-[var(--text-secondary)]">Total Filtrado:</td>
-                  <td className={`p-4 text-right text-lg ${filteredTotal >= 0 ? 'text-[var(--text-primary)]' : 'text-[var(--danger)]'}`}>
-                    {formatMoney(filteredTotal)}
-                  </td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                      {t.totalInstallments > 1 && (
+                        <span className="bg-[var(--bg-input)] border border-[var(--border-color)] px-2 py-0.5 rounded text-[var(--text-secondary)]">
+                          {t.installmentNumber}/{t.totalInstallments}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleEdit(t)}
+                        className="text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(t)}
+                        className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-input)]/10 flex justify-between items-center font-medium">
+                <span className="text-[var(--text-secondary)]">Total:</span>
+                <span className={`${filteredTotal >= 0 ? 'text-[var(--text-primary)]' : 'text-[var(--danger)]'}`}>
+                  {formatMoney(filteredTotal)}
+                </span>
+              </div>
+            </div>
+          </>
         )}
       </Card>
 

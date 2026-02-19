@@ -220,7 +220,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         maxLength={100}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Input
             label="Valor (R$)"
@@ -254,7 +254,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select
           label="Categoria"
           value={formData.categoryId}
