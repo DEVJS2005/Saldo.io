@@ -19,6 +19,7 @@ The goal is to help users **understand where their money goes**, without complex
 - Expense and income tracking
 - Custom categories
 - Visual reports (monthly / weekly)
+- Secure authentication with resilience against infinite loading loops
 - Architecture ready for future integrations
 
 ---

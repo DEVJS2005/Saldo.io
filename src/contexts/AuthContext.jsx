@@ -42,41 +42,68 @@ export function AuthProvider({ children }) {
     };
 
     useEffect(() => {
+        let isMounted = true;
+        let currentUserId = null;
+
         // Check active session
         const initSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const userWithRole = await fetchProfile(session.user);
-                setUser(userWithRole);
-            } else {
-                setUser(null);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                currentUserId = session?.user?.id || null;
+
+                if (session?.user) {
+                    const userWithRole = await fetchProfile(session.user);
+                    if (isMounted && currentUserId === session.user.id) {
+                        setUser(userWithRole);
+                    }
+                } else {
+                    if (isMounted) {
+                        setUser(null);
+                    }
+                }
+            } catch (err) {
+                console.error("Error initializing session:", err);
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
-            setLoading(false);
         };
         initSession();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            currentUserId = session?.user?.id || null;
+
             if (event === 'SIGNED_OUT') {
-                setUser(null);
-                setLoading(false);
+                if (isMounted) {
+                    setUser(null);
+                    setLoading(false);
+                }
             } else if (session?.user) {
                 const userWithRole = await fetchProfile(session.user);
-                setUser(prev => {
-                    if (prev?.id === userWithRole.id &&
-                        prev?.role === userWithRole.role &&
-                        prev?.canSync === userWithRole.canSync &&
-                        prev?.email === userWithRole.email) {
-                        return prev;
-                    }
-                    return userWithRole;
-                });
-                setLoading(false);
+                if (isMounted && currentUserId === session.user.id) {
+                    setUser(prev => {
+                        if (prev?.id === userWithRole.id &&
+                            prev?.role === userWithRole.role &&
+                            prev?.canSync === userWithRole.canSync &&
+                            prev?.email === userWithRole.email) {
+                            return prev;
+                        }
+                        return userWithRole;
+                    });
+                    setLoading(false);
+                }
             } else {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     const signUp = (email, password) => {

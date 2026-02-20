@@ -23,9 +23,9 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 - **Múltiplas Contas**: Carteira, Bancos, Vale Alimentação e Cartões de Crédito (com controle de faturas).
 
 ### 🛡️ Segurança de Acesso
-- **Autenticação Robusta**: Login seguro via e-mail.
+- **Autenticação Robusta**: Login seguro via e-mail e tratamento de estados para evitar falhas de carregamento (limbo infinito).
 - **Proteção de Dados**: Políticas RLS (Row Level Security) garantem que apenas você acesse seus dados.
-- **Anti-Falhas**: Sistema de logout seguro e proteção contra perda de conexão.
+- **Anti-Falhas**: Sistema de logout seguro, proteção de rotas contra loops de histórico e resiliência à perda de conexão.
 
 ### ⚙️ Painel Administrativo (SaaS)
 - Gestão de usuários e permissões.

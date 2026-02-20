@@ -5,10 +5,10 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 
 export default function Register() {
-    const { signUp } = useAuth();
+    const { signUp, user, loading: authLoading } = useAuth();
     const { alert } = useDialog(); // Get alert
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
@@ -17,6 +17,10 @@ export default function Register() {
     const [loading, setLoading] = useState(false);
     // const [error, setError] = useState(null); // Remove error state
     const [success, setSuccess] = useState(false);
+
+    if (!authLoading && user) {
+        return <Navigate to="/" replace />;
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();

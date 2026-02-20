@@ -4,16 +4,20 @@ import { useDialog } from '../contexts/DialogContext'; // Import useDialog
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 
 export default function Login() {
-    const { signIn } = useAuth();
+    const { signIn, user, loading: authLoading } = useAuth();
     const { alert } = useDialog(); // Get alert
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     // const [error, setError] = useState(null); // Remove error state
+
+    if (!authLoading && user) {
+        return <Navigate to="/" replace />;
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();

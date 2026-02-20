@@ -19,14 +19,14 @@ const Register = lazy(() => import('./pages/Register'));
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/login" replace />;
   return children;
 }
 
 function ProtectedAdminRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
-  if (!user || user.role !== 'admin') return <Navigate to="/" />;
+  if (!user || user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }
 

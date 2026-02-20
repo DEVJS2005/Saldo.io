@@ -41,6 +41,7 @@ Foco na gestão do sistema SaaS, proteção de dados e robustez.
 - [x] **Controle de Upload**: Permissão específica para enviar dados locais para a nuvem.
 - [x] **Performance**: Lazy loading, Skeletons e cálculos no servidor (RPC).
 - [x] **Deploy Robusto**: Configuração para Vercel/Cloudflare e proteção contra falhas de rede.
+- [x] **Correção de Autenticação**: Resolução do "limbo infinito" no login/logout e aprimoramento do redirecionamento de rotas protegidas.
 
 ## 🚧 v0.6.0 - Visão e Análise (Planejado)
 Entendendo os números com profundidade.

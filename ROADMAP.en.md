@@ -41,6 +41,7 @@ Focus on SaaS management, data protection, and robustness.
 - [x] **Upload Control**: Specific permission to upload local data to the cloud.
 - [x] **Performance**: Lazy loading, Skeletons, and server-side calculations (RPC).
 - [x] **Robust Deploy**: Configuration for Vercel/Cloudflare and network failure protection.
+- [x] **Authentication Fix**: Resolution of the "infinite limbo" in login/logout and improvement of protected route redirection.
 
 ## 📅 v0.6.0 - Vision & Analysis (Planned)
 Deep understanding of the numbers.
