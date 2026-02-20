@@ -5,6 +5,7 @@ import { useBudget } from '../hooks/useBudget';
 import { useMasterData } from '../hooks/useMasterData';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { MonthYearSelector } from '../components/ui/MonthYearSelector';
+import { MonthlyComparisonChart } from '../components/reports/MonthlyComparisonChart';
 
 export default function Reports() {
     const { selectedDate, setSelectedDate } = useDate();
@@ -73,11 +74,10 @@ export default function Reports() {
                         </div>
                     )}
                 </Card>
+            </div>
 
-                {/* Placeholder for future reports */}
-                <Card title="Em breve" className="min-h-[400px] flex items-center justify-center opacity-50">
-                    <p>Mais relatórios virão aqui...</p>
-                </Card>
+            <div className="grid grid-cols-1 gap-6">
+                <MonthlyComparisonChart selectedDate={selectedDate} />
             </div>
         </div>
     );
