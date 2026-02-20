@@ -48,12 +48,14 @@ Entendendo os números com profundidade.
 - [ ] **Relatórios de Fluxo**: Gráficos de barra/linha para evolução mensal de gastos.
 - [ ] **Comparativos**: Receitas vs Despesas mês a mês.
 - [ ] **Orçamentos (Budgets)**: Definir tetos de gastos por categoria e acompanhar o progresso.
+- [ ] **PWA (Progressive Web App)**: Permitir instalação no celular para uso 100% offline, sem depender das lojas de aplicativos.
 
-## 💾 v0.7.0 - Liberdade de Dados (Planejado)
-Seus dados são seus.
+## 💾 v0.7.0 - Liberdade e Estabilidade (Planejado)
+Seus dados seguros e código inquebrável.
 - [ ] **Exportação**: Gerar arquivos CSV/JSON das transações.
 - [ ] **Importação**: Restaurar backup ou importar de outros apps.
 - [ ] **Backup Local**: Baixar arquivo completo do banco de dados.
+- [ ] **Testes Automatizados (E2E e Unitários)**: Configuração do Vitest e Playwright para blindar a interface contra regressões e loops de carregamento.
 
 ## 🔮 v0.8.0 - Administração SaaS (Planejado)
 Ferramentas avançadas para gestão do negócio.
@@ -76,3 +78,5 @@ Ideias para longo prazo.
 - [ ] **Suporte Multi-moeda**: Para viagens e contas internacionais.
 - [ ] **Temas**: Seletor manual de tema Claro/Escuro (além do sistema).
 - [ ] **Integrações**: Bancos via Open Finance (estudo de viabilidade).
+- [ ] **Metas Financeiras (Goals)**: "Caixinhas" para separar dinheiro do saldo principal com foco em objetivos (ex: Viagem, Carro).
+- [ ] **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Inglês, Espanhol, etc) na interface do usuário.

@@ -1,48 +1,91 @@
 # 💰 Saldo.io
 
-**Saldo.io** is a personal finance app focused on **clarity, simplicity, and automation**.
+> **Smart, secure, and hybrid financial control (SaaS).**
+> *Powered by **Antigravity - Gemini 3 Pro***
 
-The goal is to help users **understand where their money goes**, without complex spreadsheets or cluttered interfaces.
+**Saldo.io** is a modern personal finance management platform that combines the speed of a local app with the security of the cloud. Built with **React 19** and **Supabase**, it offers a premium experience to organize your finances.
 
----
-
-## ✨ Project goals
-- 📊 Real-time balance, income, and expenses
-- 🧠 Smart expense categorization
-- ⚡ Clean, fast, and intuitive UI
-- 🔒 Privacy and security first
+![Status](https://img.shields.io/badge/Status-v0.5.0_(Stable)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 
-## 🚀 Features (work in progress)
-- Financial dashboard
-- Expense and income tracking
-- Custom categories
-- Visual reports (monthly / weekly)
-- Secure authentication with resilience against infinite loading loops
-- Architecture ready for future integrations
+## ✨ Key Features
+
+### 🔄 Hybrid Architecture (Dual Database)
+- **Offline Mode (Free)**: Your data is saved only on your device (IndexedDB). Total privacy, zero cost.
+- **Cloud Mode (Premium)**: Automatic synchronization with the cloud (Supabase) to access from anywhere.
+
+### 📊 Complete Management
+- **Intuitive Dashboard**: Clear view of forecasts, current balance, income, and expenses.
+- **Smart Transactions**:
+  - Automatic installments.
+  - Recurrences (fixed or variable) with edit propagation.
+- **Multiple Accounts**: Wallet, Banks, Vouchers, and Credit Cards (with invoice control).
+
+### 🛡️ Access Security
+- **Robust Authentication**: Secure login via email and state management to prevent loading failures (infinite limbo).
+- **Data Protection**: RLS (Row Level Security) policies ensure that only you access your data.
+- **Fail-Safe**: Secure logout system, route protection against history loops, and resilience to connection loss.
+
+### ⚙️ Administrative Panel (SaaS)
+- User and permissions management.
+- Access control to Premium resources (Sync).
+- System audit and metrics.
 
 ---
 
-## 🛠️ Tech stack
-- Modern, responsive frontend
-- Performance-focused backend
-- Scalable architecture
+## 🛠️ Tech Stack
+
+This project uses the most modern tools in the web ecosystem:
+
+- **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) (Icons)
+- **Local Data**: [Dexie.js](https://dexie.org/) (IndexedDB Wrapper)
+- **Backend / Cloud**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, RPC)
+- **Deploy**: Vercel / Cloudflare Pages
 
 ---
 
-## 🎯 Vision
-Provide **real financial control** without complexity.
+## 🚀 How to Run Locally
 
-Managing money should be simple.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/seu-usuario/saldo.io.git
+   cd saldo.io
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**
+   Create a `.env` file in the root and add your Supabase keys:
+   ```env
+   VITE_SUPABASE_URL=your_url_here
+   VITE_SUPABASE_ANON_KEY=your_anonymous_key_here
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-## 📌 Project status
-🚧 Actively under development
+## 🗺️ Roadmap
 
-Check out our [Roadmap](ROADMAP.en.md) to see what's coming next.
+Check out our [Detailed Roadmap](ROADMAP.en.md) to see the future plans, including:
+- [ ] Advanced Reports and Charts
+- [ ] Progressive Web App (PWA) Support
+- [ ] Data Export
 
-Contributions, ideas, and feedback are welcome!
+---
 
-> **Saldo.io** — know exactly where your money is.
+## 🤝 Contribution
+
+Contributions are welcome! Feel free to open **Issues** or submit **Pull Requests**.
+
+---
+
+Developed with 💜 by **You**.

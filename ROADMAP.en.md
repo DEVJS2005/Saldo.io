@@ -48,12 +48,14 @@ Deep understanding of the numbers.
 - [ ] **Flow Reports**: Bar/line charts for monthly expense evolution.
 - [ ] **Comparisons**: Income vs Expenses month by month.
 - [ ] **Budgets**: Set spending limits by category and track progress.
+- [ ] **Progressive Web App (PWA)**: Allow installation on mobile for 100% offline use, without app stores.
 
-## 💾 v0.7.0 - Data Freedom (Planned)
-Your data belongs to you.
+## 💾 v0.7.0 - Freedom & Stability (Planned)
+Secure data and unbreakable code.
 - [ ] **Export**: Generate CSV/JSON files of transactions.
 - [ ] **Import**: Restore backup or import from other apps.
 - [ ] **Local Backup**: Download full database file.
+- [ ] **Automated Testing (E2E & Unit)**: Vitest and Playwright setup to shield the interface against regressions and loading loops.
 
 ## 🔮 v0.8.0 - SaaS Administration (Planned)
 Advanced tools for business management.
@@ -75,3 +77,5 @@ Long-term ideas.
 - [ ] **Multi-currency Support**: For travel and international accounts.
 - [ ] **Themes**: Manual Light/Dark theme selector (overriding system default).
 - [ ] **Integrations**: Open Finance connections (feasibility study).
+- [ ] **Financial Goals**: "Safeboxes" to separate money from the main balance focusing on specific objectives (e.g., Vacation, New Car).
+- [ ] **Internationalization (i18n)**: Dynamic support for multiple languages (English, Spanish, etc.) in the user interface.
