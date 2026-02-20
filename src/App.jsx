@@ -6,6 +6,7 @@ import { DialogProvider } from './contexts/DialogContext';
 import { Suspense, lazy } from 'react';
 import Loading from './components/ui/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
+import { Analytics } from '@vercel/analytics/react';
 
 // Lazy Load Pages
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -70,6 +71,7 @@ function App() {
             <BrowserRouter>
               <AppContent />
             </BrowserRouter>
+            <Analytics />
           </ErrorBoundary>
         </DialogProvider>
       </DateProvider>
