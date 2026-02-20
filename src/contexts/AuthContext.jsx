@@ -87,8 +87,11 @@ export function AuthProvider({ children }) {
         return supabase.auth.signInWithPassword({ email, password });
     };
 
-    const signOut = () => {
-        return supabase.auth.signOut();
+    const signOut = async () => {
+        setUser(null);
+        setLoading(false);
+        const { error } = await supabase.auth.signOut();
+        if (error) console.error('Error signing out:', error);
     };
 
     return (
