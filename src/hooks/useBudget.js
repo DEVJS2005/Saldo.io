@@ -18,6 +18,7 @@ export function useBudget(monthDate = new Date()) {
 
   const fetchBudget = useCallback(async () => {
     if (!user) return;
+    setLoading(true);
 
     const start = startOfMonth(monthDate).toISOString();
     const end = endOfMonth(monthDate).toISOString();
@@ -31,6 +32,7 @@ export function useBudget(monthDate = new Date()) {
         const { data, error: monthlyError } = await supabase
           .from('transactions')
           .select('*')
+          .is('deleted_at', null)
           .gte('date', start)
           .lte('date', end)
           .order('date', { ascending: false });
@@ -57,10 +59,11 @@ export function useBudget(monthDate = new Date()) {
             // 1. Monthly Data
             monthlyData = await db.transactions
                 .where('date').between(start, end, true, true)
+                .filter(t => t.deleted_at == null)
                 .reverse().sortBy('date');
 
             // 2. Global Balance Calculation (Client-side)
-            const allTxs = await db.transactions.toArray();
+            const allTxs = await db.transactions.filter(t => t.deleted_at == null).toArray();
             
             allTxs.forEach(t => {
                 const val = Number(t.amount);

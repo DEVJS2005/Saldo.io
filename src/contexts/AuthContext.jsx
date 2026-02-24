@@ -44,6 +44,9 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         let isMounted = true;
         let currentUserId = null;
+        let fallbackTimer = setTimeout(() => {
+            if (isMounted) setLoading(false);
+        }, 3000);
 
         // Check active session
         const initSession = async () => {
@@ -102,6 +105,7 @@ export function AuthProvider({ children }) {
 
         return () => {
             isMounted = false;
+            clearTimeout(fallbackTimer);
             subscription.unsubscribe();
         };
     }, []);

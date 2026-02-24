@@ -43,7 +43,7 @@ export default function Dashboard() {
                 Fechar Mês
               </Button>
             )}
-            <Button onClick={() => setIsModalOpen(true)} size="sm">
+            <Button onClick={() => setIsModalOpen(true)} size="sm" data-testid="btn-add-transaction">
               <Plus size={18} className="mr-1" />
               Nova
             </Button>
@@ -72,7 +72,7 @@ export default function Dashboard() {
             </Card>
 
             <Card title="Saldo Atual">
-              <div className={`text-3xl font-bold ${balanceReal >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+              <div className={`text-3xl font-bold ${balanceReal >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`} data-testid="balance-display">
                 {formatCurrency(balanceReal)}
               </div>
               <p className="text-xs text-[var(--text-secondary)] mt-1">Dinheiro em caixa</p>

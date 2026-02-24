@@ -53,6 +53,7 @@ export default function Login() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            data-testid="input-email"
                         />
                     </div>
                     <div>
@@ -62,10 +63,11 @@ export default function Login() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            data-testid="input-password"
                         />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={loading} data-testid="login-submit-button">
+                    <Button type="submit" className="w-full" disabled={loading} data-testid="btn-login">
                         {loading ? 'Entrando...' : 'Entrar'}
                     </Button>
                 </form>

@@ -80,6 +80,8 @@ export default function Transactions() {
       if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
         await deleteTransaction(t.id);
         refresh();
+        // Force reload just in case Realtime is disabled or slow
+        window.location.reload();
       }
     }
   };
@@ -90,6 +92,7 @@ export default function Transactions() {
       setDeleteModalOpen(false);
       setTransactionToDelete(null);
       refresh();
+      window.location.reload();
     }
   };
 
@@ -104,7 +107,7 @@ export default function Transactions() {
         </div>
         <div className="flex items-center gap-2">
           <MonthYearSelector selectedDate={selectedDate} onChange={setSelectedDate} />
-          <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2">
+          <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2" data-testid="btn-add-transaction">
             <Plus size={18} />
             Nova Transação
           </Button>
@@ -219,9 +222,9 @@ export default function Transactions() {
                     <th className="p-4 font-medium text-[var(--text-secondary)] text-center">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-color)]">
+                <tbody className="divide-y divide-[var(--border-color)]" data-testid="transaction-list">
                   {filteredTransactions.map((t) => (
-                    <tr key={t.id} className="last:border-0 hover:bg-[var(--bg-input)]/20 transition-colors">
+                    <tr key={t.id} className="last:border-0 hover:bg-[var(--bg-input)]/20 transition-colors" data-testid={`transaction-item-${t.id}`}>
                       <td className="p-4 text-sm whitespace-nowrap">{format(new Date(t.date), 'dd/MM/yyyy')}</td>
                       <td className="p-4">
                         <div className="font-medium">{t.description}</div>
@@ -271,6 +274,7 @@ export default function Transactions() {
                             onClick={() => handleDeleteClick(t)}
                             className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors p-2"
                             title="Excluir"
+                            data-testid={`btn-delete-transaction-${t.id}`}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -292,9 +296,9 @@ export default function Transactions() {
             </div>
 
             {/* Mobile Card View */}
-            <div className="sm:hidden divide-y divide-[var(--border-color)]">
+            <div className="sm:hidden divide-y divide-[var(--border-color)]" data-testid="transaction-list-mobile">
               {filteredTransactions.map((t) => (
-                <div key={t.id} className="p-4 space-y-3 hover:bg-[var(--bg-input)]/20 transition-colors">
+                <div key={t.id} className="p-4 space-y-3 hover:bg-[var(--bg-input)]/20 transition-colors" data-testid={`transaction-item-mobile-${t.id}`}>
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-medium text-[var(--text-primary)]">{t.description}</div>
@@ -331,12 +335,15 @@ export default function Transactions() {
                       <button
                         onClick={() => handleEdit(t)}
                         className="text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+                        title="Editar"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(t)}
                         className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                        title="Excluir"
+                        data-testid={`btn-delete-transaction-mobile-${t.id}`}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -432,13 +439,13 @@ export default function Transactions() {
           <div className="flex flex-col gap-2">
             {transactionToDelete && (transactionToDelete.recurrenceId || transactionToDelete.installmentId) && (
               <>
-                <Button variant="secondary" onClick={() => confirmDelete('single')}>
+                <Button variant="secondary" onClick={() => confirmDelete('single')} data-testid="btn-confirm-delete-single">
                   Apenas esta {transactionToDelete.installmentId ? 'parcela' : 'transação'}
                 </Button>
-                <Button variant="secondary" onClick={() => confirmDelete('future')}>
+                <Button variant="secondary" onClick={() => confirmDelete('future')} data-testid="btn-confirm-delete-future">
                   Esta e as futuras
                 </Button>
-                <Button variant="danger" onClick={() => confirmDelete('all')}>
+                <Button variant="danger" onClick={() => confirmDelete('all')} data-testid="btn-confirm-delete">
                   Todas as {transactionToDelete.installmentId ? 'parcelas' : 'ocorrências'}
                 </Button>
               </>

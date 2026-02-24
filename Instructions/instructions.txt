@@ -1,0 +1,426 @@
+
+SALDO.IO
+Guia de Testes Automatizados & Boas Praticas de Engenharia
+Instrucoes para o Gemini
+Playwright  |  Clean Code  |  Repository Pattern  |  Soft Delete
+
+0. Contexto do Projeto
+Saldo.io e uma aplicacao de financas pessoais com arquitetura hibrida (Dexie/IndexedDB offline + Supabase cloud), construida com React 19, Vite e Tailwind CSS v4. Este documento serve como instrucao direta ao Gemini para implementar testes automatizados com Playwright e refatoracoes guiadas por Clean Code.
+
+Objetivo Principal
+Antes de continuar entregando features das versoes v0.6.0+, estabilizar a base de codigo com: (1) Testes E2E com Playwright cobrindo os fluxos criticos, (2) Repository Pattern formalizado para a camada de dados dual, (3) Soft Delete em transacoes para suportar historico e auditoria futura.
+
+1. Setup do Playwright
+1.1 Instalacao
+Execute os comandos abaixo na raiz do projeto Saldo.io:
+
+npm init playwright@latest
+
+# Responda ao wizard assim:
+# Where to put your end-to-end tests?  -> tests/e2e
+# Add a GitHub Actions workflow?        -> Y
+# Install Playwright browsers?          -> Y
+
+Instale tambem a dependencia de teste:
+
+npm install -D @playwright/test
+
+1.2 Configuracao - playwright.config.ts
+Crie o arquivo playwright.config.ts na raiz do projeto com o seguinte conteudo:
+
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [['html'], ['list']],
+
+  use: {
+    baseURL: 'http://localhost:5173',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'Mobile Safari', use: { ...devices['iPhone 13'] } },
+  ],
+
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+
+2. Estrutura de Pastas dos Testes
+Organize os testes seguindo Single Responsibility - cada arquivo cobre um unico fluxo de dominio:
+
+tests/
+  e2e/
+    auth/
+      login.spec.ts
+      register.spec.ts
+    transactions/
+      create-transaction.spec.ts
+      recurring.spec.ts          # PRIORIDADE MAXIMA
+      installments.spec.ts       # PRIORIDADE MAXIMA
+      delete-transaction.spec.ts
+    accounts/
+      account-management.spec.ts
+    categories/
+      category-management.spec.ts
+    dashboard/
+      balance-display.spec.ts
+    pages/                       # Page Object Models
+      TransactionPage.ts
+      DashboardPage.ts
+      LoginPage.ts
+    helpers/
+      auth.helper.ts             # Login via storageState
+      db.helper.ts               # Reset de dados
+      factories.ts               # Factories de dados de teste
+
+3. Page Object Model (POM)
+O padrao Page Object Model e obrigatorio. Ele separa a logica de selecao de elementos da logica de assercao - aplicacao direta do principio de Single Responsibility do Clean Code.
+
+3.1 Exemplo - TransactionPage.ts
+// tests/e2e/pages/TransactionPage.ts
+import { type Page, type Locator } from '@playwright/test';
+
+export class TransactionPage {
+  readonly page: Page;
+  readonly addButton: Locator;
+  readonly amountInput: Locator;
+  readonly descriptionInput: Locator;
+  readonly categorySelect: Locator;
+  readonly saveButton: Locator;
+
+  constructor(page: Page) {
+    this.page            = page;
+    this.addButton       = page.getByTestId('btn-add-transaction');
+    this.amountInput     = page.getByTestId('input-amount');
+    this.descriptionInput = page.getByTestId('input-description');
+    this.categorySelect  = page.getByTestId('select-category');
+    this.saveButton      = page.getByTestId('btn-save-transaction');
+  }
+
+  async createTransaction(data: {
+    amount: number;
+    description: string;
+    category: string;
+    type: 'income' | 'expense';
+  }) {
+    await this.addButton.click();
+    await this.amountInput.fill(String(data.amount));
+    await this.descriptionInput.fill(data.description);
+    await this.categorySelect.selectOption(data.category);
+    await this.saveButton.click();
+  }
+}
+
+3.2 Exemplo de Teste usando POM
+// tests/e2e/transactions/create-transaction.spec.ts
+import { test, expect } from '@playwright/test';
+import { TransactionPage } from '../pages/TransactionPage';
+
+test.describe('Criar Transacao', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/dashboard');
+  });
+
+  test('deve adicionar despesa e refletir no saldo', async ({ page }) => {
+    const transactionPage = new TransactionPage(page);
+    const balanceBefore = await page
+      .getByTestId('balance-display').textContent();
+
+    await transactionPage.createTransaction({
+      amount: 150,
+      description: 'Mercado',
+      category: 'alimentacao',
+      type: 'expense',
+    });
+
+    await expect(page.getByTestId('transaction-list'))
+      .toContainText('Mercado');
+    const balanceAfter = await page
+      .getByTestId('balance-display').textContent();
+    expect(balanceAfter).not.toBe(balanceBefore);
+  });
+});
+
+4. Fluxos Criticos para Cobrir
+PRIORIDADE ALTA - Comece por aqui
+A logica de recorrencia (editar so este, futuros ou todos) e parcelamentos sao as mais propensas a regressoes. Estes testes devem ser escritos primeiro, antes de qualquer nova feature.
+
+4.1 Autenticacao
+•	Login com credenciais validas -> redireciona para /dashboard
+•	Login com credenciais invalidas -> exibe mensagem de erro clara
+•	Logout -> redireciona para /login, sessao encerrada
+•	Acesso direto a rota protegida sem sessao -> redireciona para /login
+
+4.2 Transacoes Recorrentes (Critico)
+•	Criar transacao com recorrencia mensal
+•	Editar -> modal "Editar apenas esta ocorrencia" -> so a data selecionada muda
+•	Editar -> modal "Editar esta e futuras" -> transacoes a partir da data mudam
+•	Editar -> modal "Editar todas" -> toda a serie e atualizada
+•	Deletar -> testar os mesmos 3 modos de propagacao
+
+4.3 Parcelamentos (Critico)
+•	Criar despesa com 3 parcelas -> exatamente 3 transacoes criadas
+•	Deletar parcela do meio -> comportamento correto conforme regra de negocio
+•	Saldo reflete corretamente a soma das parcelas
+
+4.4 Dashboard
+•	Saldo exibido e a soma correta de receitas menos despesas
+•	Filtro 'Exceto conta X' remove os valores corretamente do total
+•	Transacoes recentes listadas em ordem cronologica decrescente
+
+5. Helper de Autenticacao (Reutilizavel)
+Autenticar via UI a cada teste e lento e fragil. Use storageState para fazer login uma unica vez e reutilizar em todos os testes - isso reduz o tempo de execucao da suite em ate 60%:
+
+// tests/e2e/helpers/auth.helper.ts
+import { type Page } from '@playwright/test';
+
+export async function loginUser(page: Page) {
+  await page.goto('/login');
+  await page.getByTestId('input-email')
+    .fill(process.env.TEST_EMAIL!);
+  await page.getByTestId('input-password')
+    .fill(process.env.TEST_PASSWORD!);
+  await page.getByTestId('btn-login').click();
+  await page.waitForURL('/dashboard');
+}
+
+// tests/e2e/helpers/global-setup.ts
+import { chromium } from '@playwright/test';
+import { loginUser } from './auth.helper';
+
+export default async function globalSetup() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await loginUser(page);
+  await page.context().storageState({
+    path: 'tests/.auth/user.json'
+  });
+  await browser.close();
+}
+
+// Em playwright.config.ts adicionar:
+// globalSetup: './tests/e2e/helpers/global-setup.ts'
+// use: { storageState: 'tests/.auth/user.json' }
+
+6. Convencao de data-testid
+Para que o Playwright encontre elementos de forma estavel (sem depender de classes CSS), padronize data-testid em todos os componentes interativos. Adicione estes atributos nos componentes React correspondentes:
+
+Elemento	data-testid
+Botao adicionar transacao	btn-add-transaction
+Input de valor	input-amount
+Input de descricao	input-description
+Select de categoria	select-category
+Select de conta	select-account
+Botao salvar transacao	btn-save-transaction
+Exibicao do saldo total	balance-display
+Lista de transacoes	transaction-list
+Item de transacao	transaction-item-{id}
+Botao deletar transacao	btn-delete-transaction-{id}
+Modal de confirmacao recorrencia	modal-confirm-recurring
+Botao confirmar delecao	btn-confirm-delete
+Input email (login)	input-email
+Input senha (login)	input-password
+Botao de login	btn-login
+Botao de logout	btn-logout
+
+7. Repository Pattern - Camada de Dados
+A regra mais importante do Pragmatic Programmer e DRY (Don't Repeat Yourself). Sem um padrao claro, a logica de persistencia se duplica em cada componente. O Repository Pattern resolve isso e prepara o terreno para a v0.7.0 de backup/export:
+
+// src/repositories/ITransactionRepository.ts
+export interface ITransactionRepository {
+  findAll(userId: string, month: Date): Promise<Transaction[]>;
+  findById(id: string): Promise<Transaction | null>;
+  save(transaction: Transaction): Promise<void>;
+  softDelete(id: string): Promise<void>;
+  restore(id: string): Promise<void>;
+}
+
+// Estrutura de arquivos:
+// src/repositories/
+//   ITransactionRepository.ts       <- interface (contrato)
+//   TransactionRepository.ts        <- orquestrador
+//   adapters/
+//     LocalTransactionRepository.ts  <- Dexie
+//     CloudTransactionRepository.ts  <- Supabase
+
+// src/repositories/TransactionRepository.ts
+export class TransactionRepository implements ITransactionRepository {
+  constructor(
+    private local: LocalTransactionRepository,
+    private cloud: CloudTransactionRepository,
+    private isOnline: boolean
+  ) {}
+
+  async save(transaction: Transaction) {
+    await this.local.save(transaction);          // sempre local
+    if (this.isOnline) {
+      await this.cloud.save(transaction);        // cloud se disponivel
+    }
+  }
+
+  async softDelete(id: string) {
+    await this.local.softDelete(id);
+    if (this.isOnline) await this.cloud.softDelete(id);
+  }
+}
+
+8. Soft Delete - Implementacao
+Por que Soft Delete?
+Nunca delete fisicamente transacoes financeiras. Usuarios vao querer desfazer acoes, auditar historico e a v0.8.0 precisara de Action Logs. Adicionar deleted_at agora e barato - migrar depois e caro.
+
+8.1 Migration no Supabase
+-- Adicionar colunas de soft delete
+ALTER TABLE transactions
+  ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL,
+  ADD COLUMN deleted_by UUID DEFAULT NULL
+    REFERENCES auth.users(id);
+
+-- Index para queries que excluem soft deleted (performance)
+CREATE INDEX idx_transactions_active
+  ON transactions (user_id, date)
+  WHERE deleted_at IS NULL;
+
+-- View conveniente para consultas do app
+CREATE VIEW active_transactions AS
+  SELECT * FROM transactions WHERE deleted_at IS NULL;
+
+8.2 Schema Dexie Atualizado
+// src/lib/db.ts - versao 2 do schema
+const db = new Dexie('SaldoDB');
+
+db.version(2).stores({
+  transactions:
+    '++id, userId, date, accountId, categoryId, deleted_at',
+});
+
+// SEMPRE filtrar deleted_at ao buscar transacoes ativas
+const active = await db.transactions
+  .where('userId').equals(userId)
+  .filter(t => t.deleted_at == null)
+  .toArray();
+
+// Soft delete - nunca usar .delete()
+await db.transactions.update(id, {
+  deleted_at: new Date().toISOString(),
+});
+
+9. Scripts NPM - package.json
+Adicione estes scripts ao package.json para integrar Playwright no workflow:
+
+"scripts": {
+  "dev": "vite",
+  "build": "tsc && vite build",
+  "test": "vitest",
+  "test:e2e": "playwright test",
+  "test:e2e:ui": "playwright test --ui",
+  "test:e2e:debug": "playwright test --debug",
+  "test:e2e:report": "playwright show-report",
+  "test:e2e:headed": "playwright test --headed",
+  "test:all": "npm run test && npm run test:e2e"
+}
+
+10. GitHub Actions - CI/CD
+Crie o arquivo .github/workflows/playwright.yml para rodar os testes em cada Pull Request automaticamente:
+
+name: Playwright E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+11. Boas Praticas de Clean Code para Testes
+Referencias
+Clean Code (Robert C. Martin) | The Pragmatic Programmer (Hunt & Thomas) | Testing Trophy (Kent C. Dodds) | Playwright Best Practices (Microsoft)
+
+11.1 Nomeacao de Testes
+Use sempre o padrao: deve [acao] quando [condicao]
+
+// ERRADO - nao descreve o comportamento esperado
+test('login test')
+
+// CORRETO - documenta o comportamento como especificacao
+test('deve redirecionar para /dashboard quando credenciais sao validas')
+test('deve exibir mensagem de erro quando senha esta incorreta')
+test('deve criar 3 transacoes quando parcelamento e em 3x')
+
+11.2 Independencia entre Testes
+•	Cada teste deve ser autossuficiente - nunca depender da ordem de execucao
+•	Use beforeEach para setup e afterEach para limpeza de dados
+•	Use factories.ts para criar dados, nunca valores hardcoded
+•	Reset o estado do banco entre specs via db.helper.ts
+
+11.3 Seletores Estaveis
+•	SEMPRE use data-testid - nunca classes CSS (podem mudar com refatoracao visual)
+•	Nunca use seletores XPath - frageis e ilegíveis
+•	Use getByRole() para elementos de acessibilidade quando nao ha testid
+•	Nunca selecione por texto visível para botoes de acao (traducoes quebram)
+
+11.4 Assercoes Precisas
+•	Prefira assercoes sobre estado final, nao sobre implementacao interna
+•	Use expect(locator).toBeVisible() em vez de verificar existencia no DOM
+•	Use expect(page).toHaveURL('/dashboard') para verificar navegacao
+•	Use expect(locator).toContainText() em vez de verificar innerHTML
+
+12. Checklist de Implementacao
+Execute nesta ordem para garantir base solida antes de novas features:
+
+[ ]	Instalar Playwright e configurar playwright.config.ts
+[ ]	Adicionar data-testid em todos os elementos interativos criticos
+[ ]	Criar auth.helper.ts com storageState para login global
+[ ]	Criar TransactionPage (Page Object Model)
+[ ]	Escrever testes de autenticacao (login, logout, rotas protegidas)
+[ ]	Escrever testes de criacao e delecao de transacao simples
+[ ]	Escrever testes de recorrencia (os 3 modos de propagacao)
+[ ]	Escrever testes de parcelamento
+[ ]	Migration Supabase: adicionar colunas deleted_at e deleted_by
+[ ]	Atualizar schema Dexie para soft delete (versao 2)
+[ ]	Implementar ITransactionRepository + adapters Local e Cloud
+[ ]	Configurar GitHub Actions com playwright.yml
+[ ]	Rodar test:e2e:report e validar cobertura dos fluxos criticos
+[ ]	Suite verde? Agora pode comecar a v0.6.0 com seguranca!
+
+Nota Final ao Gemini
+Ao implementar cada item deste guia: (1) nao quebre funcionalidades existentes, (2) mantenha logica de negocio nos repositories e fora dos componentes React, (3) rode os testes apos cada mudanca significativa. A meta e chegar na v0.6.0 com suite E2E verde e zero regressoes nao detectadas.
+

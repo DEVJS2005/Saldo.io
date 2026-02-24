@@ -12,6 +12,14 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getLocalYMD = (dateObj) => {
+    const d = new Date(dateObj);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     // ...
@@ -43,7 +51,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
       setFormData(prev => ({
         description: '',
         amount: '',
-        date: defaultDate.toISOString().split('T')[0],
+        date: getLocalYMD(defaultDate),
         type: prefillType,
         categoryId: '',
         accountId: '',
@@ -200,7 +208,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           <button
             key={t}
             type="button"
-            onClick={() => setFormData({ ...formData, type: t })}
+            onClick={() => setFormData(prev => ({ ...prev, type: t }))}
             className={`flex-1 py-1.5 text-sm font-medium rounded-lg capitalize transition-all ${formData.type === t
               ? 'bg-[var(--bg-card)] text-[var(--primary)] shadow-sm'
               : 'text-[var(--text-secondary)]'
@@ -215,9 +223,10 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         label="Descrição"
         placeholder={formData.type === 'receita' ? "Ex: Salário" : "Ex: Supermercado"}
         value={formData.description}
-        onChange={e => setFormData({ ...formData, description: e.target.value })}
+        onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
         required
         maxLength={100}
+        data-testid="input-description"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -228,9 +237,10 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
             step="0.01"
             placeholder="0,00"
             value={formData.amount}
-            onChange={e => setFormData({ ...formData, amount: e.target.value })}
+            onChange={e => setFormData(prev => ({ ...prev, amount: e.target.value }))}
             required
             max={999999999}
+            data-testid="input-amount"
           />
           {formData.type === 'despesa' && formData.installments > 1 && (
             <div className="flex items-center gap-2 mt-1">
@@ -238,7 +248,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
                 type="checkbox"
                 id="isInstallmentValue"
                 checked={formData.isInstallmentValue}
-                onChange={e => setFormData({ ...formData, isInstallmentValue: e.target.checked })}
+                onChange={e => setFormData(prev => ({ ...prev, isInstallmentValue: e.target.checked }))}
                 className="accent-[var(--primary)] w-3 h-3"
               />
               <label htmlFor="isInstallmentValue" className="text-xs text-[var(--text-secondary)]">Valor da Parcela?</label>
@@ -249,7 +259,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           label="Data"
           type="date"
           value={formData.date}
-          onChange={e => setFormData({ ...formData, date: e.target.value })}
+          onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
           required
         />
       </div>
@@ -258,17 +268,18 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         <Select
           label="Categoria"
           value={formData.categoryId}
-          onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+          onChange={e => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
           options={[
             { value: '', label: 'Selecione...' },
             ...(categories || []).map(c => ({ value: c.id, label: c.name }))
           ]}
           required
+          data-testid="select-category"
         />
         <Select
           label="Conta"
           value={formData.accountId}
-          onChange={e => setFormData({ ...formData, accountId: e.target.value })}
+          onChange={e => setFormData(prev => ({ ...prev, accountId: e.target.value }))}
           options={[
             { value: '', label: 'Selecione...' },
             ...(accounts || [])
@@ -276,6 +287,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
               .map(a => ({ value: a.id, label: a.name }))
           ]}
           required
+          data-testid="select-account"
         />
       </div>
 
@@ -286,7 +298,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
             type="checkbox"
             id="isRecurring"
             checked={formData.isRecurring}
-            onChange={e => setFormData({ ...formData, isRecurring: e.target.checked, installments: 1, currentInstallment: 1 })}
+            onChange={e => setFormData(prev => ({ ...prev, isRecurring: e.target.checked, installments: 1, currentInstallment: 1 }))}
             className="accent-[var(--primary)] w-4 h-4"
             disabled={formData.installments > 1}
           />
@@ -304,7 +316,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
                 min="1"
                 max="60"
                 value={formData.installments}
-                onChange={e => setFormData({ ...formData, installments: Number(e.target.value), isRecurring: false })}
+                onChange={e => setFormData(prev => ({ ...prev, installments: Number(e.target.value), isRecurring: false }))}
                 disabled={formData.isRecurring}
                 className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-2 py-1 text-sm text-center"
               />
@@ -317,7 +329,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
                   min="1"
                   max={formData.installments}
                   value={formData.currentInstallment}
-                  onChange={e => setFormData({ ...formData, currentInstallment: Number(e.target.value) })}
+                  onChange={e => setFormData(prev => ({ ...prev, currentInstallment: Number(e.target.value) }))}
                   className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-2 py-1 text-sm text-center"
                 />
               </div>
@@ -338,7 +350,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => setFormData({ ...formData, paymentStatus: 'paid' })}
+            onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'paid' }))}
             className={`px-3 py-1 rounded-lg text-xs font-medium border ${formData.paymentStatus === 'paid'
               ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
               : 'border-[var(--border-color)] text-[var(--text-secondary)]'
@@ -348,7 +360,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           </button>
           <button
             type="button"
-            onClick={() => setFormData({ ...formData, paymentStatus: 'pending' })}
+            onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'pending' }))}
             className={`px-3 py-1 rounded-lg text-xs font-medium border ${formData.paymentStatus === 'pending'
               ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
               : 'border-[var(--border-color)] text-[var(--text-secondary)]'
@@ -363,7 +375,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
 
       <div className="flex gap-3 pt-4">
         <Button variant="ghost" className="flex-1" onClick={onClose} type="button">Cancelar</Button>
-        <Button className="flex-1" type="submit" isLoading={isLoading && !confirmModalOpen}>Salvar</Button>
+        <Button className="flex-1" type="submit" isLoading={isLoading && !confirmModalOpen} data-testid="btn-save-transaction">Salvar</Button>
       </div>
 
       {/* Confirmation Modal for Propagation */}
@@ -373,19 +385,19 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
           onClose={() => { setConfirmModalOpen(false); setIsLoading(false); setPendingSubmission(null); }}
           title="Alteração em Série"
         >
-          <div className="space-y-4">
+          <div className="space-y-4" data-testid="modal-confirm-recurring">
             <p className="text-[var(--text-primary)]">
               Esta alteração afeta uma transação recorrente ou parcelada. Como deseja aplicar?
             </p>
 
             <div className="flex flex-col gap-2 pt-2">
-              <Button variant="secondary" onClick={() => handleConfirmPropagation('single')}>
+              <Button variant="secondary" onClick={() => handleConfirmPropagation('single')} data-testid="btn-propagate-single">
                 Apenas esta (Atual)
               </Button>
-              <Button onClick={() => handleConfirmPropagation('future')}>
+              <Button onClick={() => handleConfirmPropagation('future')} data-testid="btn-propagate-future">
                 Esta e as Futuras
               </Button>
-              <Button variant="ghost" className="text-sm" onClick={() => handleConfirmPropagation('all')}>
+              <Button variant="ghost" className="text-sm" onClick={() => handleConfirmPropagation('all')} data-testid="btn-propagate-all">
                 Todas (Série Completa)
               </Button>
             </div>

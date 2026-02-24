@@ -6,11 +6,12 @@ import { useDialog } from '../contexts/DialogContext';
 import { syncCloudToLocal } from '../lib/syncService';
 import { useState, useEffect } from 'react';
 
-const NavItem = ({ to, icon: Icon, label, active, onClick }) => {
+const NavItem = ({ to, icon: Icon, label, active, onClick, testId }) => {
   if (onClick) {
     return (
       <button
         onClick={onClick}
+        data-testid={testId}
         className={clsx(
           'flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left cursor-pointer relative z-10',
           active
@@ -26,6 +27,7 @@ const NavItem = ({ to, icon: Icon, label, active, onClick }) => {
   return (
     <Link
       to={to}
+      data-testid={testId}
       className={clsx(
         'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
         active
@@ -126,7 +128,7 @@ export const Layout = ({ children }) => {
 
         <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2">
           <NavItem to="/settings" icon={Settings} label="Configurações" active={path === '/settings'} />
-          <NavItem icon={LogOut} label="Sair" onClick={handleLogout} />
+          <NavItem icon={LogOut} label="Sair" onClick={handleLogout} testId="btn-logout" />
         </div>
       </aside>
 
@@ -153,7 +155,7 @@ export const Layout = ({ children }) => {
           <NavItem to="/admin" icon={ShieldCheck} label="" active={path === '/admin'} />
         )}
         <NavItem to="/settings" icon={Settings} label="" active={path === '/settings'} />
-        <NavItem icon={LogOut} label="" onClick={handleLogout} />
+        <NavItem icon={LogOut} label="" onClick={handleLogout} testId="btn-logout" />
       </nav>
     </div>
   );

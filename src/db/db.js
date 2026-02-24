@@ -2,25 +2,10 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('FinanceAppDB');
 
-// Version 3: Force update for indices
-db.version(3).stores({
-  // Accounts: Wallet, Bank, Credit Card
-  // Indexed: name, type
+// Version 4: Add soft delete
+db.version(4).stores({
   accounts: '++id, name, type', 
-
-  // Categories: Food, Housing, etc.
-  // Indexed: name, type (income/expense)
   categories: '++id, name, type', 
-
-  // Transactions
-  // Indexed fields for filtering/sorting:
-  // date: timeline
-  // [month+year]: for monthly queries
-  // type: income/expense/transfer
-  // categoryId, accountId: relationships
-  // paymentStatus: paid/pending
-  // installmentId: grouping installments
-  // isRecurring: for auto-copy
   transactions: `
     ++id,
     date,
@@ -33,7 +18,8 @@ db.version(3).stores({
     paymentStatus,
     installmentId,
     recurrenceId,
-    isRecurring
+    isRecurring,
+    deleted_at
   `
 });
 
