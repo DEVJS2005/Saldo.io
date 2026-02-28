@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { format } from 'date-fns';
-import { Shield, Users, Calendar } from 'lucide-react';
+import { Shield, Users, Calendar, Wrench, Bell } from 'lucide-react';
 
 export default function Admin() {
     const { user } = useAuth();
@@ -13,8 +13,13 @@ export default function Admin() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    const [maintenance, setMaintenance] = useState({ active: false, message: '' });
+    const [changelogForm, setChangelogForm] = useState({ title: '', content: '', type: 'feature' });
+    const [submittingChangelog, setSubmittingChangelog] = useState(false);
+
     useEffect(() => {
         fetchProfiles();
+        fetchMaintenanceStatus();
     }, []);
 
     const fetchProfiles = async () => {
@@ -138,11 +143,188 @@ export default function Admin() {
         }
     };
 
+
+
+    const fetchMaintenanceStatus = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('app_settings')
+                .select('value')
+                .eq('id', 'maintenance_mode')
+                .single();
+            if (data && data.value) setMaintenance(data.value);
+        } catch (err) {
+            console.error("Error fetching maintenance status:", err);
+        }
+    };
+
+    const toggleMaintenance = async () => {
+        const confirmed = await confirm(
+            `Tem certeza que deseja ${maintenance.active ? 'DESLIGAR' : 'LIGAR'} o modo manutenção?`,
+            maintenance.active ? 'Sistema voltará ao ar' : 'O sistema será bloqueado'
+        );
+        if (!confirmed) return;
+
+        const newValue = { ...maintenance, active: !maintenance.active };
+        try {
+            const { error } = await supabase
+                .from('app_settings')
+                .update({ value: newValue })
+                .eq('id', 'maintenance_mode');
+
+            if (error) throw error;
+            setMaintenance(newValue);
+            await alert(
+                `O modo manutenção foi ${newValue.active ? 'ativado' : 'desativado'}.`,
+                'Sucesso',
+                'success'
+            );
+        } catch (err) {
+            console.error('Error toggling maintenance:', err);
+            await alert('Erro ao alterar o modo manutenção.', 'Erro', 'error');
+        }
+    };
+
+    const handleUpdateMaintenanceMessage = async (e) => {
+        e.preventDefault();
+        try {
+            const { error } = await supabase
+                .from('app_settings')
+                .update({ value: maintenance })
+                .eq('id', 'maintenance_mode');
+
+            if (error) throw error;
+            await alert('Mensagem de manutenção atualizada.', 'Sucesso', 'success');
+        } catch (err) {
+            console.error('Error updating maintenance message:', err);
+            await alert('Erro ao salvar a mensagem.', 'Erro', 'error');
+        }
+    };
+
+    const publishChangelog = async (e) => {
+        e.preventDefault();
+        if (!changelogForm.title || !changelogForm.content) {
+            return alert('Preencha o título e o conteúdo.', 'Atenção', 'warning');
+        }
+
+        setSubmittingChangelog(true);
+        try {
+            const { error } = await supabase
+                .from('changelog')
+                .insert([{
+                    title: changelogForm.title,
+                    content: changelogForm.content,
+                    type: changelogForm.type,
+                    created_by: user.id
+                }]);
+
+            if (error) throw error;
+
+            setChangelogForm({ title: '', content: '', type: 'feature' });
+            await alert('Novidade publicada com sucesso!', 'Sucesso', 'success');
+        } catch (err) {
+            console.error('Error publishing changelog:', err);
+            await alert('Erro ao publicar novidade.', 'Erro', 'error');
+        } finally {
+            setSubmittingChangelog(false);
+        }
+    };
+
     if (loading) return <div className="p-8 text-center text-[var(--text-secondary)]">Carregando painel...</div>;
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Maintenance Toggle Card */}
+                <Card className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Wrench className="text-[var(--primary)]" size={24} />
+                        <h2 className="text-xl font-semibold">Modo Manutenção</h2>
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)] mb-4">
+                        Bloqueia o acesso de usuários padrão. Apenas administradores poderão logar e navegar.
+                    </p>
+                    <div className="flex items-center gap-4 mb-4">
+                        <button
+                            onClick={toggleMaintenance}
+                            className={`relative w-14 h-7 rounded-full transition-colors ${maintenance.active ? 'bg-amber-500' : 'bg-[var(--bg-input)]'}`}
+                        >
+                            <div className={`absolute top-1 bg-white w-5 h-5 rounded-full transition-transform ${maintenance.active ? 'left-8' : 'left-1'}`}></div>
+                        </button>
+                        <span className={`text-sm font-medium ${maintenance.active ? 'text-amber-500' : 'text-[var(--text-secondary)]'}`}>
+                            {maintenance.active ? 'Ativado (Acesso Restrito)' : 'Desativado (Acesso Público)'}
+                        </span>
+                    </div>
+
+                    <form onSubmit={handleUpdateMaintenanceMessage} className="mt-4 pt-4 border-t border-[var(--border-color)]">
+                        <label className="block text-sm font-medium mb-2">Mensagem de Manutenção (Aparece para usuários)</label>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={maintenance.message}
+                                onChange={e => setMaintenance({ ...maintenance, message: e.target.value })}
+                                className="flex-1 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-[var(--primary)] outline-none"
+                                placeholder="Voltaremos em breve..."
+                            />
+                            <button type="submit" className="px-3 py-2 bg-[var(--bg-input)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg text-sm transition-colors text-[var(--text-secondary)]">
+                                Salvar
+                            </button>
+                        </div>
+                    </form>
+                </Card>
+
+                {/* Changelog Card */}
+                <Card className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Bell className="text-[var(--primary)]" size={24} />
+                        <h2 className="text-xl font-semibold">Publicar Atualização</h2>
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)] mb-4">
+                        Publique notas de versão que aparecerão nas notificações dos usuários.
+                    </p>
+
+                    <form onSubmit={publishChangelog} className="space-y-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    placeholder="Título (Ex: Atualizei o Menu)"
+                                    required
+                                    value={changelogForm.title}
+                                    onChange={e => setChangelogForm({ ...changelogForm, title: e.target.value })}
+                                    className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-[var(--primary)] outline-none"
+                                />
+                            </div>
+                            <select
+                                value={changelogForm.type}
+                                onChange={e => setChangelogForm({ ...changelogForm, type: e.target.value })}
+                                className="w-full sm:w-32 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-[var(--primary)] outline-none"
+                            >
+                                <option value="feature">Novo</option>
+                                <option value="fix">Correção</option>
+                                <option value="maintenance">Aviso</option>
+                            </select>
+                        </div>
+                        <textarea
+                            placeholder="Descreva o que mudou na plataforma..."
+                            required
+                            rows="2"
+                            value={changelogForm.content}
+                            onChange={e => setChangelogForm({ ...changelogForm, content: e.target.value })}
+                            className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-[var(--primary)] outline-none resize-y custom-scrollbar"
+                        ></textarea>
+                        <button
+                            type="submit"
+                            disabled={submittingChangelog}
+                            className="w-full sm:w-auto px-4 py-2 bg-[var(--primary)] text-white font-medium rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+                        >
+                            {submittingChangelog ? 'Publicando...' : 'Publicar Novidade'}
+                        </button>
+                    </form>
+                </Card>
+            </div>
+
+            <div className="flex justify-between items-center mb-2">
                 <div>
                     <h1 className="text-3xl font-bold flex items-center gap-2">
                         <Shield className="text-[var(--primary)]" /> Painel Admin

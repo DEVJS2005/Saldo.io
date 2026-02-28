@@ -31,6 +31,8 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 - Gestão de usuários e permissões.
 - Controle de acesso a recursos Premium (Sync).
 - Auditoria e métricas de sistema.
+- Modo de Manutenção (Trava do sistema).
+- Central de Avisos e Notificações (Changelog).
 
 ---
 

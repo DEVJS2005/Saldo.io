@@ -47,7 +47,7 @@ export default function Login() {
                         Saldo.io
                         <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full border border-[var(--primary)]/20 shadow-sm">BETA</span>
                     </h1>
-                    <p className="text-[var(--text-secondary)] text-sm">Entre para acessar suas finanças</p>
+                    <p className="text-[var(--text-secondary)] text-sm">Acesse o poder de organizar a sua vida financeira</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
