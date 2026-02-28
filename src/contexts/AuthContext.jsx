@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
         let currentUserId = null;
         let fallbackTimer = setTimeout(() => {
             if (isMounted) setLoading(false);
-        }, 3000);
+        }, 12000);
 
         // Check active session
         const initSession = async () => {

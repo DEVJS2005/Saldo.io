@@ -66,16 +66,13 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
 
   // Reset category when type changes (only if not editing or if category doesn't match new type)
   useEffect(() => {
-    if (!allCategories) return; // Wait for categories to load
+    // Only proceed if categories are loaded and a category is selected
+    if (!allCategories || !formData.categoryId) return;
 
-    if (formData.categoryId) {
-      const currentCategory = allCategories.find(c => c.id === formData.categoryId);
-      // Only reset if we found the category AND it doesn't match the type
-      // If we didn't find it (maybe deleted?), we might want to keep it or reset it. 
-      // Safe bet: if found and mismatch, reset.
-      if (currentCategory && currentCategory.type !== formData.type) {
-        setFormData(prev => ({ ...prev, categoryId: '' }));
-      }
+    const currentCategory = allCategories.find(c => c.id === formData.categoryId);
+    // If the category exists but its type doesn't match the form's current type, reset the selection
+    if (currentCategory && currentCategory.type !== formData.type) {
+      setFormData(prev => ({ ...prev, categoryId: '' }));
     }
   }, [formData.type, formData.categoryId, allCategories]);
 

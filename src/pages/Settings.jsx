@@ -225,7 +225,7 @@ export default function Settings() {
                     await db.accounts.clear();
                     await db.transactions.clear();
                 }
-                window.location.reload();
+                window.location.href = '/';
             } catch (err) {
                 await alert('Erro ao resetar: ' + err.message, 'Erro', 'error');
             }
@@ -287,26 +287,29 @@ export default function Settings() {
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Categorias</h2>
                     <Card className="p-4">
-                        <form onSubmit={handleAddCategory} className="flex gap-2 mb-4">
-                            <div className="flex-1">
+                        <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2 mb-4">
+                            <div className="flex-1 w-full">
                                 <Input
                                     placeholder="Nova categoria..."
                                     value={newCatName}
                                     onChange={e => setNewCatName(e.target.value)}
                                     required
+                                    className="w-full"
                                 />
                             </div>
-                            <select
-                                className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
-                                value={newCatType}
-                                onChange={e => setNewCatType(e.target.value)}
-                            >
-                                <option value="despesa">Despesa</option>
-                                <option value="receita">Receita</option>
-                            </select>
-                            <Button type="submit" size="sm" title="Adicionar">
-                                <Plus size={18} />
-                            </Button>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <select
+                                    className="flex-1 sm:w-32 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                                    value={newCatType}
+                                    onChange={e => setNewCatType(e.target.value)}
+                                >
+                                    <option value="despesa">Despesa</option>
+                                    <option value="receita">Receita</option>
+                                </select>
+                                <Button type="submit" size="sm" title="Adicionar" className="shrink-0">
+                                    <Plus size={18} />
+                                </Button>
+                            </div>
                         </form>
 
                         <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
@@ -373,10 +376,11 @@ export default function Settings() {
                                     value={newAccName}
                                     onChange={e => setNewAccName(e.target.value)}
                                     required
+                                    className="w-full"
                                 />
-                                <div className="flex flex-col sm:flex-row gap-2">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <select
-                                        className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-2 py-2 text-sm flex-1 focus:ring-2 focus:ring-[var(--primary)] outline-none min-w-0"
+                                        className="w-full sm:flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
                                         value={newAccType}
                                         onChange={e => {
                                             setNewAccType(e.target.value);
@@ -391,24 +395,26 @@ export default function Settings() {
                                     </select>
                                     {newAccType === 'credit' && (
                                         <select
-                                            className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-2 py-2 text-sm flex-1 focus:ring-2 focus:ring-[var(--primary)] outline-none min-w-0"
+                                            className="w-full sm:flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
                                             value={newAccLinkedId}
                                             onChange={e => setNewAccLinkedId(e.target.value)}
                                         >
-                                            <option value="">Conta de Pagamento (Opcional)</option>
+                                            <option value="">Conta Pgto (Opcional)</option>
                                             {accounts?.filter(a => a.type === 'bank' || a.type === 'wallet').map(acc => (
                                                 <option key={acc.id} value={acc.id}>{acc.name}</option>
                                             ))}
                                         </select>
                                     )}
                                     {newAccType === 'credit' && (
-                                        <Input
-                                            type="number"
-                                            placeholder="Limite"
-                                            className="w-full sm:w-24"
-                                            value={newAccLimit}
-                                            onChange={e => setNewAccLimit(e.target.value)}
-                                        />
+                                        <div className="w-full sm:w-32">
+                                            <Input
+                                                type="number"
+                                                placeholder="Limite R$"
+                                                className="w-full"
+                                                value={newAccLimit}
+                                                onChange={e => setNewAccLimit(e.target.value)}
+                                            />
+                                        </div>
                                     )}
                                 </div>
                                 <Button type="submit" size="sm" className="w-full">

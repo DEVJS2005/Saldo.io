@@ -84,13 +84,15 @@ export const Layout = ({ children }) => {
   }, [user]);
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    } finally {
-      // Force redirect to ensure state clear, even if network fails
-      window.location.href = '/login';
+    if (await confirm('Deseja realmente sair da sua conta?', 'Sair')) {
+      try {
+        await signOut();
+      } catch (error) {
+        console.error('Error signing out:', error);
+      } finally {
+        // Force redirect to ensure state clear, even if network fails
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -138,9 +140,9 @@ export const Layout = ({ children }) => {
           {children}
 
           <footer className="py-6 text-center text-sm text-[var(--text-secondary)] border-t border-[var(--border-color)] mt-8">
-            <p>© {new Date().getFullYear()} Saldo.io. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Saldo.io. Todos os direitos reservados.</p>
             <p className="mt-1 text-xs opacity-70">
-              Made by <span className="font-semibold text-[var(--primary)]">JS Dev</span> AND <span className="font-semibold text-[var(--primary)]">Gemini</span>
+              Feito com ❤️ por <span className="font-semibold text-[var(--primary)]">JS Dev</span> & <span className="font-semibold text-[var(--primary)]">Gemini</span>
             </p>
           </footer>
         </div>

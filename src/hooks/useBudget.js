@@ -134,7 +134,18 @@ export function useBudget(monthDate = new Date()) {
 
   useEffect(() => {
     fetchBudget();
-  }, [fetchBudget]);
 
+    let txSub;
+    if (user?.canSync) {
+      txSub = supabase
+        .channel('budget_transactions_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => fetchBudget())
+        .subscribe();
+    }
+
+    return () => {
+      if (txSub) supabase.removeChannel(txSub);
+    };
+  }, [fetchBudget, user?.canSync]);
   return { ...stats, loading, refresh: fetchBudget };
 }

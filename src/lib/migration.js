@@ -2,7 +2,7 @@ import { db } from '../db/db';
 import { supabase } from './supabase';
 
 export async function migrateLocalData(userId) {
-  if (!userId) throw new Error('User not logged in');
+  if (!userId) throw new Error('Usuário não está logado');
 
   const result = {
     categories: 0,

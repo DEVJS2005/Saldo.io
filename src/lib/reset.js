@@ -6,7 +6,7 @@ export async function resetCloudData() {
   const { error: aErr } = await supabase.from('accounts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
   if (tErr || cErr || aErr) {
-    throw new Error('Failed to reset some data');
+    throw new Error('Falha ao resetar alguns dados');
   }
   return true;
 }

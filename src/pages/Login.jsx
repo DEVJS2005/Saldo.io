@@ -4,6 +4,7 @@ import { useDialog } from '../contexts/DialogContext'; // Import useDialog
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
+import { getErrorMessage } from '../utils/authErrors';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 
 export default function Login() {
@@ -29,7 +30,7 @@ export default function Login() {
             navigate('/');
         } catch (err) {
             // setError(err.message);
-            await alert(err.message || 'Erro ao fazer login', 'Erro de Acesso', 'error');
+            await alert(getErrorMessage(err), 'Erro de Acesso', 'error');
         } finally {
             setLoading(false);
         }

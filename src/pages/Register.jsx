@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext'; // Import useDialog
 import { supabase } from '../lib/supabase';
+import { getErrorMessage } from '../utils/authErrors';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -39,7 +40,7 @@ export default function Register() {
             setSuccess(true);
         } catch (err) {
             // setError(err.message);
-            await alert(err.message || 'Erro ao criar conta', 'Erro de Cadastro', 'error');
+            await alert(getErrorMessage(err), 'Erro de Cadastro', 'error');
         } finally {
             setLoading(false);
         }
@@ -69,14 +70,18 @@ export default function Register() {
                             </p>
                         </div>
 
-                        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 p-4 rounded-xl text-xs mb-8 text-left leading-relaxed">
-                            <strong className="block mb-1">⚠️ Atenção:</strong>
-                            Você deve clicar no link enviado ao seu e-mail para ativar sua conta antes de tentar o login.
+                        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 p-4 rounded-xl text-xs mb-8 text-left leading-relaxed shadow-sm">
+                            <strong className="block mb-1 flex items-center gap-1">
+                                <span className="text-lg">📩</span> Atenção:
+                            </strong>
+                            Verifique agora o link de confirmação que enviamos para o seu e-mail. **Você só conseguirá fazer login após clicar nesse link.**
+                            <br /><br />
+                            <span className="italic opacity-80">*Dica: Se não encontrar na caixa de entrada, verifique a pasta de **Lixo Eletrônico ou Spam**.*</span>
                         </div>
 
                         <Link to="/login" className="block w-full">
-                            <Button className="w-full h-11" variant="outline">
-                                Voltar para o Login
+                            <Button className="w-full h-11 transition-all hover:scale-[1.02] active:scale-[0.98]" variant="outline">
+                                Voltar para o Login (Após Confirmar)
                             </Button>
                         </Link>
                     </div>

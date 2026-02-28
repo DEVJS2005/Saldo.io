@@ -7,7 +7,7 @@ import { supabase } from './supabase';
  * ensuring they have the latest backup.
  */
 export async function syncCloudToLocal(userId) {
-    if (!userId) throw new Error('User ID required for sync');
+    if (!userId) throw new Error('ID do usuário necessário para sincronização');
 
     const result = {
         categories: 0,

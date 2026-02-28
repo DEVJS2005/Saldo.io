@@ -18,8 +18,8 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-2xl shadow-2xl border border-[var(--border-color)] overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
+      <div className="bg-[var(--bg-card)] w-full max-w-lg max-h-[100dvh] sm:max-h-[90dvh] flex flex-col rounded-2xl shadow-2xl border border-[var(--border-color)] overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex-none flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
@@ -28,7 +28,7 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
             <X size={20} />
           </button>
         </div>
-        <div className="p-6 max-h-[calc(100dvh-120px)] overflow-y-auto custom-scrollbar">
+        <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </div>

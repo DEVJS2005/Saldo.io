@@ -16,8 +16,7 @@ export default function Dashboard() {
   const { selectedDate, setSelectedDate } = useDate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [closeMonthOpen, setCloseMonthOpen] = useState(false);
-  const { income, expense, balanceProjected, balanceReal, transactions, accountBalances, loading } = useBudget(selectedDate);
-
+  const { income, expense, balanceProjected, balanceReal, transactions, accountBalances, loading, refresh } = useBudget(selectedDate);
   const formatCurrency = (val) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   return (
@@ -130,7 +129,7 @@ export default function Dashboard() {
         <TransactionForm
           onClose={() => setIsModalOpen(false)}
           defaultDate={selectedDate}
-          onSuccess={useBudget(selectedDate).refresh}
+          onSuccess={refresh}
         />
       </Modal>
 
