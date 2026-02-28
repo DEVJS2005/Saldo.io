@@ -201,7 +201,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
   const categories = allCategories?.filter(c => c.type === formData.type);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 pb-4">
       {/* Type Toggle */}
       <div className="flex p-1 bg-[var(--bg-input)] rounded-xl mb-4">
         {['receita', 'despesa'].map((t) => (
