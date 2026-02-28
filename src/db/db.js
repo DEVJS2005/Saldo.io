@@ -3,8 +3,9 @@ import Dexie from 'dexie';
 export const db = new Dexie('FinanceAppDB');
 
 // Version 4: Add soft delete
-db.version(4).stores({
-  accounts: '++id, name, type', 
+// Version 5: Add linkedAccountId
+db.version(5).stores({
+  accounts: '++id, name, type, linkedAccountId', 
   categories: '++id, name, type', 
   transactions: `
     ++id,
