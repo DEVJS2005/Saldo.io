@@ -105,11 +105,12 @@ export default function Transactions() {
           <h1 className="text-3xl font-bold">Transações</h1>
           <p className="text-[var(--text-secondary)]">Gerencie suas receitas e despesas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar w-full sm:w-auto">
           <MonthYearSelector selectedDate={selectedDate} onChange={setSelectedDate} />
-          <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2" data-testid="btn-add-transaction">
+          <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2 whitespace-nowrap flex-shrink-0" data-testid="btn-add-transaction">
             <Plus size={18} />
-            Nova Transação
+            <span className="hidden sm:inline">Nova Transação</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
       </div>
