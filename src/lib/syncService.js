@@ -70,7 +70,8 @@ export async function syncCloudToLocal(userId) {
             if (accounts?.length) {
                 const localAccs = accounts.map(a => ({
                     ...a,
-                    id: a.id // Keep UUID
+                    id: a.id, // Keep UUID
+                    linkedAccountId: a.linked_account_id || null // Map linked account
                 }));
                 await db.accounts.bulkAdd(localAccs);
                 result.accounts = localAccs.length;

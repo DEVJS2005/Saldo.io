@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Wrench, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X } from 'lucide-react';
 import { migrateLocalData } from '../lib/migration';
 import { resetCloudData } from '../lib/reset';
 import { db } from '../db/db';
@@ -24,6 +24,7 @@ export default function Settings() {
     const [newAccName, setNewAccName] = useState('');
     const [newAccType, setNewAccType] = useState('bank');
     const [newAccLimit, setNewAccLimit] = useState('');
+    const [newAccLinkedId, setNewAccLinkedId] = useState('');
 
     // Edits state
     const [limitEdits, setLimitEdits] = useState({});
@@ -31,6 +32,7 @@ export default function Settings() {
     const [editingCatId, setEditingCatId] = useState(null); // Currently editing ID
     const [accEdits, setAccEdits] = useState({}); // { id: 'New Name' }
     const [editingAccId, setEditingAccId] = useState(null); // Currently editing ID
+    const [accLinkedEdits, setAccLinkedEdits] = useState({}); // { id: 'Linked ID' }
 
     // --- Actions ---
 
@@ -101,11 +103,14 @@ export default function Settings() {
                 user_id: user.id,
                 name: newAccName,
                 type: newAccType,
-                limit: newAccType === 'credit' ? parseFloat(newAccLimit || 0) : 0
+                limit: newAccType === 'credit' ? parseFloat(newAccLimit || 0) : 0,
+                linked_account_id: (newAccType === 'credit' && newAccLinkedId) ? newAccLinkedId : null
             });
             if (error) throw error;
             setNewAccName('');
             setNewAccLimit('');
+            setNewAccLinkedId('');
+            setNewAccType('bank');
             await refreshData();
         } catch (err) {
             console.error(err);
@@ -116,6 +121,7 @@ export default function Settings() {
     const startEditingAccount = (acc) => {
         setEditingAccId(acc.id);
         setAccEdits(prev => ({ ...prev, [acc.id]: acc.name }));
+        setAccLinkedEdits(prev => ({ ...prev, [acc.id]: acc.linked_account_id || acc.linkedAccountId || '' }));
     };
 
     const cancelEditingAccount = () => {
@@ -124,12 +130,16 @@ export default function Settings() {
 
     const saveAccountName = async (id) => {
         const newName = accEdits[id];
+        const newLinkedId = accLinkedEdits[id];
         if (!newName || !newName.trim()) return;
 
         try {
             const { error } = await supabase
                 .from('accounts')
-                .update({ name: newName })
+                .update({
+                    name: newName,
+                    linked_account_id: newLinkedId || null
+                })
                 .eq('id', id);
 
             if (error) throw error;
@@ -194,9 +204,7 @@ export default function Settings() {
     };
 
     // Maintenance
-    const handleRepairTransactions = async () => {
-        await alert('Esta função não é necessária na nuvem.', 'Info');
-    };
+
 
     const handleExportData = async () => {
         // Export from Supabase
@@ -366,11 +374,14 @@ export default function Settings() {
                                     onChange={e => setNewAccName(e.target.value)}
                                     required
                                 />
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <select
-                                        className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-2 py-2 text-sm flex-1 focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                                        className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-2 py-2 text-sm flex-1 focus:ring-2 focus:ring-[var(--primary)] outline-none min-w-0"
                                         value={newAccType}
-                                        onChange={e => setNewAccType(e.target.value)}
+                                        onChange={e => {
+                                            setNewAccType(e.target.value);
+                                            if (e.target.value !== 'credit') setNewAccLinkedId('');
+                                        }}
                                     >
                                         <option value="bank">Conta Corrente</option>
                                         <option value="credit">Cartão de Crédito</option>
@@ -379,10 +390,22 @@ export default function Settings() {
                                         <option value="invest">Investimento</option>
                                     </select>
                                     {newAccType === 'credit' && (
+                                        <select
+                                            className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg px-2 py-2 text-sm flex-1 focus:ring-2 focus:ring-[var(--primary)] outline-none min-w-0"
+                                            value={newAccLinkedId}
+                                            onChange={e => setNewAccLinkedId(e.target.value)}
+                                        >
+                                            <option value="">Conta de Pagamento (Opcional)</option>
+                                            {accounts?.filter(a => a.type === 'bank' || a.type === 'wallet').map(acc => (
+                                                <option key={acc.id} value={acc.id}>{acc.name}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                    {newAccType === 'credit' && (
                                         <Input
                                             type="number"
                                             placeholder="Limite"
-                                            className="w-24"
+                                            className="w-full sm:w-24"
                                             value={newAccLimit}
                                             onChange={e => setNewAccLimit(e.target.value)}
                                         />
@@ -407,19 +430,33 @@ export default function Settings() {
 
                                             {/* Edit Account Name Mode */}
                                             {editingAccId === acc.id ? (
-                                                <div className="flex items-center gap-2 flex-1 mr-2">
-                                                    <input
-                                                        className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--primary)]"
-                                                        value={accEdits[acc.id] || ''}
-                                                        onChange={(e) => setAccEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
-                                                        autoFocus
-                                                    />
-                                                    <button onClick={() => saveAccountName(acc.id)} className="text-emerald-500 hover:text-emerald-400">
-                                                        <Save size={16} />
-                                                    </button>
-                                                    <button onClick={cancelEditingAccount} className="text-red-500 hover:text-red-400">
-                                                        <X size={16} />
-                                                    </button>
+                                                <div className="flex flex-col gap-2 flex-1 mr-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--primary)]"
+                                                            value={accEdits[acc.id] || ''}
+                                                            onChange={(e) => setAccEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
+                                                            autoFocus
+                                                        />
+                                                        <button onClick={() => saveAccountName(acc.id)} className="text-emerald-500 hover:text-emerald-400">
+                                                            <Save size={16} />
+                                                        </button>
+                                                        <button onClick={cancelEditingAccount} className="text-red-500 hover:text-red-400">
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                    {acc.type === 'credit' && (
+                                                        <select
+                                                            className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--primary)]"
+                                                            value={accLinkedEdits[acc.id] || ''}
+                                                            onChange={(e) => setAccLinkedEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
+                                                        >
+                                                            <option value="">Conta de Pagamento (Opcional)</option>
+                                                            {accounts?.filter(a => (a.type === 'bank' || a.type === 'wallet') && a.id !== acc.id).map(bankAcc => (
+                                                                <option key={bankAcc.id} value={bankAcc.id}>{bankAcc.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <div>
@@ -549,10 +586,7 @@ export default function Settings() {
                             </p>
                         </div>
                         <div className="flex flex-col gap-2 mt-auto">
-                            <Button onClick={handleRepairTransactions} variant="secondary" className="w-full justify-start">
-                                <Wrench size={16} className="mr-2" />
-                                Reparar Transações (Datas)
-                            </Button>
+
                             <Button onClick={handleResetApp} className="w-full justify-start bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20">
                                 <Trash2 size={16} className="mr-2" />
                                 Resetar App (Apagar Tudo)

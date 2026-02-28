@@ -24,7 +24,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            Dashboard
+            <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-bold px-2 py-1 rounded-md border border-[var(--primary)]/20">BETA</span>
+          </h1>
           <p className="text-[var(--text-secondary)]">Visão geral das suas finanças</p>
         </div>
 
@@ -37,8 +40,8 @@ export default function Dashboard() {
                 <CheckCircle size={16} className="mr-2" />
                 Mês Fechado
               </div>
-            ) : Object.values(accountBalances || {}).some(bal => Math.abs(bal) > 0.01) && (
-              <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real">
+            ) : (
+              <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real" className="flex items-center">
                 <WalletMinimal size={18} className="mr-1" />
                 Fechar Mês
               </Button>

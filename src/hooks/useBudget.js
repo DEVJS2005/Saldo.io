@@ -18,7 +18,7 @@ export function useBudget(monthDate = new Date()) {
 
   const fetchBudget = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
+    if (stats.transactions.length === 0) setLoading(true);
 
     const start = startOfMonth(monthDate).toISOString();
     const end = endOfMonth(monthDate).toISOString();
@@ -42,7 +42,7 @@ export function useBudget(monthDate = new Date()) {
 
         // Fetch Global Balance (RPC)
         const { data: summaryData, error: summaryError } = await supabase
-            .rpc('get_financial_summary');
+            .rpc('get_financial_summary', { p_end_date: null });
 
         if (summaryError) {
             console.error('Error fetching financial summary:', summaryError);
@@ -64,20 +64,25 @@ export function useBudget(monthDate = new Date()) {
 
             // 2. Global Balance Calculation (Client-side)
             const allTxs = await db.transactions.filter(t => t.deleted_at == null).toArray();
+            const allAccs = await db.accounts.toArray();
             
             allTxs.forEach(t => {
                 const val = Number(t.amount);
-                const accId = String(t.accountId);
                 
-                if (accountBalances[accId] === undefined) accountBalances[accId] = 0;
+                // Find account to resolve linked account
+                const acc = allAccs.find(a => String(a.id) === String(t.accountId));
+                const linkedId = acc?.linked_account_id || acc?.linkedAccountId;
+                const targetAccId = linkedId ? String(linkedId) : String(t.accountId);
+                
+                if (accountBalances[targetAccId] === undefined) accountBalances[targetAccId] = 0;
                 
                 if (t.paymentStatus === 'paid') {
                     if (t.type === 'receita') {
                         globalRealBalance += val;
-                        accountBalances[accId] += val;
+                        accountBalances[targetAccId] += val;
                     } else if (t.type === 'despesa') {
                         globalRealBalance -= val;
-                        accountBalances[accId] -= val;
+                        accountBalances[targetAccId] -= val;
                     }
                 }
             });

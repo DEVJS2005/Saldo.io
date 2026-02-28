@@ -89,7 +89,8 @@ export async function migrateLocalData(userId) {
                 user_id: userId, 
                 name: acc.name, 
                 type: acc.type,
-                limit: acc.limit || 0 
+                limit: acc.limit || 0,
+                linked_account_id: acc.linkedAccountId || null 
             })
             .select()
             .single();

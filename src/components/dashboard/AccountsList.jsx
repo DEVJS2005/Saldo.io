@@ -13,13 +13,36 @@ export const AccountsList = ({ transactions, globalBalances }) => {
 
         transactions.forEach(t => {
             const val = Number(t.amount);
+
+            // Find linked account
+            const acc = accounts?.find(a => String(a.id) === String(t.accountId));
+            const linkedId = acc?.linked_account_id || acc?.linkedAccountId;
+            const targetAccId = linkedId ? String(linkedId) : String(t.accountId);
+
+            if (!balances[targetAccId]) balances[targetAccId] = 0;
+            // Also keep track of the original account ID for Credit Card display logic
             if (!balances[t.accountId]) balances[t.accountId] = 0;
-            if (t.type === 'receita') balances[t.accountId] += val;
-            else if (t.type === 'despesa') balances[t.accountId] -= val;
+
+            if (t.type === 'receita') {
+                balances[targetAccId] += val;
+                // If the target is different, don't add credit card invoice back to credit card locally? 
+                // Wait, if it's a credit card transaction, the credit card MUST show the localized invoice!
+                // So the credit card invoice MUST exist in balances[t.accountId].
+                // The Bank Account MUST have the deducted value.
+                if (targetAccId !== String(t.accountId)) {
+                    balances[t.accountId] += val; // keep it for the invoice display
+                }
+            }
+            else if (t.type === 'despesa') {
+                balances[targetAccId] -= val;
+                if (targetAccId !== String(t.accountId)) {
+                    balances[t.accountId] -= val; // keep it for the invoice display
+                }
+            }
         });
 
         return balances;
-    }, [transactions]);
+    }, [transactions, accounts]);
 
     const getIcon = (type) => {
         switch (type) {

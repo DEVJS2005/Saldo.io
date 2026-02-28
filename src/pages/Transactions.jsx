@@ -31,7 +31,7 @@ export default function Transactions() {
   const [transactionToView, setTransactionToView] = useState(null);
 
   const { transactions, refresh, loading } = useBudget(selectedDate);
-  const { deleteTransaction } = useTransactions();
+  const { deleteTransaction, updateTransaction } = useTransactions();
 
   // Fetch Master Data
   const { categories, accounts } = useMasterData();
@@ -96,6 +96,20 @@ export default function Transactions() {
     }
   };
 
+  const handleToggleStatus = async (t, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    try {
+      const newStatus = t.paymentStatus === 'paid' ? 'pending' : 'paid';
+      await updateTransaction(t.id, { paymentStatus: newStatus }, 'single');
+      refresh();
+    } catch (err) {
+      console.error('Error toggling status:', err);
+    }
+  };
+
   const formatMoney = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   return (
@@ -105,11 +119,12 @@ export default function Transactions() {
           <h1 className="text-3xl font-bold">Transações</h1>
           <p className="text-[var(--text-secondary)]">Gerencie suas receitas e despesas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar w-full sm:w-auto">
           <MonthYearSelector selectedDate={selectedDate} onChange={setSelectedDate} />
-          <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2" data-testid="btn-add-transaction">
+          <Button onClick={() => setCreateModalOpen(true)} className="flex items-center gap-2 whitespace-nowrap flex-shrink-0" data-testid="btn-add-transaction">
             <Plus size={18} />
-            Nova Transação
+            <span className="hidden sm:inline">Nova Transação</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
       </div>
@@ -242,12 +257,16 @@ export default function Transactions() {
                       <td className="p-4 text-sm whitespace-nowrap opacity-80">{getCategoryName(t.categoryId)}</td>
                       <td className="p-4 text-sm whitespace-nowrap opacity-80">{getAccountName(t.accountId)}</td>
                       <td className="p-4 text-sm whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.paymentStatus === 'paid'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : 'bg-amber-500/10 text-amber-500'
-                          }`}>
+                        <button
+                          onClick={(e) => handleToggleStatus(t, e)}
+                          className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors active:scale-95 select-none ${t.paymentStatus === 'paid'
+                            ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
+                            }`}
+                          title={`Marcar como ${t.paymentStatus === 'paid' ? 'Pendente' : 'Pago'}`}
+                        >
                           {t.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
-                        </span>
+                        </button>
                       </td>
                       <td className="p-4 text-right font-medium whitespace-nowrap">
                         <span className={t.type === 'receita' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
@@ -318,12 +337,16 @@ export default function Transactions() {
 
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex gap-2">
-                      <span className={`px-2 py-0.5 rounded-full font-medium ${t.paymentStatus === 'paid'
-                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                        }`}>
+                      <button
+                        onClick={(e) => handleToggleStatus(t, e)}
+                        className={`px-2 py-0.5 rounded-full font-medium border transition-colors cursor-pointer active:scale-95 select-none ${t.paymentStatus === 'paid'
+                          ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20'
+                          }`}
+                        title={`Marcar como ${t.paymentStatus === 'paid' ? 'Pendente' : 'Pago'}`}
+                      >
                         {t.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
-                      </span>
+                      </button>
                       {t.totalInstallments > 1 && (
                         <span className="bg-[var(--bg-input)] border border-[var(--border-color)] px-2 py-0.5 rounded text-[var(--text-secondary)]">
                           {t.installmentNumber}/{t.totalInstallments}

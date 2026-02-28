@@ -5,6 +5,17 @@ import { seedUserData } from '../lib/seeder';
 
 const AuthContext = createContext({});
 
+// Timeout utility to prevent infinite hanging on mobile (network drop/backgrounding)
+const withTimeout = (promise, ms = 10000) => {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('Tempo limite excedido. Verifique sua conexão.')), ms);
+        promise.then(
+            res => { clearTimeout(timer); resolve(res); },
+            err => { clearTimeout(timer); reject(err); }
+        );
+    });
+};
+
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -12,11 +23,13 @@ export function AuthProvider({ children }) {
     const fetchProfile = async (sessionUser) => {
         if (!sessionUser) return null;
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('role, is_active, can_sync')
-                .eq('id', sessionUser.id)
-                .single();
+            const result = await withTimeout(
+                supabase.from('profiles').select('role, is_active, can_sync').eq('id', sessionUser.id).single(),
+                8000
+            );
+
+            const data = result.data;
+            const error = result.error;
 
             if (error && error.code !== 'PGRST116') {
                 console.error('Error fetching profile:', error);
@@ -29,6 +42,12 @@ export function AuthProvider({ children }) {
                 return null;
             }
 
+            // Cache values for offline/timeout fallback
+            localStorage.setItem('user_role_cache', data?.role || 'user');
+            if (data?.can_sync !== undefined) {
+                localStorage.setItem('user_can_sync_cache', data.can_sync ? 'true' : 'false');
+            }
+
             // Return user with role appended
             return {
                 ...sessionUser,
@@ -36,8 +55,16 @@ export function AuthProvider({ children }) {
                 canSync: data?.can_sync || false
             };
         } catch (err) {
-            console.error(err);
-            return sessionUser;
+            console.error('Timeout or error fetching profile:', err);
+            // On timeout or offline, recover from cache to prevent unwanted downgrades
+            const cachedRole = localStorage.getItem('user_role_cache') || 'user';
+            const cachedCanSync = localStorage.getItem('user_can_sync_cache') === 'true';
+
+            return {
+                ...sessionUser,
+                role: cachedRole,
+                canSync: cachedCanSync
+            };
         }
     };
 
