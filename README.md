@@ -5,7 +5,7 @@
 
 **Saldo.io** is a modern personal finance platform that combines the speed of a local app with the security of the cloud. Built with **React 19** and **Supabase**, it offers a premium experience for organizing your finances.
 
-![Status](https://img.shields.io/badge/Status-v0.5.0_(Stable)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-v0.8.0_(Stable)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 

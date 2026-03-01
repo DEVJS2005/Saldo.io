@@ -57,19 +57,20 @@ Secure data and unbreakable code.
 - [ ] **Local Backup**: Download full database file.
 - [ ] **Automated Testing (E2E & Unit)**: Vitest and Playwright setup to shield the interface against regressions and loading loops.
 
-## 🔮 v0.8.0 - SaaS Administration (Planned)
+## ✅ v0.8.0 - SaaS Administration (Completed)
 Advanced tools for business management.
-- [ ] **Business Metrics**:
-    - [ ] Real Financial Counter (Total balance sum).
-    - [ ] Active Users (DAU/MAU).
-    - [ ] Transaction Volume (New entries per period).
-- [ ] **Advanced Support**:
-    - [ ] User Search by Email.
-    - [ ] Manual Password Reset (Forced email send).
-    - [ ] Action Logs (Security audit).
-- [ ] **System Control**:
-    - [ ] Maintenance Mode (Lock login except Admin).
-    - [ ] Global Announcements (Dashboard message for all).
+- [x] **Business Metrics**:
+    - [x] Real Financial Counter (Total balance sum).
+    - [x] Active Users (DAU/MAU).
+    - [x] Transaction Volume (New entries per period).
+- [x] **Advanced Support**:
+    - [x] User Search by Email.
+    - [x] Manual Password Reset (Forced email and internal settings).
+    - [x] Action Logs (Security audit).
+    - [x] **Public Test Account**: One-click Demo Login with automated data reset.
+- [x] **System Control**:
+    - [x] Maintenance Mode (Lock login except Admin).
+    - [x] Global Announcements (Dashboard message for all).
     - [ ] Database Monitoring (Size and health).
 
 ## 🔮 Future

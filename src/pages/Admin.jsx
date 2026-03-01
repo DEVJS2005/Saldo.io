@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { format } from 'date-fns';
-import { Shield, Users, Calendar, Wrench, Bell, DollarSign, Activity, TrendingUp, Search, Key } from 'lucide-react';
+import { Shield, Users, Calendar, Wrench, Bell, DollarSign, Activity, TrendingUp, Search, Key, Database } from 'lucide-react';
 
 export default function Admin() {
     const { user } = useAuth();
@@ -19,13 +19,25 @@ export default function Admin() {
 
     // New State for admin features
     const [metrics, setMetrics] = useState(null);
+    const [dbHealth, setDbHealth] = useState(null);
     const [searchEmail, setSearchEmail] = useState('');
 
     useEffect(() => {
         fetchProfiles();
         fetchMaintenanceStatus();
         fetchMetrics();
+        fetchDbHealth();
     }, []);
+
+    const fetchDbHealth = async () => {
+        try {
+            const { data, error } = await supabase.rpc('get_db_health_metrics');
+            if (error) throw error;
+            setDbHealth(data);
+        } catch (err) {
+            console.error("Error fetching db health:", err);
+        }
+    };
 
     const fetchMetrics = async () => {
         try {
@@ -309,6 +321,42 @@ export default function Admin() {
                         </div>
                     </Card>
                 </div>
+            )}
+
+            {/* Database Monitoring */}
+            {dbHealth && (
+                <Card className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Database className="text-[var(--primary)]" size={24} />
+                        <h2 className="text-xl font-semibold">Monitoramento de Banco de Dados</h2>
+                    </div>
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <p className="text-sm text-[var(--text-secondary)]">Tamanho Total</p>
+                            <p className="text-2xl font-bold">{dbHealth.database_size}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-[var(--text-secondary)]">Status</p>
+                            <p className="text-lg font-medium text-emerald-500 flex items-center gap-1 justify-end">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> {dbHealth.status}
+                            </p>
+                        </div>
+                    </div>
+
+                    {dbHealth.tables && (
+                        <div>
+                            <p className="text-sm font-medium mb-3 border-b border-[var(--border-color)] pb-2 text-[var(--test-primary)]">Tamanho das Tabelas Principais</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {dbHealth.tables.map(t => (
+                                    <div key={t.table_name} className="flex justify-between items-center p-3 bg-[var(--bg-input)]/50 rounded-lg border border-[var(--border-color)]">
+                                        <span className="text-sm font-medium capitalize">{t.table_name}</span>
+                                        <span className="font-mono text-sm text-[var(--primary)]">{t.size}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </Card>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

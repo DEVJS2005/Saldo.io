@@ -1,0 +1,45 @@
+name: Post Release to Supabase Changelog
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  post-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Post to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RELEASE_TITLE: ${{ github.event.release.name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          # The changelog table usually expects a title, description, and maybe a version/tag.
+          # Here we use the Supabase REST API to insert a new row into the `changelog` table.
+          # Ensure you have set SUPABASE_URL and SUPABASE_SERVICE_KEY in your GitHub Secrets.
+          
+          # We use jq to properly escape the JSON payload
+          PAYLOAD=$(jq -n \
+            --arg title "Nova Release: $RELEASE_TAG - $RELEASE_TITLE" \
+            --arg content "$RELEASE_BODY" \
+            --arg type "feature" \
+            '{
+              title: $title,
+              content: $content,
+              type: $type
+            }')
+          
+          echo "Posting to Supabase..."
+          curl -s -X POST "${SUPABASE_URL}/rest/v1/changelog" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "$PAYLOAD"
+          
+          echo "Successfully posted the release to the changelog."

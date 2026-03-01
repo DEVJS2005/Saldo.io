@@ -57,18 +57,18 @@ Seus dados seguros e código inquebrável.
 - [ ] **Backup Local**: Baixar arquivo completo do banco de dados.
 - [ ] **Testes Automatizados (E2E e Unitários)**: Configuração do Vitest e Playwright para blindar a interface contra regressões e loops de carregamento.
 
-## 🔮 v0.8.0 - Administração SaaS (Planejado)
+## ✅ v0.8.0 - Administração SaaS (Concluído)
 Ferramentas avançadas para gestão do negócio.
-- [ ] **Métricas de Negócio**:
-    - [ ] Contador Financeiro Real (Soma total dos saldos).
-    - [ ] Usuários Ativos (DAU/MAU).
-    - [ ] Volume de Transações (Novas entradas por período).
-- [ ] **Suporte Avançado**:
-    - [ ] Busca de usuários por E-mail.
-    - [ ] Reset de Senha Manual (Envio de e-mail forçado).
-    - [ ] Logs de Ação (Auditoria de segurança).
-    - [ ] **Conta de Teste Pública**: Login sem verificação de e-mail com reset de senha permitido.
-- [ ] **Controle do Sistema**:
+- [x] **Métricas de Negócio**:
+    - [x] Contador Financeiro Real (Soma total dos saldos).
+    - [x] Usuários Ativos (DAU/MAU).
+    - [x] Volume de Transações (Novas entradas por período).
+- [x] **Suporte Avançado**:
+    - [x] Busca de usuários por E-mail.
+    - [x] Reset de Senha Manual (Envio de e-mail forçado e painel interno).
+    - [x] Logs de Ação (Auditoria de segurança).
+    - [x] **Conta de Teste Pública**: Login automático para Demonstração com reset.
+- [x] **Controle do Sistema**:
     - [x] Modo Manutenção (Travar login exceto Admin).
     - [x] Avisos Globais (Mensagem no dashboard de todos - Changelog).
     - [ ] Monitoramento de Banco de Dados (Tamanho e saúde).

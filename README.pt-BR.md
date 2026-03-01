@@ -5,7 +5,7 @@
 
 O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combina a velocidade de um app local com a segurança da nuvem. Desenvolvido com **React 19** e **Supabase**, ele oferece uma experiência premium para organizar suas finanças.
 
-![Status](https://img.shields.io/badge/Status-v0.5.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-v0.8.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 
@@ -28,9 +28,10 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 - **Anti-Falhas**: Sistema de logout seguro, proteção de rotas contra loops de histórico e resiliência à perda de conexão.
 
 ### ⚙️ Painel Administrativo (SaaS)
-- Gestão de usuários e permissões.
+- Gestão de usuários e permissões com busca avançada.
 - Controle de acesso a recursos Premium (Sync).
-- Auditoria e métricas de sistema.
+- Métricas de Sistema: Acompanhamento de Saldo Total, Volumes e Usuários Ativos.
+- Suporte VIP: Reset de senha forçado (via admin) e conta de Demonstração pública.
 - Modo de Manutenção (Trava do sistema).
 - Central de Avisos e Notificações (Changelog).
 
