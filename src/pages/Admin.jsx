@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { format } from 'date-fns';
-import { Shield, Users, Calendar, Wrench, Bell } from 'lucide-react';
+import { Shield, Users, Calendar, Wrench, Bell, DollarSign, Activity, TrendingUp, Search, Key } from 'lucide-react';
 
 export default function Admin() {
     const { user } = useAuth();
@@ -17,10 +17,25 @@ export default function Admin() {
     const [changelogForm, setChangelogForm] = useState({ title: '', content: '', type: 'feature' });
     const [submittingChangelog, setSubmittingChangelog] = useState(false);
 
+    // New State for admin features
+    const [metrics, setMetrics] = useState(null);
+    const [searchEmail, setSearchEmail] = useState('');
+
     useEffect(() => {
         fetchProfiles();
         fetchMaintenanceStatus();
+        fetchMetrics();
     }, []);
+
+    const fetchMetrics = async () => {
+        try {
+            const { data, error } = await supabase.rpc('get_admin_metrics');
+            if (error) throw error;
+            setMetrics(data);
+        } catch (err) {
+            console.error("Error fetching metrics:", err);
+        }
+    };
 
     const fetchProfiles = async () => {
         setLoading(true);
@@ -143,7 +158,26 @@ export default function Admin() {
         }
     };
 
+    const handlePasswordReset = async (email) => {
+        const confirmed = await confirm(
+            `Tem certeza que deseja forçar o reset de senha para ${email}? Um e-mail será enviado.`,
+            'Forçar Reset'
+        );
+        if (!confirmed) return;
 
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email);
+            if (error) throw error;
+            await alert(`E-mail de recuperação enviado para ${email}.`, 'Sucesso', 'success');
+        } catch (err) {
+            console.error('Error resetting password:', err);
+            await alert('Erro ao solicitar reset de senha.', 'Erro', 'error');
+        }
+    };
+
+    const filteredProfiles = profiles.filter(p =>
+        p.email.toLowerCase().includes(searchEmail.toLowerCase())
+    );
 
     const fetchMaintenanceStatus = async () => {
         try {
@@ -232,8 +266,51 @@ export default function Admin() {
 
     if (loading) return <div className="p-8 text-center text-[var(--text-secondary)]">Carregando painel...</div>;
 
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    };
+
     return (
         <div className="space-y-6">
+            {/* Business Metrics Row */}
+            {metrics && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="p-6 border-l-4 border-[var(--primary)] text-center sm:text-left">
+                        <div className="flex flex-col sm:flex-row items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">Saldo Movimentado (Plataforma)</p>
+                                <h3 className="text-2xl font-bold">{formatCurrency(metrics.total_balance)}</h3>
+                            </div>
+                            <div className="bg-[var(--primary)]/10 p-3 rounded-full mt-4 sm:mt-0">
+                                <DollarSign className="text-[var(--primary)]" size={24} />
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="p-6 border-l-4 border-emerald-500 text-center sm:text-left">
+                        <div className="flex flex-col sm:flex-row items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">Usuários Ativos / Total</p>
+                                <h3 className="text-2xl font-bold">{metrics.active_users} / {metrics.total_users}</h3>
+                            </div>
+                            <div className="bg-emerald-500/10 p-3 rounded-full mt-4 sm:mt-0">
+                                <Activity className="text-emerald-500" size={24} />
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="p-6 border-l-4 border-purple-500 text-center sm:text-left">
+                        <div className="flex flex-col sm:flex-row items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-[var(--text-secondary)] mb-1">Total de Transações</p>
+                                <h3 className="text-2xl font-bold">{metrics.total_transactions}</h3>
+                            </div>
+                            <div className="bg-purple-500/10 p-3 rounded-full mt-4 sm:mt-0">
+                                <TrendingUp className="text-purple-500" size={24} />
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Maintenance Toggle Card */}
                 <Card className="p-6">
@@ -342,6 +419,20 @@ export default function Admin() {
                 </div>
             )}
 
+            {/* Filters Row */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Buscar usuário por email..."
+                        value={searchEmail}
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg text-sm focus:ring-[var(--primary)] outline-none"
+                    />
+                </div>
+            </div>
+
             <Card className="p-0 overflow-hidden">
                 {/* Desktop Table */}
                 <div className="hidden sm:block overflow-x-auto">
@@ -358,14 +449,14 @@ export default function Admin() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-color)]">
-                            {profiles.length === 0 ? (
+                            {filteredProfiles.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="p-8 text-center text-[var(--text-secondary)]">
                                         Nenhum perfil encontrado.
                                     </td>
                                 </tr>
                             ) : (
-                                profiles.map(profile => (
+                                filteredProfiles.map(profile => (
                                     <tr key={profile.id} className="hover:bg-[var(--bg-input)]/20 transition-colors">
                                         <td className="p-4 font-mono text-xs opacity-70" title={profile.id}>
                                             {profile.id.slice(0, 8)}...
@@ -416,7 +507,7 @@ export default function Admin() {
                                                 {profile.role}
                                             </span>
                                         </td>
-                                        <td className="p-4 flex gap-2">
+                                        <td className="p-4 flex gap-2 flex-wrap">
                                             {/* Role Toggle */}
                                             {profile.id !== user.id && (
                                                 <button
@@ -440,9 +531,18 @@ export default function Admin() {
                                                         : 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10'
                                                         }`}
                                                 >
-                                                    {profile.is_active !== false ? 'Desativar' : 'Ativar'}
+                                                    {profile.is_active !== false ? 'Dstv' : 'Ativ'}
                                                 </button>
                                             )}
+
+                                            {/* Force Password Reset */}
+                                            <button
+                                                onClick={() => handlePasswordReset(profile.email)}
+                                                className="text-xs px-3 py-1.5 rounded-md border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                                title="Forçar reset de senha"
+                                            >
+                                                <Key size={14} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -453,12 +553,12 @@ export default function Admin() {
 
                 {/* Mobile Card View */}
                 <div className="sm:hidden divide-y divide-[var(--border-color)]">
-                    {profiles.length === 0 ? (
+                    {filteredProfiles.length === 0 ? (
                         <div className="p-8 text-center text-[var(--text-secondary)]">
                             Nenhum perfil encontrado.
                         </div>
                     ) : (
-                        profiles.map(profile => (
+                        filteredProfiles.map(profile => (
                             <div key={profile.id} className="p-4 space-y-4 hover:bg-[var(--bg-input)]/20 transition-colors">
                                 <div className="flex justify-between items-start">
                                     <div>
@@ -506,21 +606,28 @@ export default function Admin() {
                                 </div>
 
                                 {profile.id !== user.id && (
-                                    <div className="flex gap-2 pt-2 border-t border-[var(--border-color)]">
+                                    <div className="flex gap-2 pt-2 border-t border-[var(--border-color)] overflow-x-auto pb-1">
                                         <button
                                             onClick={() => toggleRole(profile.id, profile.role)}
-                                            className="flex-1 px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] hover:bg-[var(--bg-input)] text-[var(--text-secondary)] transition-colors"
+                                            className="flex-shrink-0 px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] hover:bg-[var(--bg-input)] text-[var(--text-secondary)] transition-colors"
                                         >
-                                            {profile.role === 'admin' ? 'Remover Admin' : 'Tornar Admin'}
+                                            {profile.role === 'admin' ? 'Retira Admin' : 'Dá Admin'}
                                         </button>
                                         <button
                                             onClick={() => toggleStatus(profile.id, profile.is_active !== false)}
-                                            className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${profile.is_active !== false
+                                            className={`flex-shrink-0 px-3 py-2 text-xs rounded-lg border transition-colors ${profile.is_active !== false
                                                 ? 'border-red-500/30 text-red-500 hover:bg-red-500/10'
                                                 : 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10'
                                                 }`}
                                         >
-                                            {profile.is_active !== false ? 'Bloquear Conta' : 'Ativar Conta'}
+                                            {profile.is_active !== false ? 'Bloquear' : 'Ativar'}
+                                        </button>
+                                        <button
+                                            onClick={() => handlePasswordReset(profile.email)}
+                                            className="flex-shrink-0 px-3 py-2 text-xs rounded-lg border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 transition-colors flex items-center justify-center gap-1"
+                                            title="Forçar reset de senha"
+                                        >
+                                            <Key size={14} /> Reset
                                         </button>
                                     </div>
                                 )}

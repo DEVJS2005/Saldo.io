@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X, KeySquare } from 'lucide-react';
 import { migrateLocalData } from '../lib/migration';
 import { resetCloudData } from '../lib/reset';
 import { db } from '../db/db';
@@ -33,6 +33,12 @@ export default function Settings() {
     const [accEdits, setAccEdits] = useState({}); // { id: 'New Name' }
     const [editingAccId, setEditingAccId] = useState(null); // Currently editing ID
     const [accLinkedEdits, setAccLinkedEdits] = useState({}); // { id: 'Linked ID' }
+
+    // Password State
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     // --- Actions ---
 
@@ -260,6 +266,52 @@ export default function Settings() {
             await alert('Erro crítico na migração: ' + err.message, 'Erro Fatal', 'error');
         } finally {
             setMigrating(false);
+        }
+    };
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+
+        if (newPassword !== confirmNewPassword) {
+            return alert('As senhas não coincidem.', 'Aviso', 'warning');
+        }
+
+        if (newPassword.length < 6) {
+            return alert('A nova senha deve ter pelo menos 6 caracteres.', 'Aviso', 'warning');
+        }
+
+        setIsChangingPassword(true);
+        try {
+            // 1. Verify current password by attempting to sign in
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email,
+                password: currentPassword,
+            });
+
+            if (signInError) {
+                // If the error implies invalid credentials, we show a specific message
+                if (signInError.message.includes('Invalid login credentials')) {
+                    throw new Error('A senha atual está incorreta.');
+                }
+                throw signInError;
+            }
+
+            // 2. Update to new password
+            const { error: updateError } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (updateError) throw updateError;
+
+            await alert('Senha alterada com sucesso!', 'Sucesso', 'success');
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmNewPassword('');
+        } catch (err) {
+            console.error('Password change error:', err);
+            await alert(err.message || 'Erro ao alterar a senha.', 'Erro', 'error');
+        } finally {
+            setIsChangingPassword(false);
         }
     };
 
@@ -516,6 +568,61 @@ export default function Settings() {
                     </Card>
                 </div>
             </div>
+
+            {/* Profile / Security Section */}
+            <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Segurança</h2>
+                <Card className="p-4">
+                    <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+                        <KeySquare size={18} className="text-[var(--primary)]" />
+                        Alterar Senha de Acesso
+                    </h3>
+
+                    <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
+                        <div className="space-y-1">
+                            <label className="text-xs text-[var(--text-secondary)] ml-1">Senha Atual</label>
+                            <Input
+                                type="password"
+                                placeholder="Digite sua senha atual"
+                                value={currentPassword}
+                                onChange={e => setCurrentPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-[var(--text-secondary)] ml-1">Nova Senha</label>
+                            <Input
+                                type="password"
+                                placeholder="Mínimo de 6 caracteres"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-[var(--text-secondary)] ml-1">Confirmar Nova Senha</label>
+                            <Input
+                                type="password"
+                                placeholder="Repita a nova senha"
+                                value={confirmNewPassword}
+                                onChange={e => setConfirmNewPassword(e.target.value)}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+
+                        <Button
+                            type="submit"
+                            disabled={isChangingPassword}
+                            className="w-full mt-2"
+                        >
+                            {isChangingPassword ? 'Verificando...' : 'Atualizar Senha'}
+                        </Button>
+                    </form>
+                </Card>
+            </div>
+
             {/* Maintenance Section */}
             <div className="space-y-4 md:col-span-2">
                 <h2 className="text-xl font-semibold">Manutenção e Dados</h2>

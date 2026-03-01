@@ -16,6 +16,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -126,8 +127,20 @@ function AppContent() {
       })
       .subscribe();
 
+    // 3. Listen for Password Recovery events (redirects from email links)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          // React Router's navigate isn't available outside Router, so we force redirect
+          // The route /reset-password will pick it up
+          window.location.href = '/reset-password';
+        }
+      }
+    );
+
     return () => {
       supabase.removeChannel(channel);
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
@@ -147,6 +160,11 @@ function AppContent() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/reset-password" element={
+        <Suspense fallback={<Loading />}>
+          <ResetPassword />
+        </Suspense>
+      } />
 
       <Route path="/*" element={
         <ProtectedRoute>

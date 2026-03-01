@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { getErrorMessage } from '../utils/authErrors';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function Login() {
     const { signIn, user, loading: authLoading } = useAuth();
@@ -31,6 +32,35 @@ export default function Login() {
         } catch (err) {
             // setError(err.message);
             await alert(getErrorMessage(err), 'Erro de Acesso', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDemoLogin = async () => {
+        setLoading(true);
+        try {
+            // 1. Log in with fixed demo credentials
+            const { error: signInError } = await signIn('teste@saldo.io', 'teste123');
+            if (signInError) {
+                // To display a nicer message if the admin hasn't created the user yet
+                throw new Error('A conta de demonstração ainda não foi configurada pelo administrador.');
+            }
+
+            // 2. Clear old data and insert fresh demo data
+            const { error: rpcError } = await supabase.rpc('reset_test_account');
+
+            if (rpcError) {
+                console.error("Failed to reset test account data:", rpcError);
+                // We don't block login if reset fails, just log it. Data might be messy.
+            }
+
+            // 3. Navigate to dashboard
+            navigate('/');
+
+        } catch (err) {
+            console.error(err);
+            await alert(err.message || getErrorMessage(err), 'Erro', 'error');
         } finally {
             setLoading(false);
         }
@@ -86,6 +116,18 @@ export default function Login() {
                     <Link to="/register" className="text-[var(--primary)] font-bold hover:underline transition-all">
                         Cadastre-se agora
                     </Link>
+                </div>
+
+                {/* Internal Demo Account Access */}
+                <div className="mt-6 pt-4 border-t border-[var(--border-color)]/10 text-center">
+                    <button
+                        type="button"
+                        onClick={handleDemoLogin}
+                        disabled={loading}
+                        className="text-xs text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium underline underline-offset-2 transition-colors disabled:opacity-50"
+                    >
+                        Acessar Conta de Demonstração (Interno)
+                    </button>
                 </div>
             </Card>
         </div>
