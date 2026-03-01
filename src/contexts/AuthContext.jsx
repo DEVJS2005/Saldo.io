@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
         try {
             const result = await withTimeout(
                 supabase.from('profiles').select('role, is_active, can_sync').eq('id', sessionUser.id).single(),
-                8000
+                15000
             );
 
             const data = result.data;
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
         let currentUserId = null;
         let fallbackTimer = setTimeout(() => {
             if (isMounted) setLoading(false);
-        }, 12000);
+        }, 20000);
 
         // Check active session
         const initSession = async () => {
