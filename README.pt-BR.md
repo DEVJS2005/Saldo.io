@@ -5,7 +5,7 @@
 
 O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combina a velocidade de um app local com a segurança da nuvem. Desenvolvido com **React 19** e **Supabase**, ele oferece uma experiência premium para organizar suas finanças.
 
-![Status](https://img.shields.io/badge/Status-v0.8.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-v0.9.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white) ![Coverage](https://img.shields.io/badge/Cobertura-70%25_mín-brightgreen)
 
 ---
 
@@ -25,6 +25,8 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 ### 🛡️ Segurança de Acesso
 - **Autenticação Robusta**: Login seguro via e-mail e tratamento de estados para evitar falhas de carregamento (limbo infinito).
 - **Proteção de Dados**: Políticas RLS (Row Level Security) garantem que apenas você acesse seus dados.
+- **Validação no Backend**: Funções RPC com `SECURITY DEFINER` validam permissões diretamente no banco — imunes a manipulação client-side.
+- **CSP Headers**: Content-Security-Policy e headers de segurança aplicados em produção via Vercel.
 - **Anti-Falhas**: Sistema de logout seguro, proteção de rotas contra loops de histórico e resiliência à perda de conexão.
 
 ### ⚙️ Painel Administrativo (SaaS)
@@ -34,6 +36,12 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 - Suporte VIP: Reset de senha forçado (via admin) e conta de Demonstração pública.
 - Modo de Manutenção (Trava do sistema).
 - Central de Avisos e Notificações (Changelog).
+- **Auditoria**: Tabela `audit_logs` imutável (append-only) registra toda ação do painel admin.
+
+### 🧹 Qualidade e CI/CD
+- **GitHub Actions**: Pipeline automático (Lint → Build + Testes) em todo PR e push.
+- **Cobertura de Código**: Threshold mínimo de 70% via Vitest + V8.
+- **Merge Protegido**: Branch `main` só aceita merges com todos os checks passando.
 
 ---
 
@@ -45,6 +53,8 @@ Este projeto utiliza o que há de mais moderno no ecossistema web:
 - **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) (Ícones)
 - **Dados Locais**: [Dexie.js](https://dexie.org/) (IndexedDB Wrapper)
 - **Backend / Nuvem**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, RPC)
+- **Testes**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + [Playwright](https://playwright.dev/) (E2E)
+- **CI/CD**: [GitHub Actions](https://github.com/features/actions)
 - **Deploy**: Vercel / Cloudflare Pages
 
 ---

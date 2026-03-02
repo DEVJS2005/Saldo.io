@@ -55,7 +55,7 @@ Seus dados seguros e código inquebrável.
 - [ ] **Exportação**: Gerar arquivos CSV/JSON das transações.
 - [ ] **Importação**: Restaurar backup ou importar de outros apps.
 - [ ] **Backup Local**: Baixar arquivo completo do banco de dados.
-- [ ] **Testes Automatizados (E2E e Unitários)**: Configuração do Vitest e Playwright para blindar a interface contra regressões e loops de carregamento.
+- [x] **Testes Automatizados (Unitários)**: Vitest com cobertura mínima de 70% — transações, parcelamentos, recorrências e migração de dados cobertos.
 
 ## ✅ v0.8.0 - Administração SaaS (Concluído)
 Ferramentas avançadas para gestão do negócio.
@@ -72,6 +72,17 @@ Ferramentas avançadas para gestão do negócio.
     - [x] Modo Manutenção (Travar login exceto Admin).
     - [x] Avisos Globais (Mensagem no dashboard de todos - Changelog).
     - [ ] Monitoramento de Banco de Dados (Tamanho e saúde).
+
+## ✅ v0.9.0 - Qualidade, CI/CD e Segurança (Concluído)
+Confiabilidade de produção e proteção de dados em camadas.
+- [x] **CI/CD (GitHub Actions)**: Pipeline com Lint obrigatório, Build automático e Testes — merge bloqueado sem checks passando.
+- [x] **Cobertura de Testes**: Relatório de cobertura com threshold mínimo de 70% (statements, branches, functions, lines).
+- [x] **CSP Headers**: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options e Referrer-Policy via Vercel.
+- [x] **Validação de Permissões no Backend**: Funções RPC (`check_user_permissions`, `check_admin_access`, `check_sync_access`) com `SECURITY DEFINER` — imunes a manipulação client-side.
+- [x] **Hook `usePermissions`**: Camada React para consumir as RPCs de permissão de forma segura antes de ações sensíveis.
+- [x] **Tabela `audit_logs`**: Log imutável (append-only) de todas as ações do painel admin, protegido por RLS.
+- [x] **RLS Policies**: Políticas de segurança para as tabelas `profiles`, `transactions`, `categories` e `accounts`.
+- [x] **Correção de Segurança**: Removido fallback de `localStorage` para `role/canSync` — timeout agora assume nível mínimo de permissão.
 
 ## 🔮 Futuro
 Ideias para longo prazo.
