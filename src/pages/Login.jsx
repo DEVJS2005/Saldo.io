@@ -7,6 +7,13 @@ import { Card } from '../components/ui/Card';
 import { getErrorMessage } from '../utils/authErrors';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+    email: z.string().email({ message: "E-mail inválido." }),
+    password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+});
+
 
 export default function Login() {
     const { signIn, user, loading: authLoading } = useAuth();
@@ -26,6 +33,13 @@ export default function Login() {
         setLoading(true);
         // setError(null);
         try {
+            const result = loginSchema.safeParse({ email, password });
+
+            if (!result.success) {
+                const firstError = result.error.errors[0].message;
+                return alert(firstError, 'Erro de Validação', 'error');
+            }
+
             const { error } = await signIn(email, password);
             if (error) throw error;
             navigate('/');

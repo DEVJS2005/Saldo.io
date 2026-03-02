@@ -1,8 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-import { seedUserData } from '../lib/seeder';
-
 const AuthContext = createContext({});
 
 // Timeout utility to prevent infinite hanging on mobile (network drop/backgrounding)
@@ -42,13 +40,11 @@ export function AuthProvider({ children }) {
                 return null;
             }
 
-            // Cache values for offline/timeout fallback
-            localStorage.setItem('user_role_cache', data?.role || 'user');
-            if (data?.can_sync !== undefined) {
-                localStorage.setItem('user_can_sync_cache', data.can_sync ? 'true' : 'false');
-            }
-
-            // Return user with role appended
+            // ⚠️ IMPORTANTE: user.role e user.canSync são usados apenas para
+            // decisões de UX (ex: exibir ou ocultar botões). Para ações
+            // sensíveis (ex: sync, painel admin, upload), use o hook
+            // usePermissions() que valida via RPC no backend — não pode
+            // ser manipulado pelo cliente.
             return {
                 ...sessionUser,
                 role: data?.role || 'user',
@@ -56,14 +52,13 @@ export function AuthProvider({ children }) {
             };
         } catch (err) {
             console.error('Timeout or error fetching profile:', err);
-            // On timeout or offline, recover from cache to prevent unwanted downgrades
-            const cachedRole = localStorage.getItem('user_role_cache') || 'user';
-            const cachedCanSync = localStorage.getItem('user_can_sync_cache') === 'true';
-
+            // Segurança: em caso de timeout/offline, assume o nível mínimo de
+            // permissão ('user', canSync: false). Nunca eleve permissões via
+            // fallback client-side — use usePermissions() para validação real.
             return {
                 ...sessionUser,
-                role: cachedRole,
-                canSync: cachedCanSync
+                role: 'user',
+                canSync: false
             };
         }
     };

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { migrateLocalData } from '../lib/migration';
-import { resetCloudData } from '../lib/reset';
 import { db } from '../db/db';
 
+// -----------------------------------------------
+// Mocks de chamadas do Supabase
+// -----------------------------------------------
 const mocks = vi.hoisted(() => ({
   insert: vi.fn(),
   select: vi.fn(),
@@ -13,22 +15,14 @@ const mocks = vi.hoisted(() => ({
   toArray: vi.fn(),
 }));
 
-// Chain setup
-mocks.select.mockReturnValue({ eq: mocks.eq });
-mocks.eq.mockResolvedValue({ data: [], error: null }); 
-mocks.insert.mockReturnValue({ select: () => ({ single: mocks.single }), error: null });
-mocks.single.mockResolvedValue({ data: { id: 'new-uuid-123' }, error: null });
-mocks.delete.mockReturnValue({ neq: mocks.neq });
-mocks.neq.mockResolvedValue({ error: null });
-
 vi.mock('../lib/supabase', () => ({
   supabase: {
-    from: vi.fn(() => ({
+    from: vi.fn((table) => ({
       select: mocks.select,
       insert: mocks.insert,
       delete: mocks.delete,
     })),
-  }
+  },
 }));
 
 // Mock Dexie
@@ -37,103 +31,149 @@ vi.mock('../db/db', () => ({
     categories: { toArray: mocks.toArray },
     accounts: { toArray: mocks.toArray },
     transactions: { toArray: mocks.toArray },
-  }
+  },
 }));
 
+/**
+ * Helper: configura o mock para um cenário de permissão concedida.
+ * A migration.js chama .select('can_upload_local_data').eq('id', userId).single()
+ * e depois .select('id, name').eq('user_id', userId) para categories e accounts.
+ */
+function setupPermissionGranted() {
+  // 1ª chamada: profiles.select().eq().single() → permissão concedida
+  mocks.select.mockReturnValueOnce({
+    eq: vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({
+        data: { can_upload_local_data: true },
+        error: null,
+      }),
+    }),
+  });
+}
+
+function setupCloudCatsAndAccs({ cats = [], accs = [] } = {}) {
+  // 2ª chamada: categories.select('id, name').eq('user_id', userId)
+  mocks.select.mockReturnValueOnce({
+    eq: vi.fn().mockResolvedValue({ data: cats, error: null }),
+  });
+  // 3ª chamada: accounts.select('id, name').eq('user_id', userId)
+  mocks.select.mockReturnValueOnce({
+    eq: vi.fn().mockResolvedValue({ data: accs, error: null }),
+  });
+}
+
 describe('Migration Logic', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-        // Reset chain defaults
-        mocks.select.mockReturnValue({ eq: mocks.eq });
-        mocks.eq.mockResolvedValue({ data: [] }); 
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Padrão para insert: retorna sucesso com um ID novo
+    mocks.insert.mockReturnValue({
+      select: () => ({
+        single: vi.fn().mockResolvedValue({ data: { id: 'new-uuid-123' }, error: null }),
+      }),
+      error: null,
+    });
+  });
+
+  it('should migrate data when cloud is empty', async () => {
+    setupPermissionGranted();
+    setupCloudCatsAndAccs({ cats: [], accs: [] });
+
+    // Dados Locais
+    mocks.toArray
+      .mockResolvedValueOnce([{ id: 1, name: 'Food', type: 'despesa' }])  // Categories
+      .mockResolvedValueOnce([{ id: 1, name: 'Bank', type: 'bank' }])    // Accounts
+      .mockResolvedValueOnce([                                             // Transactions
+        { description: 'Lunch', amount: 10, date: new Date().toISOString(), categoryId: 1, accountId: 1 }
+      ]);
+
+    // Insert de transactions retorna sucesso direto (sem .select().single())
+    mocks.insert.mockReturnValueOnce({ // categories insert
+      select: () => ({ single: vi.fn().mockResolvedValue({ data: { id: 'cat-uuid' }, error: null }) }),
+    });
+    mocks.insert.mockReturnValueOnce({ // accounts insert
+      select: () => ({ single: vi.fn().mockResolvedValue({ data: { id: 'acc-uuid' }, error: null }) }),
+    });
+    mocks.insert.mockResolvedValueOnce({ error: null }); // transactions bulk insert
+
+    const result = await migrateLocalData('user-123');
+
+    expect(result.categories).toBe(1);
+    expect(result.accounts).toBe(1);
+    expect(result.transactions).toBe(1);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('should handle existing cloud categories (The Duplicate Issue)', async () => {
+    setupPermissionGranted();
+    setupCloudCatsAndAccs({
+      cats: [{ id: 'existing-food-uuid', name: 'Food' }],
+      accs: [{ id: 'existing-bank-uuid', name: 'Bank' }],
     });
 
-    it('should migrate data when cloud is empty', async () => {
-        // Setup Local Data
-        mocks.toArray.mockResolvedValueOnce([{ id: 1, name: 'Food', type: 'despesa' }]); // Categories
-        mocks.toArray.mockResolvedValueOnce([{ id: 1, name: 'Bank', type: 'bank' }]); // Accounts
-        mocks.toArray.mockResolvedValueOnce([ // Transactions
-            { description: 'Lunch', amount: 10, date: new Date().toISOString(), categoryId: 1, accountId: 1 }
-        ]);
+    mocks.toArray
+      .mockResolvedValueOnce([{ id: 10, name: 'Food', type: 'despesa' }])
+      .mockResolvedValueOnce([{ id: 20, name: 'Bank', type: 'bank' }])
+      .mockResolvedValueOnce([
+        { description: 'Dinner', amount: 50, date: new Date().toISOString(), categoryId: 10, accountId: 20 }
+      ]);
 
-        // Setup Cloud Data (Empty)
-        mocks.eq.mockResolvedValueOnce({ data: [] }); // Categories
-        mocks.eq.mockResolvedValueOnce({ data: [] }); // Accounts
+    mocks.insert.mockResolvedValueOnce({ error: null }); // transactions bulk insert
 
-        // Run
-        const result = await migrateLocalData('user-123');
+    const result = await migrateLocalData('user-123');
 
-        expect(result.categories).toBe(1);
-        expect(result.accounts).toBe(1);
-        expect(result.transactions).toBe(1);
-        expect(result.errors).toHaveLength(0);
+    expect(result.categories).toBe(0); // nenhuma nova
+    expect(result.accounts).toBe(0);   // nenhuma nova
+    expect(result.transactions).toBe(1);
+
+    // Verifica que o insert da transação usou os IDs existentes da nuvem
+    const insertCall = mocks.insert.mock.calls[0]; // 1ª chamada de insert = transactions chunk
+    const insertedTx = insertCall[0][0]; // chunk[0]
+    expect(insertedTx.category_id).toBe('existing-food-uuid');
+    expect(insertedTx.account_id).toBe('existing-bank-uuid');
+  });
+
+  it('should NOT create duplicates when migrating data that matches Seeded data (Accents check)', async () => {
+    setupPermissionGranted();
+    setupCloudCatsAndAccs({
+      cats: [{ id: 'seeded-uuid-1', name: 'Alimentação' }],
+      accs: [],
     });
 
-    it('should handle existing cloud categories (The Duplicate Issue)', async () => {
-        // Setup Local Data
-        mocks.toArray.mockResolvedValueOnce([{ id: 10, name: 'Food', type: 'despesa' }]);
-        mocks.toArray.mockResolvedValueOnce([{ id: 20, name: 'Bank', type: 'bank' }]);
-        mocks.toArray.mockResolvedValueOnce([
-            { description: 'Dinner', amount: 50, date: new Date().toISOString(), categoryId: 10, accountId: 20 }
-        ]);
+    mocks.toArray
+      .mockResolvedValueOnce([{ id: 99, name: 'Alimentação', type: 'despesa' }])
+      .mockResolvedValueOnce([]) // Accounts
+      .mockResolvedValueOnce([]); // Transactions
 
-        // Setup Cloud Data (EXISTING)
-        mocks.eq.mockResolvedValueOnce({ data: [{ id: 'existing-food-uuid', name: 'Food' }] }); 
-        mocks.eq.mockResolvedValueOnce({ data: [{ id: 'existing-bank-uuid', name: 'Bank' }] });
+    const result = await migrateLocalData('user-123');
 
-        // Run
-        const result = await migrateLocalData('user-123');
+    expect(result.categories).toBe(0);
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
 
-        expect(result.categories).toBe(0); // 0 new
-        expect(result.accounts).toBe(0); // 0 new
-        expect(result.transactions).toBe(1); // 1 transaction inserted
-        
-        // Verify transaction insert used the correct mapped IDs
-        const insertCall = mocks.insert.mock.calls.find(call => call[0][0]?.description === 'Dinner' || call[0]?.description === 'Dinner');
-        // insert receives chunk array
-        const insertedTx = insertCall[0][0] || insertCall[0]; // chunk [0]
-        expect(insertedTx.category_id).toBe('existing-food-uuid');
-        expect(insertedTx.account_id).toBe('existing-bank-uuid');
+  it('should skip transactions with Invalid Date', async () => {
+    setupPermissionGranted();
+    setupCloudCatsAndAccs({ cats: [], accs: [] });
+
+    mocks.toArray
+      .mockResolvedValueOnce([{ id: 10, name: 'Food', type: 'despesa' }])
+      .mockResolvedValueOnce([{ id: 20, name: 'Bank', type: 'bank' }])
+      .mockResolvedValueOnce([
+        { description: 'Valid Tx', amount: 50, date: new Date().toISOString(), categoryId: 10, accountId: 20 },
+        { description: 'Invalid Tx', amount: 99, date: 'Invalid Date', categoryId: 10, accountId: 20 }
+      ]);
+
+    mocks.insert.mockReturnValueOnce({ // categories
+      select: () => ({ single: vi.fn().mockResolvedValue({ data: { id: 'cat-uuid' }, error: null }) }),
     });
-
-    it('should NOT create duplicates when migrating data that matches Seeded data (Accents check)', async () => {
-        // 1. Simulate "Seeded" Cloud Data
-        // 'Alimentação' is a common source of encoding issues
-        const seededCategories = [{ id: 'seeded-uuid-1', name: 'Alimentação', type: 'despesa' }];
-        mocks.eq.mockResolvedValueOnce({ data: seededCategories }); // Existing Cloud Cats
-        mocks.eq.mockResolvedValueOnce({ data: [] }); // Existing Cloud Accounts
-
-        // 2. Setup Local Data with SAME name
-        mocks.toArray.mockResolvedValueOnce([{ id: 99, name: 'Alimentação', type: 'despesa' }]); // Local Cats
-        mocks.toArray.mockResolvedValueOnce([]); // Local Accounts
-        mocks.toArray.mockResolvedValueOnce([]); // Local Tx
-
-        // Run
-        const result = await migrateLocalData('user-123');
-
-        // Should find match and NOT insert
-        expect(result.categories).toBe(0); 
-        expect(mocks.insert).not.toHaveBeenCalled();
+    mocks.insert.mockReturnValueOnce({ // accounts
+      select: () => ({ single: vi.fn().mockResolvedValue({ data: { id: 'acc-uuid' }, error: null }) }),
     });
+    mocks.insert.mockResolvedValueOnce({ error: null }); // transactions
 
-    it('should skip transactions with Invalid Date', async () => {
-        // Setup Local Data
-        mocks.toArray.mockResolvedValueOnce([{ id: 10, name: 'Food', type: 'despesa' }]); // Cats
-        mocks.toArray.mockResolvedValueOnce([{ id: 20, name: 'Bank', type: 'bank' }]); // Accs
-        mocks.toArray.mockResolvedValueOnce([
-            { description: 'Valid Tx', amount: 50, date: new Date().toISOString(), categoryId: 10, accountId: 20 },
-            { description: 'Invalid Tx', amount: 99, date: 'Invalid Date', categoryId: 10, accountId: 20 }
-        ]);
+    const result = await migrateLocalData('user-123');
 
-        // Setup Cloud Data (Empty)
-        mocks.eq.mockResolvedValueOnce({ data: [] }); 
-        mocks.eq.mockResolvedValueOnce({ data: [] }); 
-
-        // Run
-        const result = await migrateLocalData('user-123');
-
-        expect(result.transactions).toBe(1); // Only 1 valid tx
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0]).toContain('Invalid Date'); // Check error message
-    });
+    expect(result.transactions).toBe(1); // somente a transação válida
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('Invalid Date');
+  });
 });

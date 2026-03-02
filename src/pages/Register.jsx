@@ -7,6 +7,16 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+    email: z.string().email({ message: "E-mail inválido." }),
+    password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+    confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["confirmPassword"]
+});
 
 export default function Register() {
     const { signUp, user, loading: authLoading } = useAuth();
@@ -26,8 +36,11 @@ export default function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (password !== confirmPassword) {
-            return alert('As senhas não coincidem.', 'Erro de Validação', 'error');
+        const result = registerSchema.safeParse({ email, password, confirmPassword });
+
+        if (!result.success) {
+            const firstError = result.error.errors[0].message;
+            return alert(firstError, 'Erro de Validação', 'error');
         }
 
         setLoading(true);
