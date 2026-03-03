@@ -71,7 +71,7 @@ Ferramentas avançadas para gestão do negócio.
 - [x] **Controle do Sistema**:
     - [x] Modo Manutenção (Travar login exceto Admin).
     - [x] Avisos Globais (Mensagem no dashboard de todos - Changelog).
-    - [ ] Monitoramento de Banco de Dados (Tamanho e saúde).
+    - [x] Monitoramento de Banco de Dados (Tamanho, saúde, crescimento e índices com UI visual).
 
 ## ✅ v0.9.0 - Qualidade, CI/CD e Segurança (Concluído)
 Confiabilidade de produção e proteção de dados em camadas.

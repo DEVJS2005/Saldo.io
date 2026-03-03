@@ -324,40 +324,132 @@ export default function Admin() {
             )}
 
             {/* Database Monitoring */}
-            {dbHealth && (
-                <Card className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
+            <Card className="p-6">
+                <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
                         <Database className="text-[var(--primary)]" size={24} />
                         <h2 className="text-xl font-semibold">Monitoramento de Banco de Dados</h2>
                     </div>
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <p className="text-sm text-[var(--text-secondary)]">Tamanho Total</p>
-                            <p className="text-2xl font-bold">{dbHealth.database_size}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-sm text-[var(--text-secondary)]">Status</p>
-                            <p className="text-lg font-medium text-emerald-500 flex items-center gap-1 justify-end">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span> {dbHealth.status}
-                            </p>
-                        </div>
-                    </div>
+                    <button
+                        onClick={fetchDbHealth}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-input)] transition-colors flex items-center gap-1.5"
+                        title="Atualizar métricas"
+                    >
+                        <Activity size={12} /> Atualizar
+                    </button>
+                </div>
 
-                    {dbHealth.tables && (
-                        <div>
-                            <p className="text-sm font-medium mb-3 border-b border-[var(--border-color)] pb-2 text-[var(--test-primary)]">Tamanho das Tabelas Principais</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {dbHealth.tables.map(t => (
-                                    <div key={t.table_name} className="flex justify-between items-center p-3 bg-[var(--bg-input)]/50 rounded-lg border border-[var(--border-color)]">
-                                        <span className="text-sm font-medium capitalize">{t.table_name}</span>
-                                        <span className="font-mono text-sm text-[var(--primary)]">{t.size}</span>
-                                    </div>
-                                ))}
+                {!dbHealth ? (
+                    <div className="text-center py-8 text-[var(--text-secondary)] text-sm">
+                        <Database size={32} className="mx-auto mb-2 opacity-30" />
+                        <p>Carregando métricas do banco...</p>
+                        <p className="text-xs mt-1 opacity-60">Certifique-se de que a função <code>get_db_health_metrics()</code> foi executada no Supabase.</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Header: Tamanho + Status */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                            <div className="p-4 rounded-xl bg-[var(--bg-input)]/50 border border-[var(--border-color)]">
+                                <p className="text-xs text-[var(--text-secondary)] mb-1">Tamanho Total</p>
+                                <p className="text-xl font-bold">{dbHealth.database_size}</p>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">de 500 MB (Free)</p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-[var(--bg-input)]/50 border border-[var(--border-color)]">
+                                <p className="text-xs text-[var(--text-secondary)] mb-1">Status</p>
+                                <p className={`text-lg font-bold flex items-center gap-1.5 ${dbHealth.status === 'Saudável' ? 'text-emerald-500' :
+                                        dbHealth.status === 'Atenção' ? 'text-amber-500' : 'text-red-500'
+                                    }`}>
+                                    <span className={`w-2.5 h-2.5 rounded-full ${dbHealth.status === 'Saudável' ? 'bg-emerald-500' :
+                                            dbHealth.status === 'Atenção' ? 'bg-amber-500' : 'bg-red-500'
+                                        }`} />
+                                    {dbHealth.status}
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-[var(--bg-input)]/50 border border-[var(--border-color)]">
+                                <p className="text-xs text-[var(--text-secondary)] mb-1">Índices</p>
+                                <p className="text-xl font-bold">{dbHealth.index_size}</p>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">tamanho total</p>
+                            </div>
+                            <div className="p-4 rounded-xl bg-[var(--bg-input)]/50 border border-[var(--border-color)]">
+                                <p className="text-xs text-[var(--text-secondary)] mb-1">Crescimento (30d)</p>
+                                {dbHealth.growth ? (
+                                    <>
+                                        <p className={`text-xl font-bold flex items-center gap-1 ${(dbHealth.growth.growth_percent ?? 0) > 10 ? 'text-amber-500' :
+                                                (dbHealth.growth.growth_percent ?? 0) > 0 ? 'text-emerald-500' : 'text-[var(--text-secondary)]'
+                                            }`}>
+                                            {dbHealth.growth.growth_percent !== null
+                                                ? `${dbHealth.growth.growth_percent > 0 ? '+' : ''}${dbHealth.growth.growth_percent}%`
+                                                : '—'}
+                                        </p>
+                                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                                            {dbHealth.growth.last_30_days} tx nos últimos 30d
+                                        </p>
+                                    </>
+                                ) : (
+                                    <p className="text-xl font-bold text-[var(--text-secondary)]">—</p>
+                                )}
                             </div>
                         </div>
-                    )}
-                </Card>
-            )}
+
+                        {/* Barra de uso geral do banco */}
+                        {dbHealth.database_size_bytes && (
+                            <div className="mb-6">
+                                <div className="flex justify-between text-xs text-[var(--text-secondary)] mb-1.5">
+                                    <span>Uso do banco</span>
+                                    <span>{Math.min(100, ((dbHealth.database_size_bytes / (500 * 1024 * 1024)) * 100)).toFixed(1)}% de 500 MB</span>
+                                </div>
+                                <div className="h-2.5 bg-[var(--bg-input)] rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-500 ${dbHealth.status === 'Saudável' ? 'bg-emerald-500' :
+                                                dbHealth.status === 'Atenção' ? 'bg-amber-500' : 'bg-red-500'
+                                            }`}
+                                        style={{ width: `${Math.min(100, (dbHealth.database_size_bytes / (500 * 1024 * 1024)) * 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tabelas */}
+                        {dbHealth.tables && dbHealth.tables.length > 0 && (
+                            <div>
+                                <p className="text-sm font-medium mb-3 border-b border-[var(--border-color)] pb-2 text-[var(--text-secondary)]">
+                                    Tamanho das Tabelas
+                                </p>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        const maxBytes = Math.max(...dbHealth.tables.map(t => t.size_bytes || 0), 1);
+                                        return dbHealth.tables.map(t => (
+                                            <div key={t.table_name}>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-sm font-medium capitalize">{t.table_name}</span>
+                                                    <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+                                                        <span>{(t.row_count ?? 0).toLocaleString('pt-BR')} linhas</span>
+                                                        <span className="font-mono text-[var(--primary)] font-medium">{t.size}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="h-1.5 bg-[var(--bg-input)] rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-[var(--primary)]/60 rounded-full transition-all duration-500"
+                                                        style={{ width: `${((t.size_bytes || 0) / maxBytes) * 100}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Footer: timestamp */}
+                        {dbHealth.collected_at && (
+                            <p className="text-xs text-[var(--text-secondary)] text-right mt-4 opacity-50">
+                                Coletado em {new Date(dbHealth.collected_at).toLocaleString('pt-BR')}
+                            </p>
+                        )}
+                    </>
+                )}
+            </Card>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Maintenance Toggle Card */}
