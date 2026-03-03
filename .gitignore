@@ -34,6 +34,7 @@ dist-ssr
 !supabase_rls_policies.sql
 !supabase_audit_log.sql
 !supabase_rpc_permissions.sql
+!supabase_db_monitoring.sql
 
 # Playwright
 /test-results/
