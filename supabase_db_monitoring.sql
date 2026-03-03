@@ -4,6 +4,9 @@
 -- de tamanho, saúde e crescimento do banco de dados.
 -- ============================================================
 
+-- Drop necessário pois o tipo de retorno mudou (OR REPLACE não permite isso)
+DROP FUNCTION IF EXISTS get_db_health_metrics();
+
 CREATE OR REPLACE FUNCTION get_db_health_metrics()
 RETURNS JSONB
 LANGUAGE plpgsql
