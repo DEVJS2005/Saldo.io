@@ -27,6 +27,7 @@ dist-ssr
 !package.json
 !tsconfig.json
 !jsconfig.json
+!src/locales/*.json
 *.backup
 *.db
 *.sqlite
