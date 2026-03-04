@@ -2,8 +2,10 @@ import { useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { useMasterData } from '../../hooks/useMasterData';
 import { Wallet, CreditCard, Building2, Utensils, PiggyBank } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const AccountsList = ({ transactions, globalBalances }) => {
+    const { t } = useTranslation();
     const { accounts } = useMasterData();
 
     // Calculate Monthly Balances (Specifically for Credit Cards "Invoice")
@@ -57,7 +59,7 @@ export const AccountsList = ({ transactions, globalBalances }) => {
     if (!accounts) return null;
 
     return (
-        <Card title="Resumo por Conta (Mês)">
+        <Card title={t('dashboard.account_summary')}>
             <div className="space-y-4">
                 {accounts.map(acc => {
                     const isCredit = acc.type === 'credit';
@@ -85,7 +87,7 @@ export const AccountsList = ({ transactions, globalBalances }) => {
                                         <span className="font-medium">{acc.name}</span>
                                         <div className="flex items-center gap-3">
                                             <span className={!isCredit && rawBalance >= 0 ? 'text-[var(--success)]' : isCredit ? 'text-[var(--text-primary)]' : 'text-[var(--danger)]'}>
-                                                {isCredit ? 'Fatura: ' : ''}
+                                                {isCredit ? t('dashboard.invoice') + ' ' : ''}
                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayBalance)}
                                             </span>
                                         </div>
@@ -100,8 +102,8 @@ export const AccountsList = ({ transactions, globalBalances }) => {
                                     )}
                                     {isCredit && (
                                         <div className="text-xs text-[var(--text-secondary)] mt-1 flex justify-between">
-                                            <span>{usagePercent.toFixed(1)}% do limite</span>
-                                            <span>Limite: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(acc.limit)}</span>
+                                            <span>{usagePercent.toFixed(1)}% {t('dashboard.of_limit')}</span>
+                                            <span>{t('dashboard.limit')} {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(acc.limit)}</span>
                                         </div>
                                     )}
                                 </div>

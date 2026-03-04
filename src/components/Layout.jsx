@@ -7,6 +7,7 @@ import { syncCloudToLocal } from '../lib/syncService';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 const NavItem = ({ to, icon: Icon, label, active, onClick, testId }) => {
   if (onClick) {
@@ -44,6 +45,7 @@ const NavItem = ({ to, icon: Icon, label, active, onClick, testId }) => {
 };
 
 export const Layout = ({ children }) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const path = location.pathname;
   const { signOut, user } = useAuth();
@@ -191,16 +193,16 @@ export const Layout = ({ children }) => {
         </div>
 
         <nav className="space-y-2 flex-1">
-          <NavItem to="/" icon={LayoutDashboard} label="Dashboard" active={path === '/'} />
-          <NavItem to="/transactions" icon={Receipt} label="Transações" active={path === '/transactions'} />
-          <NavItem to="/reports" icon={PieChart} label="Relatórios" active={path === '/reports'} />
+          <NavItem to="/" icon={LayoutDashboard} label={t('sidebar.dashboard')} active={path === '/'} />
+          <NavItem to="/transactions" icon={Receipt} label={t('sidebar.transactions')} active={path === '/transactions'} />
+          <NavItem to="/reports" icon={PieChart} label={t('sidebar.reports')} active={path === '/reports'} />
           {user?.role === 'admin' && (
-            <NavItem to="/admin" icon={ShieldCheck} label="Admin" active={path === '/admin'} />
+            <NavItem to="/admin" icon={ShieldCheck} label={t('sidebar.admin')} active={path === '/admin'} />
           )}
         </nav>
 
         <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2">
-          <NavItem to="/settings" icon={Settings} label="Configurações" active={path === '/settings'} />
+          <NavItem to="/settings" icon={Settings} label={t('sidebar.settings')} active={path === '/settings'} />
           <NavItem icon={LogOut} label="Sair" onClick={handleLogout} testId="btn-logout" />
         </div>
       </aside>

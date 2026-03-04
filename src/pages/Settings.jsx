@@ -7,16 +7,20 @@ import { useDialog } from '../contexts/DialogContext';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X, KeySquare } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X, KeySquare, Monitor, Moon, Sun, Globe } from 'lucide-react';
 import { migrateLocalData } from '../lib/migration';
 import { resetCloudData } from '../lib/reset';
 import { db } from '../db/db';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Settings() {
     const { validateAndRepairTransactions } = useTransactions();
     const { categories, accounts, refreshData } = useMasterData();
     const { user } = useAuth();
     const { confirm, alert } = useDialog();
+    const { t, i18n } = useTranslation();
+    const { theme, setTheme } = useTheme();
 
     // Local state for inputs
     const [newCatName, setNewCatName] = useState('');
@@ -329,8 +333,8 @@ export default function Settings() {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold">Configurações</h1>
-                    <p className="text-[var(--text-secondary)]">Gerencie suas categorias e contas</p>
+                    <h1 className="text-3xl font-bold">{t('settings.title', 'Configurações')}</h1>
+                    <p className="text-[var(--text-secondary)]">Gerencie suas categorias, contas, aparência e segurança</p>
                 </div>
             </div>
 
@@ -355,8 +359,8 @@ export default function Settings() {
                                     value={newCatType}
                                     onChange={e => setNewCatType(e.target.value)}
                                 >
-                                    <option value="despesa">Despesa</option>
-                                    <option value="receita">Receita</option>
+                                    <option value="despesa">{t('common.expense', 'Despesa')}</option>
+                                    <option value="receita">{t('common.income', 'Receita')}</option>
                                 </select>
                                 <Button type="submit" size="sm" title="Adicionar" className="shrink-0">
                                     <Plus size={18} />
@@ -569,9 +573,61 @@ export default function Settings() {
                 </div>
             </div>
 
+            {/* Appearance Section */}
+            <div className="space-y-4">
+                <h2 className="text-xl font-semibold">{t('settings.appearance', 'Aparência')} & {t('settings.language', 'Idioma')}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="p-4">
+                        <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+                            <Monitor size={18} className="text-[var(--primary)]" />
+                            {t('settings.theme', 'Tema')}
+                        </h3>
+                        <div className="flex bg-[var(--bg-input)] p-1 rounded-xl">
+                            <button
+                                onClick={() => setTheme('light')}
+                                className={`flex-1 flex gap-2 items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${theme === 'light' ? 'bg-[var(--bg-card)] shadow text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            >
+                                <Sun size={16} /> {t('settings.light', 'Claro')}
+                            </button>
+                            <button
+                                onClick={() => setTheme('dark')}
+                                className={`flex-1 flex gap-2 items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${theme === 'dark' ? 'bg-[var(--bg-card)] shadow text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            >
+                                <Moon size={16} /> {t('settings.dark', 'Escuro')}
+                            </button>
+                            <button
+                                onClick={() => setTheme('system')}
+                                className={`flex-1 flex gap-2 items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${theme === 'system' ? 'bg-[var(--bg-card)] shadow text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            >
+                                <Monitor size={16} /> {t('settings.system', 'Sistema')}
+                            </button>
+                        </div>
+                    </Card>
+
+                    <Card className="p-4">
+                        <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
+                            <Globe size={18} className="text-[var(--primary)]" />
+                            {t('settings.language', 'Idioma')}
+                        </h3>
+                        <select
+                            className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                            value={i18n.language}
+                            onChange={(e) => {
+                                i18n.changeLanguage(e.target.value);
+                                localStorage.setItem('app-language', e.target.value);
+                            }}
+                        >
+                            <option value="pt-BR">Português (BR)</option>
+                            <option value="en">English (US)</option>
+                            <option value="es">Español (ES)</option>
+                        </select>
+                    </Card>
+                </div>
+            </div>
+
             {/* Profile / Security Section */}
             <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Segurança</h2>
+                <h2 className="text-xl font-semibold">{t('settings.security', 'Segurança')}</h2>
                 <Card className="p-4">
                     <h3 className="text-sm font-medium mb-4 flex items-center gap-2">
                         <KeySquare size={18} className="text-[var(--primary)]" />

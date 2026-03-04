@@ -3,10 +3,12 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { Card } from '../ui/Card';
 import { useMasterData } from '../../hooks/useMasterData';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 const COLORS = ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#6366f1', '#14b8a6'];
 
 export const Charts = ({ transactions }) => {
+    const { t } = useTranslation();
     const { categories } = useMasterData();
 
     const categoryData = useMemo(() => {
@@ -51,7 +53,7 @@ export const Charts = ({ transactions }) => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card title="Despesas por Categoria">
+            <Card title={t('dashboard.expenses_by_category')}>
                 <div className="h-[300px] w-full">
                     {categoryData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
@@ -74,12 +76,12 @@ export const Charts = ({ transactions }) => {
                             </PieChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="flex items-center justify-center h-full text-[var(--text-secondary)]">Sem despesas</div>
+                        <div className="flex items-center justify-center h-full text-[var(--text-secondary)]">{t('dashboard.no_expenses')}</div>
                     )}
                 </div>
             </Card>
 
-            <Card title="Fluxo Diário">
+            <Card title={t('dashboard.daily_flow')}>
                 <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={dailyData}>
@@ -89,8 +91,8 @@ export const Charts = ({ transactions }) => {
                                 contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px' }}
                             />
                             <Legend />
-                            <Bar dataKey="receita" fill="#10b981" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="despesa" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="receita" name={t('dashboard.incomes')} fill="#10b981" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="despesa" name={t('dashboard.expenses')} fill="#ef4444" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

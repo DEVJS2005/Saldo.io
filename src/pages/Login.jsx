@@ -8,6 +8,7 @@ import { getErrorMessage } from '../utils/authErrors';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 const loginSchema = z.object({
     email: z.string().email({ message: "E-mail inválido." }),
@@ -16,6 +17,7 @@ const loginSchema = z.object({
 
 
 export default function Login() {
+    const { t } = useTranslation();
     const { signIn, user, loading: authLoading } = useAuth();
     const { alert } = useDialog(); // Get alert
     const navigate = useNavigate();
@@ -37,7 +39,8 @@ export default function Login() {
 
             if (!result.success) {
                 const firstError = result.error.errors[0].message;
-                return alert(firstError, 'Erro de Validação', 'error');
+                const errKey = firstError.includes('E-mail') ? t('auth.err_invalid_email') : t('auth.err_password_length');
+                return alert(errKey, t('auth.err_validation'), 'error');
             }
 
             const { error } = await signIn(email, password);
@@ -45,7 +48,7 @@ export default function Login() {
             navigate('/');
         } catch (err) {
             // setError(err.message);
-            await alert(getErrorMessage(err), 'Erro de Acesso', 'error');
+            await alert(getErrorMessage(err, t), t('auth.err_access'), 'error');
         } finally {
             setLoading(false);
         }
@@ -58,7 +61,7 @@ export default function Login() {
             const { error: signInError } = await signIn('teste@saldo.io', 'teste123');
             if (signInError) {
                 // To display a nicer message if the admin hasn't created the user yet
-                throw new Error('A conta de demonstração ainda não foi configurada pelo administrador.');
+                throw new Error(t('auth.err_demo_not_setup'));
             }
 
             // 2. Clear old data and insert fresh demo data
@@ -74,7 +77,7 @@ export default function Login() {
 
         } catch (err) {
             console.error(err);
-            await alert(err.message || getErrorMessage(err), 'Erro', 'error');
+            await alert(err.message || getErrorMessage(err, t), t('errors.title_error'), 'error');
         } finally {
             setLoading(false);
         }
@@ -91,15 +94,15 @@ export default function Login() {
                         Saldo.io
                         <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full border border-[var(--primary)]/20 shadow-sm">BETA</span>
                     </h1>
-                    <p className="text-[var(--text-secondary)] text-sm">Acesse o poder de organizar a sua vida financeira</p>
+                    <p className="text-[var(--text-secondary)] text-sm">{t('auth.login_subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-1">
-                        <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">E-mail</label>
+                        <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">{t('auth.email_label')}</label>
                         <Input
                             type="email"
-                            placeholder="exemplo@email.com"
+                            placeholder={t('auth.email_placeholder')}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -108,10 +111,10 @@ export default function Login() {
                         />
                     </div>
                     <div className="space-y-1">
-                        <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">Senha</label>
+                        <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">{t('auth.password_label')}</label>
                         <Input
                             type="password"
-                            placeholder="••••••••"
+                            placeholder={t('auth.password_placeholder')}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -121,14 +124,14 @@ export default function Login() {
                     </div>
 
                     <Button type="submit" className="w-full h-11 text-base font-bold shadow-lg shadow-[var(--primary)]/20 transition-all hover:scale-[1.02] active:scale-[0.98]" disabled={loading} data-testid="btn-login">
-                        {loading ? 'Acessando...' : 'Entrar na Conta'}
+                        {loading ? t('auth.btn_login_loading') : t('auth.btn_login')}
                     </Button>
                 </form>
 
                 <div className="mt-8 pt-6 border-t border-[var(--border-color)]/20 text-center text-sm text-[var(--text-secondary)]">
-                    Não tem uma conta?{' '}
+                    {t('auth.no_account')}{' '}
                     <Link to="/register" className="text-[var(--primary)] font-bold hover:underline transition-all">
-                        Cadastre-se agora
+                        {t('auth.register_now')}
                     </Link>
                 </div>
 
@@ -140,7 +143,7 @@ export default function Login() {
                         disabled={loading}
                         className="text-xs text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium underline underline-offset-2 transition-colors disabled:opacity-50"
                     >
-                        Acessar Conta de Demonstração (Interno)
+                        {t('auth.demo_login')}
                     </button>
                 </div>
             </Card>

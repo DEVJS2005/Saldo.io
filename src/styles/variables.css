@@ -27,7 +27,7 @@
   --font-family: 'Inter', system-ui, sans-serif;
 }
 
-[data-theme="light"] {
+.light {
   --bg-primary: #f8fafc; /* Slate 50 */
   --bg-secondary: #ffffff; /* White */
   --bg-card: #ffffff;
@@ -94,5 +94,5 @@ body {
 }
 .input:focus {
   border-color: var(--primary);
-  ring: 2px solid var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }

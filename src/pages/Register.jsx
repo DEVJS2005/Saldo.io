@@ -8,6 +8,7 @@ import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 const registerSchema = z.object({
     email: z.string().email({ message: "E-mail inválido." }),
@@ -19,6 +20,7 @@ const registerSchema = z.object({
 });
 
 export default function Register() {
+    const { t } = useTranslation();
     const { signUp, user, loading: authLoading } = useAuth();
     const { alert } = useDialog(); // Get alert
     const navigate = useNavigate();
@@ -40,7 +42,11 @@ export default function Register() {
 
         if (!result.success) {
             const firstError = result.error.errors[0].message;
-            return alert(firstError, 'Erro de Validação', 'error');
+            let errKey = firstError;
+            if (firstError.includes('E-mail')) errKey = t('auth.err_invalid_email');
+            else if (firstError.includes('coincidem')) errKey = t('auth.err_passwords_match');
+            else errKey = t('auth.err_password_length');
+            return alert(errKey, t('auth.err_validation'), 'error');
         }
 
         setLoading(true);
@@ -53,7 +59,7 @@ export default function Register() {
             setSuccess(true);
         } catch (err) {
             // setError(err.message);
-            await alert(getErrorMessage(err), 'Erro de Cadastro', 'error');
+            await alert(getErrorMessage(err, t), t('auth.err_register'), 'error');
         } finally {
             setLoading(false);
         }
@@ -67,7 +73,7 @@ export default function Register() {
                         <span className="text-3xl">💰</span>
                     </div>
                     <h1 className="text-3xl font-bold mb-2 text-[var(--text-primary)]">Saldo.io</h1>
-                    <p className="text-[var(--text-secondary)] text-sm">Crie sua conta gratuita e comece agora</p>
+                    <p className="text-[var(--text-secondary)] text-sm">{t('auth.register_subtitle')}</p>
                 </div>
 
                 {success ? (
@@ -76,35 +82,35 @@ export default function Register() {
                             <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg shadow-emerald-500/20">
                                 ✓
                             </div>
-                            <h3 className="text-xl font-bold mb-3">Conta criada!</h3>
+                            <h3 className="text-xl font-bold mb-3">{t('auth.account_created')}</h3>
                             <p className="text-sm opacity-90 leading-relaxed">
-                                Enviamos um link de confirmação para:
+                                {t('auth.confirm_link_sent')}
                                 <strong className="block text-emerald-400 mt-1">{email}</strong>
                             </p>
                         </div>
 
                         <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 p-4 rounded-xl text-xs mb-8 text-left leading-relaxed shadow-sm">
                             <strong className="block mb-1 flex items-center gap-1">
-                                <span className="text-lg">📩</span> Atenção:
+                                <span className="text-lg">📩</span> {t('auth.attention')}
                             </strong>
-                            Verifique agora o link de confirmação que enviamos para o seu e-mail. **Você só conseguirá fazer login após clicar nesse link.**
+                            <span dangerouslySetInnerHTML={{ __html: t('auth.verify_link_msg').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                             <br /><br />
-                            <span className="italic opacity-80">*Dica: Se não encontrar na caixa de entrada, verifique a pasta de **Lixo Eletrônico ou Spam**.*</span>
+                            <span className="italic opacity-80" dangerouslySetInnerHTML={{ __html: t('auth.spam_tip').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>') }} />
                         </div>
 
                         <Link to="/login" className="block w-full">
                             <Button className="w-full h-11 transition-all hover:scale-[1.02] active:scale-[0.98]" variant="outline">
-                                Voltar para o Login (Após Confirmar)
+                                {t('auth.back_to_login')}
                             </Button>
                         </Link>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">E-mail</label>
+                            <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">{t('auth.email_label')}</label>
                             <Input
                                 type="email"
-                                placeholder="exemplo@email.com"
+                                placeholder={t('auth.email_placeholder')}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -112,10 +118,10 @@ export default function Register() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">Senha</label>
+                            <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">{t('auth.password_label')}</label>
                             <Input
                                 type="password"
-                                placeholder="Mínimo 6 caracteres"
+                                placeholder={t('auth.password_placeholder_reg')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 minLength={6}
@@ -124,10 +130,10 @@ export default function Register() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">Confirmar Senha</label>
+                            <label className="text-xs font-semibold text-[var(--text-muted)] ml-1">{t('auth.confirm_password_label')}</label>
                             <Input
                                 type="password"
-                                placeholder="Repita sua senha"
+                                placeholder={t('auth.confirm_password_placeholder')}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
@@ -136,16 +142,16 @@ export default function Register() {
                         </div>
 
                         <Button type="submit" className="w-full h-11 text-base font-bold shadow-lg shadow-[var(--primary)]/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2" disabled={loading}>
-                            {loading ? 'Criando conta...' : 'Criar minha Conta'}
+                            {loading ? t('auth.btn_register_loading') : t('auth.btn_register')}
                         </Button>
                     </form>
                 )}
 
                 {!success && (
                     <div className="mt-8 pt-6 border-t border-[var(--border-color)]/20 text-center text-sm text-[var(--text-secondary)]">
-                        Já tem uma conta?{' '}
+                        {t('auth.already_have_account')}{' '}
                         <Link to="/login" className="text-[var(--primary)] font-bold hover:underline transition-all">
-                            Fazer Login
+                            {t('auth.do_login')}
                         </Link>
                     </div>
                 )}

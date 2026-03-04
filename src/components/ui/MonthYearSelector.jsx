@@ -2,8 +2,10 @@ import { addMonths, subMonths, format, setMonth, setYear, getYear, getMonth } fr
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './Button';
+import { useTranslation } from 'react-i18next';
 
 export const MonthYearSelector = ({ selectedDate, onChange }) => {
+    const { t } = useTranslation();
     const currentYear = getYear(selectedDate);
     const currentMonth = getMonth(selectedDate);
 
@@ -28,8 +30,8 @@ export const MonthYearSelector = ({ selectedDate, onChange }) => {
     // Wait, if I select 2030, the range shifts. That's good.
 
     const months = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        t('months.m0'), t('months.m1'), t('months.m2'), t('months.m3'), t('months.m4'), t('months.m5'),
+        t('months.m6'), t('months.m7'), t('months.m8'), t('months.m9'), t('months.m10'), t('months.m11')
     ];
 
     return (

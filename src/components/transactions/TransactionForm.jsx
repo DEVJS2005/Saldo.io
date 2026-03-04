@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 // Force Update HMR
 import { useMasterData } from '../../hooks/useMasterData';
 import { useTransactions } from '../../hooks/useTransactions';
@@ -11,6 +12,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
   const { addTransaction, updateTransaction } = useTransactions();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { t } = useTranslation();
 
   const getLocalYMD = (dateObj) => {
     const d = new Date(dateObj);
@@ -201,24 +203,24 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
     <form onSubmit={handleSubmit} className="space-y-4 pb-4">
       {/* Type Toggle */}
       <div className="flex p-1 bg-[var(--bg-input)] rounded-xl mb-4">
-        {['receita', 'despesa'].map((t) => (
+        {['receita', 'despesa'].map((typeOption) => (
           <button
-            key={t}
+            key={typeOption}
             type="button"
-            onClick={() => setFormData(prev => ({ ...prev, type: t }))}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-lg capitalize transition-all ${formData.type === t
+            onClick={() => setFormData(prev => ({ ...prev, type: typeOption }))}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-lg capitalize transition-all ${formData.type === typeOption
               ? 'bg-[var(--bg-card)] text-[var(--primary)] shadow-sm'
               : 'text-[var(--text-secondary)]'
               }`}
           >
-            {t}
+            {typeOption === 'receita' ? t('common.income', 'Receita') : t('common.expense', 'Despesa')}
           </button>
         ))}
       </div>
 
       <Input
-        label="Descrição"
-        placeholder={formData.type === 'receita' ? "Ex: Salário" : "Ex: Supermercado"}
+        label={t('transactions.col_description', 'Descrição')}
+        placeholder={formData.type === 'receita' ? t('transactions.form_desc_placeholder_inc', 'Ex: Salário') : t('transactions.form_desc_placeholder_exp', 'Ex: Supermercado')}
         value={formData.description}
         onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
         required
@@ -229,7 +231,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Input
-            label="Valor (R$)"
+            label={t('transactions.form_amount', 'Valor (R$)')}
             type="number"
             step="0.01"
             placeholder="0,00"
@@ -248,12 +250,12 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
                 onChange={e => setFormData(prev => ({ ...prev, isInstallmentValue: e.target.checked }))}
                 className="accent-[var(--primary)] w-3 h-3"
               />
-              <label htmlFor="isInstallmentValue" className="text-xs text-[var(--text-secondary)]">Valor da Parcela?</label>
+              <label htmlFor="isInstallmentValue" className="text-xs text-[var(--text-secondary)]">{t('transactions.form_is_installment_value', 'Valor da Parcela?')}</label>
             </div>
           )}
         </div>
         <Input
-          label="Data"
+          label={t('transactions.col_date', 'Data')}
           type="date"
           value={formData.date}
           onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
@@ -263,22 +265,22 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select
-          label="Categoria"
+          label={t('transactions.col_category', 'Categoria')}
           value={formData.categoryId}
           onChange={e => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
           options={[
-            { value: '', label: 'Selecione...' },
+            { value: '', label: t('common.select', 'Selecione...') },
             ...(categories || []).map(c => ({ value: c.id, label: c.name }))
           ]}
           required
           data-testid="select-category"
         />
         <Select
-          label="Conta"
+          label={t('transactions.col_account', 'Conta')}
           value={formData.accountId}
           onChange={e => setFormData(prev => ({ ...prev, accountId: e.target.value }))}
           options={[
-            { value: '', label: 'Selecione...' },
+            { value: '', label: t('common.select', 'Selecione...') },
             ...(accounts || [])
               .filter(a => formData.type === 'receita' ? a.type !== 'credit' : true)
               .map(a => ({ value: a.id, label: a.name }))
@@ -300,14 +302,14 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
             disabled={formData.installments > 1}
           />
           <label htmlFor="isRecurring" className="text-sm">
-            {formData.type === 'receita' ? 'Receita Fixa (Mensal)' : 'Despesa Fixa (Mensal)'}
+            {formData.type === 'receita' ? t('transactions.form_recurring_income', 'Receita Fixa (Mensal)') : t('transactions.form_recurring_expense', 'Despesa Fixa (Mensal)')}
           </label>
         </div>
 
         {formData.type === 'despesa' && (
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <label className="text-xs text-[var(--text-secondary)] block mb-1">Total de Parcelas</label>
+              <label className="text-xs text-[var(--text-secondary)] block mb-1">{t('transactions.form_total_installments', 'Total de Parcelas')}</label>
               <input
                 type="number"
                 min="1"
@@ -320,7 +322,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
             </div>
             {formData.installments > 1 && (
               <div className="flex-1">
-                <label className="text-xs text-[var(--text-secondary)] block mb-1">Parcela Atual</label>
+                <label className="text-xs text-[var(--text-secondary)] block mb-1">{t('transactions.form_current_installment', 'Parcela Atual')}</label>
                 <input
                   type="number"
                   min="1"
@@ -336,14 +338,18 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
 
         {formData.installments > 1 && (
           <p className="text-xs text-[var(--text-secondary)]">
-            Gerando {formData.installments - formData.currentInstallment + 1} lançamentos: {formData.currentInstallment}/{formData.installments} até {formData.installments}/{formData.installments}.
+            {t('transactions.form_generating_installments', 'Gerando {{count}} lançamentos: {{current}}/{{total}} até {{total}}/{{total}}.', {
+              count: formData.installments - formData.currentInstallment + 1,
+              current: formData.currentInstallment,
+              total: formData.installments
+            })}
           </p>
         )}
       </div>
 
       {/* Payment Status */}
       <div className="flex items-center gap-4 pt-2">
-        <label className="text-sm font-medium">Status:</label>
+        <label className="text-sm font-medium">{t('transactions.form_status', 'Status:')}</label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -353,7 +359,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
               : 'border-[var(--border-color)] text-[var(--text-secondary)]'
               }`}
           >
-            Pago / Recebido
+            {t('transactions.paid_received', 'Pago / Recebido')}
           </button>
           <button
             type="button"
@@ -363,7 +369,7 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
               : 'border-[var(--border-color)] text-[var(--text-secondary)]'
               }`}
           >
-            Pendente
+            {t('transactions.pending', 'Pendente')}
           </button>
         </div>
       </div>
@@ -371,8 +377,8 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
       {error && <p className="text-red-500 text-sm bg-red-500/10 p-2 rounded-lg">{error}</p>}
 
       <div className="flex gap-3 pt-4">
-        <Button variant="ghost" className="flex-1" onClick={onClose} type="button">Cancelar</Button>
-        <Button className="flex-1" type="submit" isLoading={isLoading && !confirmModalOpen} data-testid="btn-save-transaction">Salvar</Button>
+        <Button variant="ghost" className="flex-1" onClick={onClose} type="button">{t('common.cancel', 'Cancelar')}</Button>
+        <Button className="flex-1" type="submit" isLoading={isLoading && !confirmModalOpen} data-testid="btn-save-transaction">{t('common.save', 'Salvar')}</Button>
       </div>
 
       {/* Confirmation Modal for Propagation */}
@@ -380,22 +386,22 @@ export const TransactionForm = ({ onClose, onSuccess, prefillType = 'despesa', d
         <Modal
           isOpen={confirmModalOpen}
           onClose={() => { setConfirmModalOpen(false); setIsLoading(false); setPendingSubmission(null); }}
-          title="Alteração em Série"
+          title={t('transactions.edit_series_title', 'Alteração em Série')}
         >
           <div className="space-y-4" data-testid="modal-confirm-recurring">
             <p className="text-[var(--text-primary)]">
-              Esta alteração afeta uma transação recorrente ou parcelada. Como deseja aplicar?
+              {t('transactions.edit_series_prompt', 'Esta alteração afeta uma transação recorrente ou parcelada. Como deseja aplicar?')}
             </p>
 
             <div className="flex flex-col gap-2 pt-2">
               <Button variant="secondary" onClick={() => handleConfirmPropagation('single')} data-testid="btn-propagate-single">
-                Apenas esta (Atual)
+                {t('transactions.edit_only_this', 'Apenas esta (Atual)')}
               </Button>
               <Button onClick={() => handleConfirmPropagation('future')} data-testid="btn-propagate-future">
-                Esta e as Futuras
+                {t('transactions.edit_this_and_future', 'Esta e as Futuras')}
               </Button>
               <Button variant="ghost" className="text-sm" onClick={() => handleConfirmPropagation('all')} data-testid="btn-propagate-all">
-                Todas (Série Completa)
+                {t('transactions.edit_all_series', 'Todas (Série Completa)')}
               </Button>
             </div>
           </div>

@@ -11,8 +11,10 @@ import { MonthYearSelector } from '../components/ui/MonthYearSelector';
 import { CloseMonthModal } from '../components/dashboard/CloseMonthModal';
 import { useDate } from '../contexts/DateContext';
 import { Skeleton } from '../components/ui/Skeleton';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { selectedDate, setSelectedDate } = useDate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [closeMonthOpen, setCloseMonthOpen] = useState(false);
@@ -24,10 +26,10 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            Dashboard
+            {t('dashboard.title', 'Dashboard')}
             <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-bold px-2 py-1 rounded-md border border-[var(--primary)]/20">BETA</span>
           </h1>
-          <p className="text-[var(--text-secondary)]">Visão geral das suas finanças</p>
+          <p className="text-[var(--text-secondary)]">{t('dashboard.overview', 'Visão geral das suas finanças')}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 items-center">
@@ -47,7 +49,7 @@ export default function Dashboard() {
             )}
             <Button onClick={() => setIsModalOpen(true)} size="sm" data-testid="btn-add-transaction">
               <Plus size={18} className="mr-1" />
-              Nova
+              {t('common.new', 'Nova')}
             </Button>
           </div>
         </div>
@@ -66,24 +68,24 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card title="Previsão (Fim do Mês)">
+            <Card title={t('dashboard.forecast')}>
               <div className={`text-3xl font-bold ${balanceProjected >= 0 ? 'text-[var(--text-primary)]' : 'text-[var(--danger)]'}`}>
                 {formatCurrency(balanceProjected)}
               </div>
-              <p className="text-xs text-[var(--text-secondary)] mt-1">Considerando pendências do mês</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">{t('dashboard.forecast_desc')}</p>
             </Card>
 
-            <Card title="Saldo Atual">
+            <Card title={t('dashboard.total_balance')}>
               <div className={`text-3xl font-bold ${balanceReal >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`} data-testid="balance-display">
                 {formatCurrency(balanceReal)}
               </div>
-              <p className="text-xs text-[var(--text-secondary)] mt-1">Dinheiro em caixa</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">{t('dashboard.cash_in_hand')}</p>
             </Card>
 
-            <Card title="Receitas">
+            <Card title={t('dashboard.incomes', 'Receitas')}>
               <div className="text-2xl font-semibold text-[var(--primary)]">{formatCurrency(income)}</div>
             </Card>
-            <Card title="Despesas">
+            <Card title={t('dashboard.expenses', 'Despesas')}>
               <div className="text-2xl font-semibold text-[var(--danger)]">{formatCurrency(expense)}</div>
             </Card>
           </div>
