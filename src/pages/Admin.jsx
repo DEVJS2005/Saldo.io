@@ -276,7 +276,8 @@ export default function Admin() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-[var(--text-secondary)]">Carregando painel...</div>;
+
+    if (loading) return <div className="p-8 text-center text-[var(--text-secondary)]">{t('common.loading', 'Carregando...')}</div>;
 
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -357,10 +358,10 @@ export default function Admin() {
                             <div className="p-4 rounded-xl bg-[var(--bg-input)]/50 border border-[var(--border-color)]">
                                 <p className="text-xs text-[var(--text-secondary)] mb-1">Status</p>
                                 <p className={`text-lg font-bold flex items-center gap-1.5 ${dbHealth.status === 'Saudável' ? 'text-emerald-500' :
-                                        dbHealth.status === 'Atenção' ? 'text-amber-500' : 'text-red-500'
+                                    dbHealth.status === 'Atenção' ? 'text-amber-500' : 'text-red-500'
                                     }`}>
                                     <span className={`w-2.5 h-2.5 rounded-full ${dbHealth.status === 'Saudável' ? 'bg-emerald-500' :
-                                            dbHealth.status === 'Atenção' ? 'bg-amber-500' : 'bg-red-500'
+                                        dbHealth.status === 'Atenção' ? 'bg-amber-500' : 'bg-red-500'
                                         }`} />
                                     {dbHealth.status}
                                 </p>
@@ -375,7 +376,7 @@ export default function Admin() {
                                 {dbHealth.growth ? (
                                     <>
                                         <p className={`text-xl font-bold flex items-center gap-1 ${(dbHealth.growth.growth_percent ?? 0) > 10 ? 'text-amber-500' :
-                                                (dbHealth.growth.growth_percent ?? 0) > 0 ? 'text-emerald-500' : 'text-[var(--text-secondary)]'
+                                            (dbHealth.growth.growth_percent ?? 0) > 0 ? 'text-emerald-500' : 'text-[var(--text-secondary)]'
                                             }`}>
                                             {dbHealth.growth.growth_percent !== null
                                                 ? `${dbHealth.growth.growth_percent > 0 ? '+' : ''}${dbHealth.growth.growth_percent}%`
@@ -401,7 +402,7 @@ export default function Admin() {
                                 <div className="h-2.5 bg-[var(--bg-input)] rounded-full overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all duration-500 ${dbHealth.status === 'Saudável' ? 'bg-emerald-500' :
-                                                dbHealth.status === 'Atenção' ? 'bg-amber-500' : 'bg-red-500'
+                                            dbHealth.status === 'Atenção' ? 'bg-amber-500' : 'bg-red-500'
                                             }`}
                                         style={{ width: `${Math.min(100, (dbHealth.database_size_bytes / (500 * 1024 * 1024)) * 100)}%` }}
                                     />

@@ -6,6 +6,7 @@ import {
     BarChart, Bar, Line, XAxis, YAxis, Tooltip,
     ResponsiveContainer, CartesianGrid, Legend, ComposedChart
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
 const fmtFull = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -26,6 +27,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export const MonthlyComparisonChart = ({ selectedDate }) => {
+    const { t } = useTranslation();
     const { data, loading } = useMonthlyComparison(selectedDate, 6);
 
     const summary = useMemo(() => {
@@ -49,8 +51,8 @@ export const MonthlyComparisonChart = ({ selectedDate }) => {
     return (
         <Card className="p-6">
             <div className="mb-5">
-                <h3 className="text-lg font-semibold">Comparativo Mensal (6 meses)</h3>
-                <p className="text-sm text-[var(--text-secondary)]">Receitas vs Despesas e saldo do mês</p>
+                <h3 className="text-lg font-semibold">{t('reports.monthly_comparison_title', 'Comparativo Mensal (6 meses)')}</h3>
+                <p className="text-sm text-[var(--text-secondary)]">{t('reports.monthly_comparison_subtitle', 'Receitas vs Despesas e saldo do mês')}</p>
             </div>
 
             <div className="h-[300px] w-full">
@@ -61,9 +63,9 @@ export const MonthlyComparisonChart = ({ selectedDate }) => {
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} tickFormatter={fmt} width={70} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ paddingBottom: '12px', fontSize: '12px' }} />
-                        <Bar name="Receitas" dataKey="receita" fill="#10b981" radius={[3, 3, 0, 0]} barSize={20} />
-                        <Bar name="Despesas" dataKey="despesa" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={20} />
-                        <Line name="Saldo do Mês" dataKey="saldo" type="monotone" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                        <Bar name={t('common.income', 'Receitas')} dataKey="receita" fill="#10b981" radius={[3, 3, 0, 0]} barSize={20} />
+                        <Bar name={t('common.expense', 'Despesas')} dataKey="despesa" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={20} />
+                        <Line name={t('reports.monthly_balance', 'Saldo do mês')} dataKey="saldo" type="monotone" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
@@ -71,21 +73,21 @@ export const MonthlyComparisonChart = ({ selectedDate }) => {
             {summary && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-[var(--border-color)]">
                     <div className="text-center">
-                        <p className="text-xs text-[var(--text-secondary)]">Melhor mês</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.best_month', 'Melhor mês')}</p>
                         <p className="text-sm font-semibold text-emerald-500">{summary.best.name}</p>
                         <p className="text-xs font-mono text-emerald-500">{fmtFull(summary.best.saldo)}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-xs text-[var(--text-secondary)]">Pior mês</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.worst_month', 'Pior mês')}</p>
                         <p className="text-sm font-semibold text-red-500">{summary.worst.name}</p>
                         <p className="text-xs font-mono text-red-500">{fmtFull(summary.worst.saldo)}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-xs text-[var(--text-secondary)]">Saldo médio</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.average_balance', 'Saldo médio')}</p>
                         <p className={`text-sm font-semibold ${summary.avg >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{fmtFull(summary.avg)}</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-xs text-[var(--text-secondary)]">Tendência</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.trend', 'Tendência')}</p>
                         <p className={`text-sm font-semibold ${summary.trend >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                             {summary.trend >= 0 ? '↗' : '↘'} {fmtFull(Math.abs(summary.trend))}
                         </p>

@@ -18,16 +18,20 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
+import { useTranslation } from 'react-i18next';
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  const { t } = useTranslation();
+  if (loading) return <div className="flex items-center justify-center h-screen">{t('common.loading', 'Carregando...')}</div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 }
 
 function ProtectedAdminRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+  const { t } = useTranslation();
+  if (loading) return <div className="flex items-center justify-center h-screen">{t('common.loading', 'Carregando...')}</div>;
   if (!user || user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }

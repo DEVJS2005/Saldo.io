@@ -5,6 +5,7 @@ import {
 import { Card } from '../ui/Card';
 import { useMonthlyComparison } from '../../hooks/useMonthlyComparison';
 import { Skeleton } from '../ui/Skeleton';
+import { useTranslation } from 'react-i18next';
 
 const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
 const fmtFull = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -25,6 +26,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export function FluxoMensalChart({ selectedDate }) {
+    const { t } = useTranslation();
     const { data, loading } = useMonthlyComparison(selectedDate, 12);
 
     const totalReceita = data.reduce((s, d) => s + d.receita, 0);
@@ -44,20 +46,20 @@ export function FluxoMensalChart({ selectedDate }) {
         <Card className="p-6">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold">Fluxo Mensal (12 meses)</h3>
-                    <p className="text-sm text-[var(--text-secondary)]">Receitas, despesas e saldo acumulado</p>
+                    <h3 className="text-lg font-semibold">{t('reports.monthly_flow_title', 'Fluxo Mensal (12 meses)')}</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{t('reports.monthly_flow_subtitle', 'Receitas, despesas e saldo acumulado')}</p>
                 </div>
                 <div className="flex gap-4 text-right">
                     <div>
-                        <p className="text-xs text-[var(--text-secondary)]">Total Receitas</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.total_incomes', 'Total Receitas')}</p>
                         <p className="text-base font-bold text-emerald-500">{fmtFull(totalReceita)}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-[var(--text-secondary)]">Total Despesas</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.total_expenses', 'Total Despesas')}</p>
                         <p className="text-base font-bold text-red-500">{fmtFull(totalDespesa)}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-[var(--text-secondary)]">Saldo Acumulado</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('reports.accumulated_balance', 'Saldo Acumulado')}</p>
                         <p className={`text-base font-bold ${saldoFinal >= 0 ? 'text-[var(--primary)]' : 'text-red-500'}`}>{fmtFull(saldoFinal)}</p>
                     </div>
                 </div>
@@ -72,9 +74,9 @@ export function FluxoMensalChart({ selectedDate }) {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{ paddingBottom: '12px', fontSize: '12px' }} />
                         <ReferenceLine y={0} stroke="var(--border-color)" strokeDasharray="4 4" />
-                        <Bar name="Receitas" dataKey="receita" fill="#10b981" radius={[3, 3, 0, 0]} barSize={16} />
-                        <Bar name="Despesas" dataKey="despesa" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={16} />
-                        <Line name="Saldo Acumulado" dataKey="saldo_acumulado" type="monotone" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 3, fill: 'var(--primary)' }} activeDot={{ r: 5 }} />
+                        <Bar name={t('common.income', 'Receitas')} dataKey="receita" fill="#10b981" radius={[3, 3, 0, 0]} barSize={16} />
+                        <Bar name={t('common.expense', 'Despesas')} dataKey="despesa" fill="#ef4444" radius={[3, 3, 0, 0]} barSize={16} />
+                        <Line name={t('reports.accumulated_balance', 'Saldo Acumulado')} dataKey="saldo_acumulado" type="monotone" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 3, fill: 'var(--primary)' }} activeDot={{ r: 5 }} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>

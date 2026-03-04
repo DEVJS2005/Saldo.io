@@ -75,14 +75,14 @@ export const Layout = ({ children }) => {
             localStorage.setItem('has_cloud_access', 'false');
             setIsMigrating(false); // Stop loading before alert
             await alert(
-              'Seu plano Premium expirou. Baixamos seus dados mais recentes da nuvem para este dispositivo. Você pode continuar usando o sistema em Modo Local.',
-              'Modo Local Ativado',
+              t('layout.premium_expired_desc', 'Seu plano Premium expirou. Baixamos seus dados mais recentes da nuvem para este dispositivo. Você pode continuar usando o sistema em Modo Local.'),
+              t('layout.local_mode_activated', 'Modo Local Ativado'),
               'info'
             );
           } else {
             setIsMigrating(false);
             console.error(result.error);
-            await alert('Falha ao baixar backup da nuvem. Entre em contato com o suporte.', 'Erro', 'error');
+            await alert(t('layout.backup_failed', 'Falha ao baixar backup da nuvem. Entre em contato com o suporte.'), t('layout.error', 'Erro'), 'error');
           }
         } catch (e) {
           setIsMigrating(false);
@@ -148,7 +148,7 @@ export const Layout = ({ children }) => {
   };
 
   const handleLogout = async () => {
-    if (await confirm('Deseja realmente sair da sua conta?', 'Sair')) {
+    if (await confirm(t('layout.logout_confirm', 'Deseja realmente sair da sua conta?'), t('common.logout', 'Sair'))) {
       try {
         await signOut();
       } catch (error) {
@@ -164,8 +164,8 @@ export const Layout = ({ children }) => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-        <h2 className="text-xl font-bold animate-pulse">Sincronizando dados...</h2>
-        <p className="text-[var(--text-secondary)]">Baixando backup da nuvem para uso offline.</p>
+        <h2 className="text-xl font-bold animate-pulse">{t('layout.syncing_data', 'Sincronizando dados...')}</h2>
+        <p className="text-[var(--text-secondary)]">{t('layout.downloading_backup', 'Baixando backup da nuvem para uso offline.')}</p>
       </div>
     );
   }
@@ -203,7 +203,7 @@ export const Layout = ({ children }) => {
 
         <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2">
           <NavItem to="/settings" icon={Settings} label={t('sidebar.settings')} active={path === '/settings'} />
-          <NavItem icon={LogOut} label="Sair" onClick={handleLogout} testId="btn-logout" />
+          <NavItem icon={LogOut} label={t('common.logout', 'Sair')} onClick={handleLogout} testId="btn-logout" />
         </div>
       </aside>
 
@@ -234,7 +234,7 @@ export const Layout = ({ children }) => {
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto custom-scrollbar bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center sticky top-0 bg-[var(--bg-card)]/90 backdrop-blur-sm">
-                  <h3 className="font-semibold">Atualizações</h3>
+                  <h3 className="font-semibold">{t('layout.updates', 'Atualizações')}</h3>
                   <button onClick={() => setShowNotifications(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                     <X size={16} />
                   </button>
@@ -243,7 +243,7 @@ export const Layout = ({ children }) => {
                 <div className="divide-y divide-[var(--border-color)]">
                   {changelogs.length === 0 ? (
                     <div className="p-6 text-center text-sm text-[var(--text-secondary)]">
-                      Nenhuma novidade por enquanto.
+                      {t('layout.no_updates', 'Nenhuma novidade por enquanto.')}
                     </div>
                   ) : (
                     changelogs.map(log => (
@@ -275,9 +275,9 @@ export const Layout = ({ children }) => {
           {children}
 
           <footer className="py-6 text-center text-sm text-[var(--text-secondary)] border-t border-[var(--border-color)] mt-8">
-            <p>© {new Date().getFullYear()} Saldo.io. Todos os direitos reservados.</p>
+            <p>© {new Date().getFullYear()} Saldo.io. {t('layout.all_rights_reserved', 'Todos os direitos reservados.')}</p>
             <p className="mt-1 text-xs opacity-70">
-              Feito com ❤️ por <span className="font-semibold text-[var(--primary)]">JS Dev</span> & <span className="font-semibold text-[var(--primary)]">Gemini</span>
+              {t('layout.made_by', 'Feito com ❤️ por')} <span className="font-semibold text-[var(--primary)]">JS Dev</span> & <span className="font-semibold text-[var(--primary)]">Gemini</span>
             </p>
           </footer>
         </div>

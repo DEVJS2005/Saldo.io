@@ -39,12 +39,12 @@ export default function Dashboard() {
             {transactions.some(t => t.description.includes('Fechamento de Mês')) ? (
               <div className="flex items-center text-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--success)]/20">
                 <CheckCircle size={16} className="mr-2" />
-                Mês Fechado
+                {t('dashboard.month_closed', 'Mês Fechado')}
               </div>
             ) : (
-              <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title="Zerar Saldo Real" className="flex items-center">
+              <Button onClick={() => setCloseMonthOpen(true)} size="sm" variant="secondary" title={t('dashboard.reset_real_balance', 'Zerar Saldo Real')} className="flex items-center">
                 <WalletMinimal size={18} className="mr-1" />
-                Fechar Mês
+                {t('dashboard.close_month', 'Fechar Mês')}
               </Button>
             )}
             <Button onClick={() => setIsModalOpen(true)} size="sm" data-testid="btn-add-transaction">
@@ -126,7 +126,7 @@ export default function Dashboard() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Nova Transação"
+        title={t('dashboard.new_transaction_title', 'Nova Transação')}
       >
         <TransactionForm
           onClose={() => setIsModalOpen(false)}
@@ -138,7 +138,7 @@ export default function Dashboard() {
       <Modal
         isOpen={closeMonthOpen}
         onClose={() => setCloseMonthOpen(false)}
-        title="Fechar Mês / Zerar Saldo"
+        title={t('dashboard.close_month_modal_title', 'Fechar Mês / Zerar Saldo')}
       >
         <CloseMonthModal onClose={() => setCloseMonthOpen(false)} selectedDate={selectedDate} />
       </Modal>

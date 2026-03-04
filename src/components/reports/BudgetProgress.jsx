@@ -5,10 +5,11 @@ import { useBudget } from '../../hooks/useBudget';
 import { useMasterData } from '../../hooks/useMasterData';
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
+import { useTranslation } from 'react-i18next';
 
 const fmtFull = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-function BudgetRow({ budget, spent, categoryName, onEdit, onDelete }) {
+function BudgetRow({ budget, spent, categoryName, onEdit, onDelete, t }) {
     const pct = budget.limitAmount > 0 ? Math.min(100, (spent / budget.limitAmount) * 100) : 0;
     const color = pct >= 100 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-emerald-500';
     const textColor = pct >= 100 ? 'text-red-500' : pct >= 70 ? 'text-amber-500' : 'text-emerald-500';
@@ -19,10 +20,10 @@ function BudgetRow({ budget, spent, categoryName, onEdit, onDelete }) {
                 <span className="font-medium text-sm">{categoryName}</span>
                 <div className="flex items-center gap-3">
                     <span className={`text-xs font-mono font-bold ${textColor}`}>{fmtFull(spent)} / {fmtFull(budget.limitAmount)}</span>
-                    <button onClick={() => onEdit(budget)} className="text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors" title="Editar">
+                    <button onClick={() => onEdit(budget)} className="text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors" title={t('common.edit', 'Editar')}>
                         <Pencil size={13} />
                     </button>
-                    <button onClick={() => onDelete(budget.id)} className="text-[var(--text-secondary)] hover:text-red-500 transition-colors" title="Remover">
+                    <button onClick={() => onDelete(budget.id)} className="text-[var(--text-secondary)] hover:text-red-500 transition-colors" title={t('common.remove', 'Remover')}>
                         <Trash2 size={13} />
                     </button>
                 </div>
@@ -31,14 +32,14 @@ function BudgetRow({ budget, spent, categoryName, onEdit, onDelete }) {
                 <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
             </div>
             <div className="flex justify-between text-xs text-[var(--text-secondary)]">
-                <span>{pct.toFixed(0)}% utilizado</span>
-                <span>Restante: {fmtFull(Math.max(0, budget.limitAmount - spent))}</span>
+                <span>{pct.toFixed(0)}% {t('reports.used', 'utilizado')}</span>
+                <span>{t('reports.remaining', 'Restante:')} {fmtFull(Math.max(0, budget.limitAmount - spent))}</span>
             </div>
         </div>
     );
 }
 
-function AddEditForm({ categories, usedCategoryIds, initial, onSave, onCancel }) {
+function AddEditForm({ categories, usedCategoryIds, initial, onSave, onCancel, t }) {
     const [categoryId, setCategoryId] = useState(initial?.categoryId || '');
     const [amount, setAmount] = useState(initial?.limitAmount?.toString() || '');
     const [saving, setSaving] = useState(false);
@@ -56,7 +57,7 @@ function AddEditForm({ categories, usedCategoryIds, initial, onSave, onCancel })
 
     return (
         <div className="p-4 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 space-y-3">
-            <p className="text-sm font-semibold">{initial ? 'Editar Orçamento' : 'Novo Orçamento'}</p>
+            <p className="text-sm font-semibold">{initial ? t('reports.edit_budget', 'Editar Orçamento') : t('reports.new_budget', 'Novo Orçamento')}</p>
             <div className="flex flex-col sm:flex-row gap-2">
                 {!initial && (
                     <select
@@ -64,7 +65,7 @@ function AddEditForm({ categories, usedCategoryIds, initial, onSave, onCancel })
                         onChange={e => setCategoryId(e.target.value)}
                         className="flex-1 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm outline-none"
                     >
-                        <option value="">Selecione uma categoria...</option>
+                        <option value="">{t('reports.select_category', 'Selecione uma categoria...')}</option>
                         {availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                 )}
@@ -73,14 +74,14 @@ function AddEditForm({ categories, usedCategoryIds, initial, onSave, onCancel })
                     type="number"
                     min="0.01"
                     step="0.01"
-                    placeholder="Limite (R$)"
+                    placeholder={t('reports.limit', 'Limite (R$)')}
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     className="w-full sm:w-36 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm outline-none"
                 />
                 <div className="flex gap-2">
                     <button onClick={handleSave} disabled={saving} className="px-3 py-2 bg-[var(--primary)] text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-1">
-                        <Check size={14} /> {saving ? '...' : 'Salvar'}
+                        <Check size={14} /> {saving ? '...' : t('common.save', 'Salvar')}
                     </button>
                     <button onClick={onCancel} className="px-3 py-2 border border-[var(--border-color)] rounded-lg text-sm hover:bg-[var(--bg-input)] transition-colors">
                         <X size={14} />
@@ -92,6 +93,7 @@ function AddEditForm({ categories, usedCategoryIds, initial, onSave, onCancel })
 }
 
 export function BudgetProgress({ selectedDate }) {
+    const { t } = useTranslation();
     const { budgets, loading: loadingBudgets, setBudgetLimit, deleteBudgetLimit } = useBudgetLimits(selectedDate);
     const { transactions, loading: loadingTx } = useBudget(selectedDate);
     const { categories, loading: loadingCats } = useMasterData();
@@ -143,15 +145,15 @@ export function BudgetProgress({ selectedDate }) {
         <Card className="p-6">
             <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h3 className="text-lg font-semibold">Orçamentos por Categoria</h3>
-                    <p className="text-sm text-[var(--text-secondary)]">Limites mensais de gastos</p>
+                    <h3 className="text-lg font-semibold">{t('reports.budgets_by_category', 'Orçamentos por Categoria')}</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{t('reports.budgets_by_category_subtitle', 'Limites mensais de gastos')}</p>
                 </div>
                 {!showAdd && (
                     <button
                         onClick={() => setShowAdd(true)}
                         className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 hover:bg-[var(--primary)]/20 transition-colors"
                     >
-                        <Plus size={14} /> Novo
+                        <Plus size={14} /> {t('common.new', 'Novo')}
                     </button>
                 )}
             </div>
@@ -163,6 +165,7 @@ export function BudgetProgress({ selectedDate }) {
                         usedCategoryIds={usedCategoryIds}
                         onSave={handleSave}
                         onCancel={() => setShowAdd(false)}
+                        t={t}
                     />
                 </div>
             )}
@@ -170,8 +173,8 @@ export function BudgetProgress({ selectedDate }) {
             {budgets.length === 0 && !showAdd ? (
                 <div className="text-center py-10 text-[var(--text-secondary)] text-sm">
                     <p className="text-3xl mb-2">🎯</p>
-                    <p className="font-medium">Nenhum orçamento definido</p>
-                    <p className="text-xs mt-1 opacity-60">Clique em "Novo" para definir um limite de gastos por categoria.</p>
+                    <p className="font-medium">{t('reports.no_budgets', 'Nenhum orçamento definido')}</p>
+                    <p className="text-xs mt-1 opacity-60">{t('reports.no_budgets_hint', 'Clique em "Novo" para definir um limite de gastos por categoria.')}</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -187,6 +190,7 @@ export function BudgetProgress({ selectedDate }) {
                                     initial={{ ...budget, name: cat?.name }}
                                     onSave={(_, amount) => handleSave(budget.categoryId, amount)}
                                     onCancel={() => setEditing(null)}
+                                    t={t}
                                 />
                             );
                         }
@@ -198,6 +202,7 @@ export function BudgetProgress({ selectedDate }) {
                                 categoryName={cat?.name || 'Categoria'}
                                 onEdit={setEditing}
                                 onDelete={handleDelete}
+                                t={t}
                             />
                         );
                     })}

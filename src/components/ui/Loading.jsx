@@ -1,6 +1,8 @@
 import { Wallet } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Loading() {
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
             <div className="relative">
@@ -10,7 +12,7 @@ export default function Loading() {
                 <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-[var(--bg-primary)] animate-ping"></div>
             </div>
             <h2 className="mt-6 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-400 animate-pulse">
-                Carregando Saldo.io...
+                {t('common.loading', 'Carregando...')}
             </h2>
         </div>
     );

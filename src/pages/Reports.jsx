@@ -6,6 +6,7 @@ import { FluxoMensalChart } from '../components/reports/FluxoMensalChart';
 import { GastosPorCategoriaChart } from '../components/reports/GastosPorCategoriaChart';
 import { BudgetProgress } from '../components/reports/BudgetProgress';
 import { TrendingUp, BarChart2, Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function SectionTitle({ icon: Icon, title, subtitle }) {
     return (
@@ -22,6 +23,7 @@ function SectionTitle({ icon: Icon, title, subtitle }) {
 }
 
 export default function Reports() {
+    const { t } = useTranslation();
     const { selectedDate, setSelectedDate } = useDate();
     const { income, expense } = useBudget(selectedDate);
 
@@ -33,8 +35,8 @@ export default function Reports() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold">Relatórios</h1>
-                    <p className="text-[var(--text-secondary)]">Análise detalhada das suas finanças</p>
+                    <h1 className="text-3xl font-bold">{t('reports.title', 'Relatórios')}</h1>
+                    <p className="text-[var(--text-secondary)]">{t('reports.subtitle', 'Análise detalhada das suas finanças')}</p>
                 </div>
                 <MonthYearSelector selectedDate={selectedDate} onChange={setSelectedDate} />
             </div>
@@ -42,15 +44,15 @@ export default function Reports() {
             {/* Resumo rápido do mês */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-                    <p className="text-xs text-[var(--text-secondary)] mb-1">Receitas do mês</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">{t('reports.monthly_income', 'Receitas do mês')}</p>
                     <p className="text-xl font-bold text-emerald-500">{formatCurrency(income)}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-                    <p className="text-xs text-[var(--text-secondary)] mb-1">Despesas do mês</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">{t('reports.monthly_expense', 'Despesas do mês')}</p>
                     <p className="text-xl font-bold text-red-500">{formatCurrency(expense)}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] col-span-2 sm:col-span-1">
-                    <p className="text-xs text-[var(--text-secondary)] mb-1">Saldo do mês</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">{t('reports.monthly_balance', 'Saldo do mês')}</p>
                     <p className={`text-xl font-bold ${(income - expense) >= 0 ? 'text-[var(--primary)]' : 'text-red-500'}`}>
                         {formatCurrency(income - expense)}
                     </p>
@@ -59,13 +61,13 @@ export default function Reports() {
 
             {/* ── Seção 1: Visão Geral do Mês ── */}
             <section>
-                <SectionTitle icon={BarChart2} title="Visão Geral do Mês" subtitle="Distribuição de gastos por categoria" />
+                <SectionTitle icon={BarChart2} title={t('reports.overview_title', 'Visão Geral do Mês')} subtitle={t('reports.overview_subtitle', 'Distribuição de gastos por categoria')} />
                 <GastosPorCategoriaChart selectedDate={selectedDate} />
             </section>
 
             {/* ── Seção 2: Evolução Histórica ── */}
             <section>
-                <SectionTitle icon={TrendingUp} title="Evolução Histórica" subtitle="Fluxo dos últimos 12 meses e comparativo semestral" />
+                <SectionTitle icon={TrendingUp} title={t('reports.evolution_title', 'Evolução Histórica')} subtitle={t('reports.evolution_subtitle', 'Fluxo dos últimos 12 meses e comparativo semestral')} />
                 <div className="space-y-6">
                     <FluxoMensalChart selectedDate={selectedDate} />
                     <MonthlyComparisonChart selectedDate={selectedDate} />
@@ -74,7 +76,7 @@ export default function Reports() {
 
             {/* ── Seção 3: Orçamentos ── */}
             <section>
-                <SectionTitle icon={Target} title="Orçamentos" subtitle="Limites mensais de gastos por categoria" />
+                <SectionTitle icon={Target} title={t('reports.budgets_title', 'Orçamentos')} subtitle={t('reports.budgets_subtitle', 'Limites mensais de gastos por categoria')} />
                 <BudgetProgress selectedDate={selectedDate} />
             </section>
         </div>

@@ -4,23 +4,26 @@ import { Card } from '../ui/Card';
 import { useBudget } from '../../hooks/useBudget';
 import { useMasterData } from '../../hooks/useMasterData';
 import { Skeleton } from '../ui/Skeleton';
+import { useTranslation } from 'react-i18next';
 
 const COLORS = ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ec4899', '#14b8a6', '#f97316'];
 const fmtFull = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
 const CustomTooltip = ({ active, payload }) => {
+    const { t } = useTranslation();
     if (!active || !payload?.length) return null;
     const { name, value, percent } = payload[0];
     return (
         <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-3 shadow-xl text-sm">
             <p className="font-semibold mb-1">{name}</p>
             <p className="font-mono">{fmtFull(value)}</p>
-            <p className="text-[var(--text-secondary)] text-xs">{(percent * 100).toFixed(1)}% do total</p>
+            <p className="text-[var(--text-secondary)] text-xs">{(percent * 100).toFixed(1)}% {t('reports.of_total', 'do total')}</p>
         </div>
     );
 };
 
 export function GastosPorCategoriaChart({ selectedDate }) {
+    const { t } = useTranslation();
     const { transactions, loading: loadingBudget } = useBudget(selectedDate);
     const { categories, loading: loadingCats } = useMasterData();
 
@@ -32,11 +35,11 @@ export function GastosPorCategoriaChart({ selectedDate }) {
         categories.forEach(c => { catMap[String(c.id)] = c.name; });
 
         const totals = {};
-        transactions.forEach(t => {
-            if (t.type !== 'despesa') return;
-            const catId = String(t.categoryId || t.category_id || '');
-            const name = catMap[catId] || 'Sem categoria';
-            totals[name] = (totals[name] || 0) + Number(t.amount);
+        transactions.forEach(tpx => {
+            if (tpx.type !== 'despesa') return;
+            const catId = String(tpx.categoryId || tpx.category_id || '');
+            const name = catMap[catId] || t('reports.uncategorized', 'Sem categoria');
+            totals[name] = (totals[name] || 0) + Number(tpx.amount);
         });
 
         return Object.entries(totals)
@@ -59,15 +62,15 @@ export function GastosPorCategoriaChart({ selectedDate }) {
     return (
         <Card className="p-6">
             <div className="mb-4">
-                <h3 className="text-lg font-semibold">Gastos por Categoria</h3>
+                <h3 className="text-lg font-semibold">{t('reports.expenses_by_category', 'Gastos por Categoria')}</h3>
                 <p className="text-sm text-[var(--text-secondary)]">
-                    Total: <span className="font-semibold text-red-500">{fmtFull(totalDespesa)}</span>
+                    {t('reports.total', 'Total:')} <span className="font-semibold text-red-500">{fmtFull(totalDespesa)}</span>
                 </p>
             </div>
 
             {data.length === 0 ? (
                 <div className="h-[280px] flex items-center justify-center text-[var(--text-secondary)] text-sm">
-                    Sem despesas neste período.
+                    {t('reports.no_expenses', 'Sem despesas neste período.')}
                 </div>
             ) : (
                 <div className="flex flex-col lg:flex-row items-center gap-4">
