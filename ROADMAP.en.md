@@ -48,7 +48,6 @@ Deep understanding of the numbers.
 - [ ] **Flow Reports**: Bar/line charts for monthly expense evolution.
 - [ ] **Comparisons**: Income vs Expenses month by month.
 - [ ] **Budgets**: Set spending limits by category and track progress.
-- [ ] **Progressive Web App (PWA)**: Allow installation on mobile for 100% offline use, without app stores.
 
 ## 💾 v0.7.0 - Freedom & Stability (Planned)
 Secure data and unbreakable code.
@@ -73,10 +72,15 @@ Advanced tools for business management.
     - [x] Global Announcements (Dashboard message for all).
     - [ ] Database Monitoring (Size and health).
 
+## ✅ v1.0.0 - Global Experience & Onboarding (Completed)
+Final UI optimization and global reach of the product.
+- [x] **PWA (Progressive Web App)**: Mobile and desktop installation for use as a native app, fast and offline-ready.
+- [x] **Themes**: Manual Light/Dark theme selector saved locally.
+- [x] **Internationalization (i18n)**: Dynamic support for multiple languages (Portuguese, English, Spanish).
+- [x] **System Tour**: Interactive Onboarding integration (React Joyride) to present the main screens.
+
 ## 🔮 Future
 Long-term ideas.
 - [ ] **Multi-currency Support**: For travel and international accounts.
-- [ ] **Themes**: Manual Light/Dark theme selector (overriding system default).
 - [ ] **Integrations**: Open Finance connections (feasibility study).
 - [ ] **Financial Goals**: "Safeboxes" to separate money from the main balance focusing on specific objectives (e.g., Vacation, New Car).
-- [ ] **Internationalization (i18n)**: Dynamic support for multiple languages (English, Spanish, etc.) in the user interface.

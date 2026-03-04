@@ -5,7 +5,7 @@
 
 O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combina a velocidade de um app local com a segurança da nuvem. Desenvolvido com **React 19** e **Supabase**, ele oferece uma experiência premium para organizar suas finanças.
 
-![Status](https://img.shields.io/badge/Status-v0.9.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white) ![Coverage](https://img.shields.io/badge/Cobertura-70%25_mín-brightgreen)
+![Status](https://img.shields.io/badge/Status-v1.0.0_(Estável)-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white) ![Coverage](https://img.shields.io/badge/Cobertura-70%25_mín-brightgreen)
 
 ---
 
@@ -37,6 +37,12 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 - Modo de Manutenção (Trava do sistema).
 - Central de Avisos e Notificações (Changelog).
 - **Auditoria**: Tabela `audit_logs` imutável (append-only) registra toda ação do painel admin.
+
+### 🌐 Experiência Global e Onboarding
+- **PWA (Progressive Web App)**: Instalável no Celular/Desktop para uso nativo, rápido e offline-ready.
+- **Temas**: Seletor manual para forçar Tema Claro / Escuro.
+- **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Português, Inglês, Espanhol).
+- **Tour do Sistema**: Integração de Onboarding interativo para apresentar as telas principais ao usuário pelo sistema.
 
 ### 🧹 Qualidade e CI/CD
 - **GitHub Actions**: Pipeline automático (Lint → Build + Testes) em todo PR e push.

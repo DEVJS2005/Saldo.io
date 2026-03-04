@@ -5,7 +5,7 @@
 
 **Saldo.io** is a modern personal finance platform that combines the speed of a local app with the security of the cloud. Built with **React 19** and **Supabase**, it offers a premium experience for organizing your finances.
 
-![Status](https://img.shields.io/badge/Status-v0.8.0_(Stable)-success) ![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-v1.0.0_(Stable)-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white) ![Coverage](https://img.shields.io/badge/Coverage-min_70%25-brightgreen)
 
 ---
 
@@ -30,7 +30,13 @@
 ### ⚙️ Admin Panel (SaaS)
 - User and permission management.
 - Access control for Premium features (Sync).
-- System audit and metrics.
+- System audit and metrics (Changelog, Database Health, Audit Logs).
+
+### 🌐 Global Experience & Onboarding
+- **PWA (Progressive Web App)**: Installable on Mobile/Desktop, responsive and offline-ready.
+- **Internationalization (i18n)**: Fully translated to English, Spanish and Portuguese.
+- **Themes**: System-based or manual Dark/Light mode toggle.
+- **Product Tour**: Automated interactive tour for new users (React Joyride).
 
 ---
 
@@ -42,6 +48,7 @@ This project uses the latest in the web ecosystem:
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) (Icons)
 - **Local Data**: [Dexie.js](https://dexie.org/) (IndexedDB Wrapper)
 - **Backend / Cloud**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, RPC)
+- **Testing**: [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) (E2E)
 - **Deploy**: Vercel / Cloudflare Pages
 
 ---

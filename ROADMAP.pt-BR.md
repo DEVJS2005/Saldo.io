@@ -48,7 +48,6 @@ Entendendo os números com profundidade.
 - [ ] **Relatórios de Fluxo**: Gráficos de barra/linha para evolução mensal de gastos.
 - [ ] **Comparativos**: Receitas vs Despesas mês a mês.
 - [ ] **Orçamentos (Budgets)**: Definir tetos de gastos por categoria e acompanhar o progresso.
-- [ ] **PWA (Progressive Web App)**: Permitir instalação no celular para uso 100% offline, sem depender das lojas de aplicativos.
 
 ## 💾 v0.7.0 - Liberdade e Estabilidade (Planejado)
 Seus dados seguros e código inquebrável.
@@ -84,10 +83,15 @@ Confiabilidade de produção e proteção de dados em camadas.
 - [x] **RLS Policies**: Políticas de segurança para as tabelas `profiles`, `transactions`, `categories` e `accounts`.
 - [x] **Correção de Segurança**: Removido fallback de `localStorage` para `role/canSync` — timeout agora assume nível mínimo de permissão.
 
+## ✅ v1.0.0 - Experiência Global e Onboarding (Concluído)
+Otimização final de interface e alcance global do produto.
+- [x] **PWA (Progressive Web App)**: Instalação no celular e desktop para uso como app nativo, rápido e offline-ready.
+- [x] **Temas**: Seletor manual de tema Claro/Escuro salvo localmente.
+- [x] **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Português, Inglês, Espanhol).
+- [x] **Tour do Sistema**: Integração de Onboarding interativo (React Joyride) para apresentação das telas principais.
+
 ## 🔮 Futuro
 Ideias para longo prazo.
 - [ ] **Suporte Multi-moeda**: Para viagens e contas internacionais.
-- [ ] **Temas**: Seletor manual de tema Claro/Escuro (além do sistema).
 - [ ] **Integrações**: Bancos via Open Finance (estudo de viabilidade).
 - [ ] **Metas Financeiras (Goals)**: "Caixinhas" para separar dinheiro do saldo principal com foco em objetivos (ex: Viagem, Carro).
-- [ ] **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Inglês, Espanhol, etc) na interface do usuário.
