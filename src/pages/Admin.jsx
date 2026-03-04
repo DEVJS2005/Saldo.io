@@ -5,8 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { format } from 'date-fns';
 import { Shield, Users, Calendar, Wrench, Bell, DollarSign, Activity, TrendingUp, Search, Key, Database } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Admin() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { confirm, alert } = useDialog();
     const [profiles, setProfiles] = useState([]);
