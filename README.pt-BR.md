@@ -42,7 +42,6 @@ O **Saldo.io** é uma plataforma moderna de gestão financeira pessoal que combi
 - **PWA (Progressive Web App)**: Instalável no Celular/Desktop para uso nativo, rápido e offline-ready.
 - **Temas**: Seletor manual para forçar Tema Claro / Escuro.
 - **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Português, Inglês, Espanhol).
-- **Tour do Sistema**: Integração de Onboarding interativo para apresentar as telas principais ao usuário pelo sistema.
 
 ### 🧹 Qualidade e CI/CD
 - **GitHub Actions**: Pipeline automático (Lint → Build + Testes) em todo PR e push.

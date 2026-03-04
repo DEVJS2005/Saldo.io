@@ -36,7 +36,6 @@
 - **PWA (Progressive Web App)**: Installable on Mobile/Desktop, responsive and offline-ready.
 - **Internationalization (i18n)**: Fully translated to English, Spanish and Portuguese.
 - **Themes**: System-based or manual Dark/Light mode toggle.
-- **Product Tour**: Automated interactive tour for new users (React Joyride).
 
 ---
 

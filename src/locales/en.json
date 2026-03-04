@@ -1,13 +1,4 @@
 {
-  "tour": {
-    "welcome_title": "Welcome to Saldo.io!",
-    "welcome_desc": "We made this quick tour to show you the main features of the system. Let's go?",
-    "nav_desc": "Use this sidebar to navigate between Dashboard, Transactions, Reports, and Settings.",
-    "settings_desc": "Here you can quickly change the language and switch between Light and Dark themes.",
-    "balance_desc": "Your Total Balance and end-of-month projections are always visible at the top of the dashboard.",
-    "new_transaction_desc": "Click here to add new Incomes or Expenses, including fixed and installment ones!",
-    "charts_desc": "Track your expenses by category and daily flow through detailed and interactive charts."
-  },
   "dashboard": {
     "title": "Dashboard",
     "overview": "Overview of your finances",
