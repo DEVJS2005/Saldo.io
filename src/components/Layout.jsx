@@ -6,6 +6,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { syncCloudToLocal } from '../lib/syncService';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { SystemTour } from './ui/SystemTour';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
@@ -181,6 +182,9 @@ export const Layout = ({ children }) => {
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      {/* Product Tour Component */}
+      <SystemTour />
+
       {/* Sidebar - Desktop */}
       <aside className="w-64 hidden md:flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-card)] p-4 fixed h-full z-50">
         <div className="flex items-center gap-3 px-4 py-6 mb-6">
@@ -192,7 +196,7 @@ export const Layout = ({ children }) => {
           </h1>
         </div>
 
-        <nav className="space-y-2 flex-1">
+        <nav className="space-y-2 flex-1 tour-nav">
           <NavItem to="/" icon={LayoutDashboard} label={t('sidebar.dashboard')} active={path === '/'} />
           <NavItem to="/transactions" icon={Receipt} label={t('sidebar.transactions')} active={path === '/transactions'} />
           <NavItem to="/reports" icon={PieChart} label={t('sidebar.reports')} active={path === '/reports'} />
@@ -201,7 +205,7 @@ export const Layout = ({ children }) => {
           )}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2">
+        <div className="mt-auto pt-6 border-t border-[var(--border-color)] space-y-2 tour-settings">
           <NavItem to="/settings" icon={Settings} label={t('sidebar.settings')} active={path === '/settings'} />
           <NavItem icon={LogOut} label={t('common.logout', 'Sair')} onClick={handleLogout} testId="btn-logout" />
         </div>

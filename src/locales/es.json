@@ -1,4 +1,13 @@
 {
+  "tour": {
+    "welcome_title": "¡Bienvenido a Saldo.io!",
+    "welcome_desc": "Hicimos este recorrido rápido para mostrarte las principales características del sistema. ¿Vamos?",
+    "nav_desc": "Usa este menú lateral para navegar entre Dashboard, Transacciones, Informes y Configuración.",
+    "settings_desc": "Aquí puedes cambiar rápidamente el idioma y alternar entre los temas Claro y Oscuro.",
+    "balance_desc": "Tu Saldo Total y las proyecciones para fin de mes siempre están visibles en la parte superior del panel.",
+    "new_transaction_desc": "¡Haz clic aquí para agregar nuevos Ingresos o Gastos, incluidos los fijos y a plazos!",
+    "charts_desc": "Sigue tus gastos por categoría y flujo diario a través de gráficos interactivos y detallados."
+  },
   "dashboard": {
     "title": "Panel",
     "overview": "Resumen de tus finanzas",

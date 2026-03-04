@@ -47,7 +47,7 @@ export default function Dashboard() {
                 {t('dashboard.close_month', 'Fechar Mês')}
               </Button>
             )}
-            <Button onClick={() => setIsModalOpen(true)} size="sm" data-testid="btn-add-transaction">
+            <Button onClick={() => setIsModalOpen(true)} size="sm" data-testid="btn-add-transaction" className="tour-new-transaction flex items-center">
               <Plus size={18} className="mr-1" />
               {t('common.new', 'Nova')}
             </Button>
@@ -75,7 +75,7 @@ export default function Dashboard() {
               <p className="text-xs text-[var(--text-secondary)] mt-1">{t('dashboard.forecast_desc')}</p>
             </Card>
 
-            <Card title={t('dashboard.total_balance')}>
+            <Card title={t('dashboard.total_balance')} className="tour-balance">
               <div className={`text-3xl font-bold ${balanceReal >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`} data-testid="balance-display">
                 {formatCurrency(balanceReal)}
               </div>
@@ -111,7 +111,9 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
               {income + expense > 0 && (
-                <Charts transactions={transactions} />
+                <div className="tour-charts">
+                  <Charts transactions={transactions} />
+                </div>
               )}
             </div>
             <div>
