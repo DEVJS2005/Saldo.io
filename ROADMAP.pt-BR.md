@@ -90,8 +90,18 @@ Otimização final de interface e alcance global do produto.
 - [x] **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Português, Inglês, Espanhol).
 - [x] **Tour do Sistema**: Integração de Onboarding interativo (React Joyride) para apresentação das telas principais.
 
-## 🔮 Futuro
-Ideias para longo prazo.
-- [ ] **Suporte Multi-moeda**: Para viagens e contas internacionais.
-- [ ] **Integrações**: Bancos via Open Finance (estudo de viabilidade).
+## 🔮 Futuro Triagem & Novas Implementações
+Ideias e integrações focadas em expandir os horizontes do app.
+
+### Curto/Médio Prazo
+- [ ] **Gestão Avançada de Cartões de Crédito**: Fechamento, vencimento, limites em tempo real e faturas.
+- [ ] **Tags ou "Centros de Custo"**: Categorização cruzada para eventos (ex: #ViagemSP, #Carnaval2026).
+- [ ] **Gerenciador de Assinaturas (Subscriptions)**: Dashboard dedicado para gastos recorrentes com insights de economia.
+- [ ] **Automação de Alertas e Notificações**: Lembretes de vencimento e alertas de limite de orçamento (Budgets).
+
+### Longo Prazo (Diferenciais Competitivos)
+- [ ] **Finanças Compartilhadas e Divisão de Contas**: Estilo Splitwise (rachar contas transacionais, gerir quem deve quem, painel família).
+- [ ] **Evolução Patrimonial (Net Worth e Investimentos)**: Projeção de patrimônio líquido cruzando saldo com investimentos/poupança.
+- [ ] **Suporte Multi-moeda**: Para viagens e gestão de contas internacionais.
+- [ ] **Integrações Inteligentes**: Bancos via Open Finance (importação fluida) e Automação via OCR (leitura de notas fiscais).
 - [ ] **Metas Financeiras (Goals)**: "Caixinhas" para separar dinheiro do saldo principal com foco em objetivos (ex: Viagem, Carro).

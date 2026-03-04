@@ -79,8 +79,18 @@ Final UI optimization and global reach of the product.
 - [x] **Internationalization (i18n)**: Dynamic support for multiple languages (Portuguese, English, Spanish).
 - [x] **System Tour**: Interactive Onboarding integration (React Joyride) to present the main screens.
 
-## 🔮 Future
-Long-term ideas.
-- [ ] **Multi-currency Support**: For travel and international accounts.
-- [ ] **Integrations**: Open Finance connections (feasibility study).
+## 🔮 Future Triage & New Implementations
+Ideas and integrations focused on expanding the app's horizons.
+
+### Short/Medium Term
+- [ ] **Advanced Credit Card Management**: Closing dates, due dates, real-time limits, and invoices.
+- [ ] **Tags or "Cost Centers"**: Cross-categorization for events (e.g., #SPTrip, #Carnival2026).
+- [ ] **Subscriptions Manager**: Dedicated dashboard for recurring expenses with savings insights.
+- [ ] **Alerts & Notifications Automation**: Due date reminders and budget ceiling alerts.
+
+### Long Term (Competitive Advantages)
+- [ ] **Shared Finances & Bill Splitting**: Splitwise style (split transactional bills, track who owes who, family dashboard).
+- [ ] **Net Worth & Investments Evolution**: Net worth projection mixing checking balance with investments/savings.
+- [ ] **Multi-currency Support**: For travel and international accounts management.
+- [ ] **Smart Integrations**: Banking via Open Finance (fluid import) and OCR Automation (receipt scanning).
 - [ ] **Financial Goals**: "Safeboxes" to separate money from the main balance focusing on specific objectives (e.g., Vacation, New Car).
