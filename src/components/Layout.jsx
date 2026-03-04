@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
 import { syncCloudToLocal } from '../lib/syncService';
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
