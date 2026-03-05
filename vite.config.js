@@ -16,17 +16,22 @@ export default defineConfig({
         description: 'Seu gerenciador financeiro offline-first.',
         theme_color: '#0b0f19',
         background_color: '#0b0f19',
+        start_url: '/',
+        id: '/',
         display: 'standalone',
+        orientation: 'portrait',
         icons: [
           {
             src: 'favicon.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'favicon.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
