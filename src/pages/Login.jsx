@@ -54,34 +54,6 @@ export default function Login() {
         }
     };
 
-    const handleDemoLogin = async () => {
-        setLoading(true);
-        try {
-            // 1. Log in with fixed demo credentials
-            const { error: signInError } = await signIn('teste@saldo.io', 'teste123');
-            if (signInError) {
-                // To display a nicer message if the admin hasn't created the user yet
-                throw new Error(t('auth.err_demo_not_setup'));
-            }
-
-            // 2. Clear old data and insert fresh demo data
-            const { error: rpcError } = await supabase.rpc('reset_test_account');
-
-            if (rpcError) {
-                console.error("Failed to reset test account data:", rpcError);
-                // We don't block login if reset fails, just log it. Data might be messy.
-            }
-
-            // 3. Navigate to dashboard
-            navigate('/');
-
-        } catch (err) {
-            console.error(err);
-            await alert(err.message || getErrorMessage(err, t), t('errors.title_error'), 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-gradient-to-br from-[var(--bg-primary)] via-[var(--bg-secondary)] to-[var(--bg-primary)]">
@@ -135,17 +107,6 @@ export default function Login() {
                     </Link>
                 </div>
 
-                {/* Internal Demo Account Access */}
-                <div className="mt-6 pt-4 border-t border-[var(--border-color)]/10 text-center">
-                    <button
-                        type="button"
-                        onClick={handleDemoLogin}
-                        disabled={loading}
-                        className="text-xs text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium underline underline-offset-2 transition-colors disabled:opacity-50"
-                    >
-                        {t('auth.demo_login')}
-                    </button>
-                </div>
             </Card>
         </div>
     );
