@@ -4,6 +4,7 @@ import { useDialog } from '../contexts/DialogContext'; // Import useDialog
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
+import { InstallPrompt } from '../components/ui/InstallPrompt';
 import { getErrorMessage } from '../utils/authErrors';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -106,6 +107,8 @@ export default function Login() {
                         {t('auth.register_now')}
                     </Link>
                 </div>
+
+                <InstallPrompt variant="card" />
 
             </Card>
         </div>

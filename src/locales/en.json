@@ -59,8 +59,17 @@
     "edit_budget": "Edit Budget",
     "new_budget": "New Budget",
     "select_category": "Select a category...",
-    "limit": "Limit",
-    "uncategorized": "Uncategorized"
+    "limit": "Limit (R$)",
+    "uncategorized": "Uncategorized",
+    "ai_unlock_title": "Unlock AI Financial Consultant",
+    "ai_unlock_desc": "Add your API key to get automated analysis and tips on your monthly spending.",
+    "ai_go_to_settings": "Go to Settings",
+    "ai_title": "Smart Monthly Analysis",
+    "ai_subtitle": "Powered by",
+    "ai_empty_state": "Click below to have your AI Assistant analyze cash flow, spending categories, and generate valuable tips based on the selected month.",
+    "ai_loading": "Analyzing Data...",
+    "ai_regenerate": "Generate New Analysis",
+    "ai_generate": "Generate Analysis"
   },
   "layout": {
     "premium_expired_desc": "Your Premium plan has expired. We have downloaded your latest cloud data to this device. You can continue using the system in Local Mode.",
@@ -100,7 +109,13 @@
     "security": "Security",
     "change_password": "Change Password",
     "current_password": "Current Password",
-    "new_password": "New Password"
+    "new_password": "New Password",
+    "ai_title": "Artificial Intelligence (BYOK)",
+    "ai_desc": "Provide your key to unlock advanced financial analysis.",
+    "ai_provider": "AI Provider",
+    "ai_api_key": "API Key",
+    "ai_privacy": "Your key is saved only in this browser. Saldo.io never sends transaction names or sensitive data to the models.",
+    "ai_saved": "A.I. settings saved locally!"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -238,5 +253,11 @@
     "income": "Income",
     "expense": "Expense",
     "select": "Select..."
+  },
+  "pwa": {
+    "install_title": "Install App",
+    "install_desc": "Add Saldo.io to your home screen for quick access and offline mode.",
+    "not_now": "Not Now",
+    "install_btn": "Install App"
   }
 }

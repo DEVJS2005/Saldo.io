@@ -14,6 +14,7 @@ import { db } from '../db/db';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import { generateBackup, exportTransactionsCSV, restoreBackup } from '../lib/backup';
+import { BrainCircuit } from 'lucide-react';
 
 export default function Settings() {
     const { validateAndRepairTransactions } = useTransactions();
@@ -38,6 +39,10 @@ export default function Settings() {
     const [accEdits, setAccEdits] = useState({}); // { id: 'New Name' }
     const [editingAccId, setEditingAccId] = useState(null); // Currently editing ID
     const [accLinkedEdits, setAccLinkedEdits] = useState({}); // { id: 'Linked ID' }
+
+    const [aiProvider, setAiProvider] = useState(localStorage.getItem('saldo_ai_provider') || 'gemini');
+    const [aiApiKey, setAiApiKey] = useState(localStorage.getItem('saldo_ai_api_key') || '');
+    const [isSavingAi, setIsSavingAi] = useState(false);
 
     // Password State
     const [currentPassword, setCurrentPassword] = useState('');
@@ -266,6 +271,15 @@ export default function Settings() {
             }
         };
         reader.readAsText(file);
+    };
+
+    const handleSaveAiSettings = async () => {
+        setIsSavingAi(true);
+        localStorage.setItem('saldo_ai_provider', aiProvider);
+        localStorage.setItem('saldo_ai_api_key', aiApiKey);
+        await new Promise(res => setTimeout(res, 500)); // feedback vizual
+        setIsSavingAi(false);
+        await alert(t('settings.ai_saved', 'Configurações de I.A. salvas localmente!'), t('errors.title_success'), 'success');
     };
 
     const handleResetApp = async () => {
@@ -719,6 +733,53 @@ export default function Settings() {
                             {isChangingPassword ? 'Verificando...' : 'Atualizar Senha'}
                         </Button>
                     </form>
+                </Card>
+            </div>
+
+            {/* AI Settings Section */}
+            <div className="space-y-4">
+                <h2 className="text-xl font-semibold">{t('settings.ai_title', 'Inteligência Artificial (BYOK)')}</h2>
+                <Card className="p-4">
+                    <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <BrainCircuit size={18} className="text-[var(--primary)]" />
+                        Consultor Financeiro I.A.
+                    </h3>
+                    <p className="text-sm text-[var(--text-secondary)] mb-4">
+                        {t('settings.ai_desc', 'Forneça sua chave para liberar análises financeiras avançadas.')}
+                    </p>
+
+                    <div className="space-y-4 max-w-md">
+                        <div className="space-y-1">
+                            <label className="text-xs text-[var(--text-secondary)] ml-1">{t('settings.ai_provider', 'Provedor de I.A.')}</label>
+                            <select
+                                className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                                value={aiProvider}
+                                onChange={e => setAiProvider(e.target.value)}
+                            >
+                                <option value="gemini">Google Gemini (Recomendado)</option>
+                                <option value="openai">OpenAI (ChatGPT)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs text-[var(--text-secondary)] ml-1">{t('settings.ai_api_key', 'Chave da API')}</label>
+                            <Input
+                                type="password"
+                                placeholder={aiProvider === 'gemini' ? 'AIzaSy...' : 'sk-...'}
+                                value={aiApiKey}
+                                onChange={e => setAiApiKey(e.target.value)}
+                            />
+                        </div>
+                        <Button 
+                            onClick={handleSaveAiSettings} 
+                            disabled={isSavingAi}
+                            className="w-full mt-2"
+                        >
+                            {isSavingAi ? 'Salvando...' : 'Salvar Chave Localmente'}
+                        </Button>
+                        <p className="text-xs text-[var(--text-muted)] text-center px-2 mt-2">
+                            {t('settings.ai_privacy', 'Sua chave é salva apenas neste navegador. O Saldo.io nunca envia nomes de suas transações ou dados sensíveis aos modelos.')}
+                        </p>
+                    </div>
                 </Card>
             </div>
 

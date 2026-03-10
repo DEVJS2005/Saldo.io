@@ -60,7 +60,16 @@
     "new_budget": "Novo Orçamento",
     "select_category": "Selecione uma categoria...",
     "limit": "Limite (R$)",
-    "uncategorized": "Sem categoria"
+    "uncategorized": "Sem categoria",
+    "ai_unlock_title": "Desbloqueie o Consultor Financeiro I.A.",
+    "ai_unlock_desc": "Adicione sua chave de API para obter análises automatizadas e dicas sobre seus gastos do mês.",
+    "ai_go_to_settings": "Ir para Configurações",
+    "ai_title": "Análise Inteligente Mensal",
+    "ai_subtitle": "Alimentado por",
+    "ai_empty_state": "Clique no botão abaixo para que seu Assistente Pessoal analise o fluxo de caixa, as categorias de gastos e gere dicas valiosas baseadas no mês selecionado.",
+    "ai_loading": "Analisando Dados...",
+    "ai_regenerate": "Gerar Nova Análise",
+    "ai_generate": "Gerar Análise"
   },
   "layout": {
     "premium_expired_desc": "Seu plano Premium expirou. Baixamos seus dados mais recentes da nuvem para este dispositivo. Você pode continuar usando o sistema em Modo Local.",
@@ -100,7 +109,13 @@
     "security": "Segurança",
     "change_password": "Trocar Senha",
     "current_password": "Senha Atual",
-    "new_password": "Nova Senha"
+    "new_password": "Nova Senha",
+    "ai_title": "Inteligência Artificial (BYOK)",
+    "ai_desc": "Forneça sua chave para liberar análises financeiras avançadas.",
+    "ai_provider": "Provedor de I.A.",
+    "ai_api_key": "Chave da API",
+    "ai_privacy": "Sua chave é salva apenas neste navegador. O Saldo.io nunca envia nomes de suas transações ou dados sensíveis aos modelos.",
+    "ai_saved": "Configurações de I.A. salvas localmente!"
   },
   "sidebar": {
     "dashboard": "Painel",
@@ -240,5 +255,11 @@
     "income": "Receita",
     "expense": "Despesa",
     "select": "Selecione..."
+  },
+  "pwa": {
+    "install_title": "Instalar Aplicativo",
+    "install_desc": "Adicione o Saldo.io à sua tela inicial para acesso rápido e modo offline.",
+    "not_now": "Agora Não",
+    "install_btn": "Instalar App"
   }
 }

@@ -1,9 +1,12 @@
 import { useDate } from '../contexts/DateContext';
 import { useBudget } from '../hooks/useBudget';
+import { useMasterData } from '../hooks/useMasterData';
+import { useMemo } from 'react';
 import { MonthYearSelector } from '../components/ui/MonthYearSelector';
 import { MonthlyComparisonChart } from '../components/reports/MonthlyComparisonChart';
 import { FluxoMensalChart } from '../components/reports/FluxoMensalChart';
 import { GastosPorCategoriaChart } from '../components/reports/GastosPorCategoriaChart';
+import { AIFinancialInsight } from '../components/reports/AIFinancialInsight';
 import { BudgetProgress } from '../components/reports/BudgetProgress';
 import { TrendingUp, BarChart2, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +28,28 @@ function SectionTitle({ icon: Icon, title, subtitle }) {
 export default function Reports() {
     const { t } = useTranslation();
     const { selectedDate, setSelectedDate } = useDate();
-    const { income, expense } = useBudget(selectedDate);
+    const { categories } = useMasterData();
+    const { income, expense, transactions } = useBudget(selectedDate);
+
+    const monthName = selectedDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+    const expensesByCategory = useMemo(() => {
+        if (!transactions || !categories) return [];
+        const catMap = {};
+        categories.forEach(c => { catMap[String(c.id)] = c.name; });
+
+        const totals = {};
+        transactions.forEach(tpx => {
+            if (tpx.type !== 'despesa') return;
+            const catId = String(tpx.categoryId || tpx.category_id || '');
+            const name = catMap[catId] || t('reports.uncategorized', 'Sem categoria');
+            totals[name] = (totals[name] || 0) + Number(tpx.amount);
+        });
+
+        return Object.entries(totals)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
+    }, [transactions, categories, t]);
 
     const formatCurrency = (v) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -58,6 +82,14 @@ export default function Reports() {
                     </p>
                 </div>
             </div>
+
+            {/* AI Insight Section */}
+            <AIFinancialInsight
+                income={income}
+                expense={expense}
+                categoriesData={expensesByCategory}
+                monthName={monthName}
+            />
 
             {/* ── Seção 1: Visão Geral do Mês ── */}
             <section>

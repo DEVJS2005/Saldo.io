@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext({});
@@ -17,6 +17,11 @@ const withTimeout = (promise, ms = 10000) => {
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const userRef = useRef(null);
+
+    useEffect(() => {
+        userRef.current = user;
+    }, [user]);
 
     const fetchProfile = async (sessionUser) => {
         if (!sessionUser) return null;
@@ -52,7 +57,15 @@ export function AuthProvider({ children }) {
             };
         } catch (err) {
             console.error('Timeout or error fetching profile:', err);
-            // Segurança: em caso de timeout/offline, assume o nível mínimo de
+            
+            // Se já temos o perfil carregado na sessão atual para este usuário,
+            // mantemos as permissões atuais para evitar que ele caia para o modo
+            // offline repentinamente por causa de uma falha temporária de rede em background.
+            if (userRef.current && userRef.current.id === sessionUser.id) {
+                return userRef.current;
+            }
+
+            // Segurança: em caso de timeout/offline inicial, assume o nível mínimo de
             // permissão ('user', canSync: false). Nunca eleve permissões via
             // fallback client-side — use usePermissions() para validação real.
             return {
