@@ -1,4 +1,4 @@
-5b2046c5import { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { useMonthlyComparison } from '../../hooks/useMonthlyComparison';
 import { Skeleton } from '../ui/Skeleton';

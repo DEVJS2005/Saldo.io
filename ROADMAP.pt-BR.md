@@ -43,17 +43,17 @@ Foco na gestão do sistema SaaS, proteção de dados e robustez.
 - [x] **Deploy Robusto**: Configuração para Vercel/Cloudflare e proteção contra falhas de rede.
 - [x] **Correção de Autenticação**: Resolução do "limbo infinito" no login/logout e aprimoramento do redirecionamento de rotas protegidas.
 
-## 🚧 v0.6.0 - Visão e Análise (Planejado)
+## ✅ v0.6.0 - Visão e Análise (Concluído)
 Entendendo os números com profundidade.
-- [ ] **Relatórios de Fluxo**: Gráficos de barra/linha para evolução mensal de gastos.
-- [ ] **Comparativos**: Receitas vs Despesas mês a mês.
-- [ ] **Orçamentos (Budgets)**: Definir tetos de gastos por categoria e acompanhar o progresso.
+- [x] **Relatórios de Fluxo**: Gráficos de barra/linha para evolução mensal de gastos.
+- [x] **Comparativos**: Receitas vs Despesas mês a mês.
+- [x] **Orçamentos (Budgets)**: Definir tetos de gastos por categoria e acompanhar o progresso.
 
-## 💾 v0.7.0 - Liberdade e Estabilidade (Planejado)
+## ✅ v0.7.0 - Liberdade e Estabilidade (Concluído)
 Seus dados seguros e código inquebrável.
-- [ ] **Exportação**: Gerar arquivos CSV/JSON das transações.
-- [ ] **Importação**: Restaurar backup ou importar de outros apps.
-- [ ] **Backup Local**: Baixar arquivo completo do banco de dados.
+- [x] **Exportação**: Gerar arquivos CSV/JSON das transações.
+- [x] **Importação**: Restaurar backup ou importar de outros apps.
+- [x] **Backup Local**: Baixar arquivo completo do banco de dados.
 - [x] **Testes Automatizados (Unitários)**: Vitest com cobertura mínima de 70% — transações, parcelamentos, recorrências e migração de dados cobertos.
 
 ## ✅ v0.8.0 - Administração SaaS (Concluído)

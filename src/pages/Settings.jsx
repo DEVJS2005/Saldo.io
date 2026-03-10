@@ -13,6 +13,7 @@ import { resetCloudData } from '../lib/reset';
 import { db } from '../db/db';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
+import { generateBackup, exportTransactionsCSV, restoreBackup } from '../lib/backup';
 
 export default function Settings() {
     const { validateAndRepairTransactions } = useTransactions();
@@ -215,14 +216,56 @@ export default function Settings() {
 
     // Maintenance
 
+    const [isProcessingData, setIsProcessingData] = useState(false);
 
-    const handleExportData = async () => {
-        // Export from Supabase
-        await alert('Funcionalidade de exportação em desenvolvimento para versão Cloud.', 'Em Breve');
+    const handleExportCSV = async () => {
+        setIsProcessingData(true);
+        try {
+            await exportTransactionsCSV(user.id, user.canSync);
+            await alert('Exportação CSV realizada com sucesso.', 'Sucesso', 'success');
+        } catch (err) {
+            await alert('Erro ao exportar CSV: ' + err.message, 'Erro', 'error');
+        } finally {
+            setIsProcessingData(false);
+        }
+    };
+
+    const handleDownloadBackup = async () => {
+        setIsProcessingData(true);
+        try {
+            await generateBackup(user.id, user.canSync);
+            await alert('Backup JSON gerado com sucesso.', 'Sucesso', 'success');
+        } catch (err) {
+            await alert('Erro ao gerar backup: ' + err.message, 'Erro', 'error');
+        } finally {
+            setIsProcessingData(false);
+        }
     };
 
     const handleImportData = async (e) => {
-        await alert('Funcionalidade de importação em desenvolvimento para versão Cloud.', 'Em Breve');
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                setIsProcessingData(true);
+                const jsonData = JSON.parse(event.target.result);
+                
+                const confirmed = await confirm(`Deseja restaurar o backup (data: ${jsonData.timestamp ? new Date(jsonData.timestamp).toLocaleString() : 'desconhecida'})? Isso sobrescreverá dados existentes com conflitos de ID.`, 'Importar Backup');
+                if (!confirmed) return;
+
+                await restoreBackup(jsonData, user.id, user.canSync);
+                await alert('Backup restaurado com sucesso! A página será recarregada.', 'Sucesso', 'success');
+                window.location.reload();
+            } catch (err) {
+                await alert('Erro ao importar backup. Erro: ' + err.message, 'Erro', 'error');
+            } finally {
+                setIsProcessingData(false);
+                e.target.value = null; // reset
+            }
+        };
+        reader.readAsText(file);
     };
 
     const handleResetApp = async () => {
@@ -693,21 +736,27 @@ export default function Settings() {
                                 Salve seus dados em um arquivo ou restaure de um backup. Útil ao trocar de navegador ou computador.
                             </p>
                         </div>
-                        <div className="flex gap-2 mt-auto">
-                            <Button onClick={handleExportData} variant="secondary" className="flex-1">
+                        <div className="flex flex-col gap-2 mt-auto">
+                            <Button onClick={handleExportCSV} disabled={isProcessingData} variant="secondary" className="w-full justify-start">
                                 <Download size={16} className="mr-2" />
-                                Exportar
+                                Exportar Transações (CSV)
                             </Button>
-                            <div className="relative flex-1">
-                                <Button variant="secondary" className="w-full">
+                            <Button onClick={handleDownloadBackup} disabled={isProcessingData} variant="secondary" className="w-full justify-start">
+                                <Download size={16} className="mr-2" />
+                                Baixar Backup Completo (JSON)
+                            </Button>
+                            <div className="relative w-full">
+                                <Button disabled={isProcessingData} variant="secondary" className="w-full justify-start">
                                     <Upload size={16} className="mr-2" />
-                                    Importar
+                                    Restaurar Backup (JSON)
                                 </Button>
                                 <input
                                     type="file"
                                     accept=".json"
                                     onChange={handleImportData}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    disabled={isProcessingData}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    title="Selecione o arquivo de backup (.json)"
                                 />
                             </div>
                         </div>

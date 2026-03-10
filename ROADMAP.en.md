@@ -43,18 +43,18 @@ Focus on SaaS management, data protection, and robustness.
 - [x] **Robust Deploy**: Configuration for Vercel/Cloudflare and network failure protection.
 - [x] **Authentication Fix**: Resolution of the "infinite limbo" in login/logout and improvement of protected route redirection.
 
-## 📅 v0.6.0 - Vision & Analysis (Planned)
+## ✅ v0.6.0 - Vision & Analysis (Completed)
 Deep understanding of the numbers.
-- [ ] **Flow Reports**: Bar/line charts for monthly expense evolution.
-- [ ] **Comparisons**: Income vs Expenses month by month.
-- [ ] **Budgets**: Set spending limits by category and track progress.
+- [x] **Flow Reports**: Bar/line charts for monthly expense evolution.
+- [x] **Comparisons**: Income vs Expenses month by month.
+- [x] **Budgets**: Set spending limits by category and track progress.
 
-## 💾 v0.7.0 - Freedom & Stability (Planned)
+## ✅ v0.7.0 - Freedom & Stability (Completed)
 Secure data and unbreakable code.
-- [ ] **Export**: Generate CSV/JSON files of transactions.
-- [ ] **Import**: Restore backup or import from other apps.
-- [ ] **Local Backup**: Download full database file.
-- [ ] **Automated Testing (E2E & Unit)**: Vitest and Playwright setup to shield the interface against regressions and loading loops.
+- [x] **Export**: Generate CSV/JSON files of transactions.
+- [x] **Import**: Restore backup or import from other apps.
+- [x] **Local Backup**: Download full database file.
+- [x] **Automated Testing (E2E & Unit)**: Vitest and Playwright setup to shield the interface against regressions and loading loops.
 
 ## ✅ v0.8.0 - SaaS Administration (Completed)
 Advanced tools for business management.
