@@ -220,55 +220,65 @@ export const Layout = ({ children }) => {
             <span className="font-bold text-lg">Saldo.io</span>
           </div>
 
-          <div className="relative" ref={notifRef}>
-            <button
-              onClick={toggleNotifications}
-              className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors relative focus:outline-none"
-            >
-              <Bell size={20} className="text-[var(--text-secondary)]" />
-              {hasUnread && (
-                <span className="absolute top-1 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--bg-primary)] animate-pulse"></span>
-              )}
-            </button>
+          <div className="flex items-center gap-3">
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={toggleNotifications}
+                className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors relative focus:outline-none"
+              >
+                <Bell size={20} className="text-[var(--text-secondary)]" />
+                {hasUnread && (
+                  <span className="absolute top-1 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[var(--bg-primary)] animate-pulse"></span>
+                )}
+              </button>
 
-            {/* Notifications Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto custom-scrollbar bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center sticky top-0 bg-[var(--bg-card)]/90 backdrop-blur-sm">
-                  <h3 className="font-semibold">{t('layout.updates', 'Atualizações')}</h3>
-                  <button onClick={() => setShowNotifications(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                    <X size={16} />
-                  </button>
-                </div>
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto custom-scrollbar bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center sticky top-0 bg-[var(--bg-card)]/90 backdrop-blur-sm">
+                    <h3 className="font-semibold">{t('layout.updates', 'Atualizações')}</h3>
+                    <button onClick={() => setShowNotifications(false)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                      <X size={16} />
+                    </button>
+                  </div>
 
-                <div className="divide-y divide-[var(--border-color)]">
-                  {changelogs.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-[var(--text-secondary)]">
-                      {t('layout.no_updates', 'Nenhuma novidade por enquanto.')}
-                    </div>
-                  ) : (
-                    changelogs.map(log => (
-                      <div key={log.id} className="p-4 hover:bg-[var(--bg-input)]/30 transition-colors">
-                        <div className="flex gap-3">
-                          {getChangelogIcon(log.type)}
-                          <div>
-                            <h4 className="text-sm font-medium pr-2 text-[var(--text-primary)] mb-1 leading-tight">
-                              {log.title}
-                            </h4>
-                            <p className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
-                              {log.content}
-                            </p>
-                            <div className="text-[10px] text-[var(--text-secondary)] opacity-70 mt-2">
-                              {format(new Date(log.created_at), "dd MMM yyyy 'às' HH:mm")}
+                  <div className="divide-y divide-[var(--border-color)]">
+                    {changelogs.length === 0 ? (
+                      <div className="p-6 text-center text-sm text-[var(--text-secondary)]">
+                        {t('layout.no_updates', 'Nenhuma novidade por enquanto.')}
+                      </div>
+                    ) : (
+                      changelogs.map(log => (
+                        <div key={log.id} className="p-4 hover:bg-[var(--bg-input)]/30 transition-colors">
+                          <div className="flex gap-3">
+                            {getChangelogIcon(log.type)}
+                            <div>
+                              <h4 className="text-sm font-medium pr-2 text-[var(--text-primary)] mb-1 leading-tight">
+                                {log.title}
+                              </h4>
+                              <p className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
+                                {log.content}
+                              </p>
+                              <div className="text-[10px] text-[var(--text-secondary)] opacity-70 mt-2">
+                                {format(new Date(log.created_at), "dd MMM yyyy 'às' HH:mm")}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="md:hidden p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors text-[var(--text-secondary)] hover:text-red-500"
+              title={t('common.logout', 'Sair')}
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </header>
 
