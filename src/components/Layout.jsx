@@ -290,44 +290,44 @@ export const Layout = ({ children }) => {
 
           <footer className="py-8 text-center text-sm text-[var(--text-secondary)] border-t border-[var(--border-color)] mt-8 flex flex-col items-center gap-6">
             <div className="bg-[var(--bg-card)] p-5 rounded-2xl border border-[var(--border-color)] max-w-sm w-full mx-auto shadow-sm">
-                <Heart size={24} className="text-red-500 mx-auto mb-2 opacity-80" />
-                <h4 className="font-medium text-[var(--text-primary)] mb-1">Apoie o Projeto</h4>
-                <p className="text-xs mb-4 opacity-80">
-                    O Saldo.io é gratuito e desenvolvido com carinho. Se este app te ajudou a organizar suas finanças, considere fazer uma doação de qualquer valor via PIX para nos ajudar a mantê-lo online e evoluindo!
-                </p>
-                <div className="flex flex-col items-center gap-3">
-                    <img 
-                        src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=00020101021126580014br.gov.bcb.pix013679f98c7c-456d-43b2-b791-a6f2fb5cac545204000053039865802BR5925JOAO%20VICTOR%20BATISTA%20SANTO6007ARACAJU62070503***63043102&margin=10" 
-                        alt="QR Code PIX" 
-                        className="rounded-xl border border-[var(--border-color)] bg-white p-1 select-none pointer-events-none" 
-                        style={{ width: '140px', height: '140px' }}
-                    />
-                    <div className="w-full text-left">
-                        <span className="text-[10px] uppercase font-bold tracking-wider opacity-50 ml-1">Chave PIX (EAT)</span>
-                        <div className="flex items-center gap-2 w-full bg-[var(--bg-input)] rounded-lg p-2.5 border border-[var(--border-color)] mt-1 select-all cursor-text">
-                            <span className="text-xs font-mono text-[var(--text-primary)]">79f98c7c-456d-43b2-b791-a6f2fb5cac54</span>
-                        </div>
-                    </div>
+              <Heart size={24} className="text-red-500 mx-auto mb-2 opacity-80" />
+              <h4 className="font-medium text-[var(--text-primary)] mb-1">Apoie o Projeto</h4>
+              <p className="text-xs mb-4 opacity-80">
+                O Saldo.io é gratuito e desenvolvido com carinho. Se este app te ajudou a organizar suas finanças, considere fazer uma doação de qualquer valor via PIX para nos ajudar a mantê-lo online e evoluindo!
+              </p>
+              <div className="flex flex-col items-center gap-3">
+                <img
+                  src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=00020101021126580014br.gov.bcb.pix013679f98c7c-456d-43b2-b791-a6f2fb5cac545204000053039865802BR5925JOAO%20VICTOR%20BATISTA%20SANTO6007ARACAJU62070503***63043102&margin=10"
+                  alt="QR Code PIX"
+                  className="rounded-xl border border-[var(--border-color)] bg-white p-1 select-none pointer-events-none shrink-0 block"
+                  style={{ width: '140px', height: '140px' }}
+                />
+                <div className="w-full text-left">
+                  <span className="text-[10px] uppercase font-bold tracking-wider opacity-50 ml-1">Chave PIX (EAT)</span>
+                  <div className="flex items-center gap-2 w-full bg-[var(--bg-input)] rounded-lg p-2.5 border border-[var(--border-color)] mt-1 select-all cursor-text">
+                    <span className="text-xs font-mono text-[var(--text-primary)]">79f98c7c-456d-43b2-b791-a6f2fb5cac54</span>
+                  </div>
                 </div>
-                
-                {/* Donors List */}
-                <div className="mt-6 pt-4 border-t border-[var(--border-color)]/50 w-full text-left">
-                    <h5 className="text-[11px] uppercase font-bold tracking-wider opacity-50 mb-3 flex items-center justify-center gap-1">
-                        <Heart size={10} className="text-red-500" /> Últimos Apoiadores
-                    </h5>
-                    <div className="flex flex-wrap justify-center gap-2 text-xs">
-                        <span className="bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1 rounded-full text-[var(--text-secondary)]">🌟 Anônimo</span>
-                        <span className="bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1 rounded-full text-[var(--text-secondary)]">🌟 Carlos S.</span>
-                        <span className="bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1 rounded-full text-[var(--text-secondary)]">🌟 M. Felipe</span>
-                    </div>
+              </div>
+
+              {/* Donors List */}
+              <div className="mt-6 pt-4 border-t border-[var(--border-color)]/50 w-full text-left">
+                <h5 className="text-[11px] uppercase font-bold tracking-wider opacity-50 mb-3 flex items-center justify-center gap-1">
+                  <Heart size={10} className="text-red-500" /> Últimos Apoiadores
+                </h5>
+                <div className="flex flex-wrap justify-center gap-2 text-xs">
+                  <span className="bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1 rounded-full text-[var(--text-secondary)]">🌟 Anônimo</span>
+                  <span className="bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1 rounded-full text-[var(--text-secondary)]">🌟 Carlos S.</span>
+                  <span className="bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1 rounded-full text-[var(--text-secondary)]">🌟 M. Felipe</span>
                 </div>
+              </div>
             </div>
 
             <div>
-                <p>© {new Date().getFullYear()} Saldo.io. {t('layout.all_rights_reserved', 'Todos os direitos reservados.')}</p>
-                <p className="mt-1 text-xs opacity-70">
-                  {t('layout.made_by', 'Feito com ❤️ por')} <span className="font-semibold text-[var(--primary)]">JS Dev</span> & <span className="font-semibold text-[var(--primary)]">Gemini</span>
-                </p>
+              <p>© {new Date().getFullYear()} Saldo.io. {t('layout.all_rights_reserved', 'Todos os direitos reservados.')}</p>
+              <p className="mt-1 text-xs opacity-70">
+                {t('layout.made_by', 'Feito com ❤️ por')} <span className="font-semibold text-[var(--primary)]">JS Dev</span> & <span className="font-semibold text-[var(--primary)]">Gemini</span>
+              </p>
             </div>
           </footer>
         </div>
