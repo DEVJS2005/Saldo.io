@@ -47,6 +47,16 @@ export function useTransactions() {
         return;
     }
 
+    // Erros de rede transitórios (mobile background/foreground, queda momentânea)
+    // não devem ser apresentados como erros críticos — a operação pode ser retentada.
+    if (msg.includes('NetworkError') ||
+        msg.includes('Failed to fetch') ||
+        msg.includes('Load failed') ||
+        msg.includes('fetch resource')) {
+        alert('Sem conexão com a internet. Verifique sua rede e tente novamente.');
+        return;
+    }
+
     throw error; // Re-throw unknown errors
   };
 
