@@ -39,3 +39,7 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Generated screens
+stitch_screens/
+

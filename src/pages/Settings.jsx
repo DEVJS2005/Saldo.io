@@ -40,7 +40,6 @@ export default function Settings() {
     const [accLinkedEdits, setAccLinkedEdits] = useState({}); // { id: 'Linked ID' }
 
     const [aiProvider, setAiProvider] = useState(localStorage.getItem('saldo_ai_provider') || 'gemini');
-    const [aiApiKey, setAiApiKey] = useState(localStorage.getItem('saldo_ai_api_key') || '');
     const [isSavingAi, setIsSavingAi] = useState(false);
 
     // Password State
@@ -275,7 +274,7 @@ export default function Settings() {
     const handleSaveAiSettings = async () => {
         setIsSavingAi(true);
         localStorage.setItem('saldo_ai_provider', aiProvider);
-        localStorage.setItem('saldo_ai_api_key', aiApiKey);
+        localStorage.removeItem('saldo_ai_api_key'); // garantindo a remoção local para usuários legados
         await new Promise(res => setTimeout(res, 500)); // feedback vizual
         setIsSavingAi(false);
         await alert(t('settings.ai_saved', 'Configurações de I.A. salvas localmente!'), t('errors.title_success'), 'success');
@@ -738,7 +737,7 @@ export default function Settings() {
                         Consultor Financeiro I.A.
                     </h3>
                     <p className="text-sm text-[var(--text-secondary)] mb-4">
-                        {t('settings.ai_desc', 'Forneça sua chave para liberar análises financeiras avançadas.')}
+                        {t('settings.ai_desc', 'Selecione abaixo o seu provedor de inteligência artificial preferido.')}
                     </p>
 
                     <div className="space-y-4 max-w-md">
@@ -753,24 +752,15 @@ export default function Settings() {
                                 <option value="openai">OpenAI (ChatGPT)</option>
                             </select>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-xs text-[var(--text-secondary)] ml-1">{t('settings.ai_api_key', 'Chave da API')}</label>
-                            <Input
-                                type="password"
-                                placeholder={aiProvider === 'gemini' ? 'AIzaSy...' : 'sk-...'}
-                                value={aiApiKey}
-                                onChange={e => setAiApiKey(e.target.value)}
-                            />
-                        </div>
                         <Button 
                             onClick={handleSaveAiSettings} 
                             disabled={isSavingAi}
                             className="w-full mt-2"
                         >
-                            {isSavingAi ? 'Salvando...' : 'Salvar Chave Localmente'}
+                            {isSavingAi ? 'Salvando...' : 'Salvar Provedor'}
                         </Button>
                         <p className="text-xs text-[var(--text-muted)] text-center px-2 mt-2">
-                            {t('settings.ai_privacy', 'Sua chave é salva apenas neste navegador. O Saldo.io nunca envia nomes de suas transações ou dados sensíveis aos modelos.')}
+                            {t('settings.ai_privacy', 'O Saldo.io nunca envia nomes de suas transações ou dados sensíveis aos modelos. Tudo ocorre via proxy anônimo na nuvem.')}
                         </p>
                     </div>
                 </Card>

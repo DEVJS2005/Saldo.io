@@ -1,6 +1,13 @@
 import fs from 'fs';
+import 'dotenv/config';
 
-const apiKey = 'AQ.Ab8RN6I9hkdh2ISYQ9rH9U0_p7CrYjqUitVgVXBidD1o9yfKIw';
+const apiKey = process.env.STITCH_API_KEY;
+
+if (!apiKey) {
+    console.error("ERRO: STITCH_API_KEY não foi configurada nas variáveis de ambiente.");
+    process.exit(1);
+}
+
 const headers = { 'X-Goog-Api-Key': apiKey };
 
 async function fetchScreens() {

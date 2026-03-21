@@ -23,9 +23,8 @@ export function useMonthlyComparison(selectedDate = new Date(), months = 12) {
       }));
 
       const { data: txs, error } = await supabase
-        .from('transactions')
+        .from('active_transactions')
         .select('amount, type, date')
-        .is('deleted_at', null)
         .gte('date', startDate.toISOString())
         .lte('date', endDate.toISOString());
 

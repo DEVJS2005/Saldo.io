@@ -16,9 +16,8 @@ export function useBudget(monthDate = new Date()) {
       const end = endOfMonth(monthDate).toISOString();
 
       const { data, error: monthlyError } = await supabase
-        .from('transactions')
+        .from('active_transactions')
         .select('*')
-        .is('deleted_at', null)
         .gte('date', start)
         .lte('date', end)
         .order('date', { ascending: false });

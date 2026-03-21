@@ -16,7 +16,7 @@ export async function generateBackup(userId) {
 
     const { data: categories } = await supabase.from('categories').select('*').eq('user_id', userId);
     const { data: accounts } = await supabase.from('accounts').select('*').eq('user_id', userId);
-    const { data: transactions } = await supabase.from('transactions').select('*').eq('user_id', userId);
+    const { data: transactions } = await supabase.from('active_transactions').select('*').eq('user_id', userId);
     const { data: budgets } = await supabase.from('budgets').select('*').eq('user_id', userId);
 
     const backupData = {
@@ -37,7 +37,7 @@ export async function generateBackup(userId) {
 export async function exportTransactionsCSV(userId) {
     if (!userId) throw new Error('Usuário não autenticado.');
 
-    const { data: tData } = await supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
+    const { data: tData } = await supabase.from('active_transactions').select('*').eq('user_id', userId).order('date', { ascending: false });
     const { data: cData } = await supabase.from('categories').select('id, name').eq('user_id', userId);
     const { data: aData } = await supabase.from('accounts').select('id, name').eq('user_id', userId);
 
