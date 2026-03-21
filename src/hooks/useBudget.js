@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { db } from '../db/db';
 
 export function useBudget(monthDate = new Date()) {
   const { user } = useAuth();
@@ -27,67 +26,28 @@ export function useBudget(monthDate = new Date()) {
     let globalRealBalance = 0;
     const accountBalances = {};
 
-    if (user.canSync) {
-        // --- CLOUD MODE (Supabase) ---
-        const { data, error: monthlyError } = await supabase
-          .from('transactions')
-          .select('*')
-          .is('deleted_at', null)
-          .gte('date', start)
-          .lte('date', end)
-          .order('date', { ascending: false });
+    const { data, error: monthlyError } = await supabase
+      .from('transactions')
+      .select('*')
+      .is('deleted_at', null)
+      .gte('date', start)
+      .lte('date', end)
+      .order('date', { ascending: false });
 
-        if (monthlyError) console.error('Error fetching monthly budget:', monthlyError);
-        else monthlyData = data || [];
+    if (monthlyError) console.error('Error fetching monthly budget:', monthlyError);
+    else monthlyData = data || [];
 
-        // Fetch Global Balance (RPC)
-        const { data: summaryData, error: summaryError } = await supabase
-            .rpc('get_financial_summary', { p_end_date: null });
+    // Fetch Global Balance (RPC)
+    const { data: summaryData, error: summaryError } = await supabase
+        .rpc('get_financial_summary', { p_end_date: null });
 
-        if (summaryError) {
-            console.error('Error fetching financial summary:', summaryError);
-        } else if (summaryData) {
-            globalRealBalance = Number(summaryData.total_balance) || 0;
-            const accBals = summaryData.accounts_balance || {};
-            for (const [accId, bal] of Object.entries(accBals)) {
-                accountBalances[accId] = Number(bal);
-            }
-        }
-    } else {
-        // --- LOCAL MODE (Dexie) ---
-        try {
-            // 1. Monthly Data
-            monthlyData = await db.transactions
-                .where('date').between(start, end, true, true)
-                .filter(t => t.deleted_at == null)
-                .reverse().sortBy('date');
-
-            // 2. Global Balance Calculation (Client-side)
-            const allTxs = await db.transactions.filter(t => t.deleted_at == null).toArray();
-            const allAccs = await db.accounts.toArray();
-            
-            allTxs.forEach(t => {
-                const val = Number(t.amount);
-                
-                // Find account to resolve linked account
-                const acc = allAccs.find(a => String(a.id) === String(t.accountId));
-                const linkedId = acc?.linked_account_id || acc?.linkedAccountId;
-                const targetAccId = linkedId ? String(linkedId) : String(t.accountId);
-                
-                if (accountBalances[targetAccId] === undefined) accountBalances[targetAccId] = 0;
-                
-                if (t.paymentStatus === 'paid') {
-                    if (t.type === 'receita') {
-                        globalRealBalance += val;
-                        accountBalances[targetAccId] += val;
-                    } else if (t.type === 'despesa') {
-                        globalRealBalance -= val;
-                        accountBalances[targetAccId] -= val;
-                    }
-                }
-            });
-        } catch (err) {
-            console.error('Error in local budget calculation:', err);
+    if (summaryError) {
+        console.error('Error fetching financial summary:', summaryError);
+    } else if (summaryData) {
+        globalRealBalance = Number(summaryData.total_balance) || 0;
+        const accBals = summaryData.accounts_balance || {};
+        for (const [accId, bal] of Object.entries(accBals)) {
+            accountBalances[accId] = Number(bal);
         }
     }
 
@@ -119,7 +79,6 @@ export function useBudget(monthDate = new Date()) {
       }
     });
 
-    // ... logic ...
     setStats({
         income,
         expense,
@@ -135,17 +94,15 @@ export function useBudget(monthDate = new Date()) {
   useEffect(() => {
     fetchBudget();
 
-    let txSub;
-    if (user?.canSync) {
-      txSub = supabase
-        .channel('budget_transactions_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => fetchBudget())
-        .subscribe();
-    }
+    const txSub = supabase
+      .channel('budget_transactions_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => fetchBudget())
+      .subscribe();
 
     return () => {
-      if (txSub) supabase.removeChannel(txSub);
+      supabase.removeChannel(txSub);
     };
-  }, [fetchBudget, user?.canSync]);
+  }, [fetchBudget]);
+
   return { ...stats, loading, refresh: fetchBudget };
 }

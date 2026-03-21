@@ -3,8 +3,8 @@ import { LayoutDashboard, Receipt, PieChart, Settings, Wallet, LogOut, ShieldChe
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 import { useDialog } from '../contexts/DialogContext';
-import { syncCloudToLocal } from '../lib/syncService';
 import { useState, useEffect, useRef } from 'react';
+
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +51,6 @@ export const Layout = ({ children }) => {
   const path = location.pathname;
   const { signOut, user } = useAuth();
   const { alert, confirm } = useDialog();
-  const [isMigrating, setIsMigrating] = useState(false);
 
   // Changelog State
   const [changelogs, setChangelogs] = useState([]);
@@ -60,41 +59,7 @@ export const Layout = ({ children }) => {
   const notifRef = useRef(null);
 
   useEffect(() => {
-    // 1. Check downgrade/local mode
-    const checkDowngrade = async () => {
-      if (!user) return;
-
-      const hadCloudAccess = localStorage.getItem('has_cloud_access') === 'true';
-
-      if (user.canSync) {
-        if (!hadCloudAccess) localStorage.setItem('has_cloud_access', 'true');
-      } else if (hadCloudAccess) {
-        setIsMigrating(true);
-        try {
-          const result = await syncCloudToLocal(user.id);
-          if (result.success) {
-            localStorage.setItem('has_cloud_access', 'false');
-            setIsMigrating(false); // Stop loading before alert
-            await alert(
-              t('layout.premium_expired_desc', 'Seu plano Premium expirou. Baixamos seus dados mais recentes da nuvem para este dispositivo. Você pode continuar usando o sistema em Modo Local.'),
-              t('layout.local_mode_activated', 'Modo Local Ativado'),
-              'info'
-            );
-          } else {
-            setIsMigrating(false);
-            console.error(result.error);
-            await alert(t('layout.backup_failed', 'Falha ao baixar backup da nuvem. Entre em contato com o suporte.'), t('layout.error', 'Erro'), 'error');
-          }
-        } catch (e) {
-          setIsMigrating(false);
-          console.error(e);
-        }
-      }
-    };
-
-    checkDowngrade();
-
-    // 2. Fetch Changelogs
+    // 1. Fetch Changelogs
     const fetchChangelogs = async () => {
       const { data, error } = await supabase
         .from('changelog')
@@ -161,15 +126,6 @@ export const Layout = ({ children }) => {
     }
   };
 
-  if (isMigrating) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-        <h2 className="text-xl font-bold animate-pulse">{t('layout.syncing_data', 'Sincronizando dados...')}</h2>
-        <p className="text-[var(--text-secondary)]">{t('layout.downloading_backup', 'Baixando backup da nuvem para uso offline.')}</p>
-      </div>
-    );
-  }
 
   const getChangelogIcon = (type) => {
     switch (type) {

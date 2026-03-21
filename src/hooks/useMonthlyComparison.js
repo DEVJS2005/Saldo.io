@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { startOfMonth, endOfMonth, subMonths, format, eachMonthOfInterval } from 'date-fns';
-import { db } from '../db/db';
 
 export function useMonthlyComparison(selectedDate = new Date(), months = 12) {
   const { user } = useAuth();
@@ -26,29 +25,16 @@ export function useMonthlyComparison(selectedDate = new Date(), months = 12) {
       saldo: 0,
     }));
 
-    let allTransactions = [];
+    const { data: txs, error } = await supabase
+      .from('transactions')
+      .select('amount, type, date')
+      .is('deleted_at', null)
+      .gte('date', startDate.toISOString())
+      .lte('date', endDate.toISOString());
 
-    if (user.canSync) {
-      const { data: txs, error } = await supabase
-        .from('transactions')
-        .select('amount, type, date')
-        .is('deleted_at', null)
-        .gte('date', startDate.toISOString())
-        .lte('date', endDate.toISOString());
+    if (error) console.error('Error fetching comparison data:', error);
 
-      if (error) console.error('Error fetching comparison data:', error);
-      else allTransactions = txs || [];
-    } else {
-      try {
-        allTransactions = await db.transactions
-          .where('date')
-          .between(startDate.toISOString(), endDate.toISOString(), true, true)
-          .filter(t => t.deleted_at == null)
-          .toArray();
-      } catch (err) {
-        console.error('Error fetching local comparison data:', err);
-      }
-    }
+    const allTransactions = txs || [];
 
     allTransactions.forEach(t => {
       const tDate = new Date(t.date);

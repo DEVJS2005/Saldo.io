@@ -127,13 +127,12 @@ export function AuthProvider({ children }) {
                 return userRef.current;
             }
 
-            // Segurança: em caso de timeout/offline inicial, assume o nível mínimo de
-            // permissão ('user', canSync: false). Nunca eleve permissões via
-            // fallback client-side — use usePermissions() para validação real.
+            // Segurança: em caso de timeout/offline inicial, mantemos o modo cloud (online-only).
+            // O app não possui mais modo local — use usePermissions() para validação real.
             return {
                 ...sessionUser,
                 role: 'user',
-                canSync: false
+                canSync: true
             };
         }
     };

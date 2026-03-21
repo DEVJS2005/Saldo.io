@@ -8,9 +8,8 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X, KeySquare, Monitor, Moon, Sun, Globe } from 'lucide-react';
-import { migrateLocalData } from '../lib/migration';
 import { resetCloudData } from '../lib/reset';
-import { db } from '../db/db';
+
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import { generateBackup, exportTransactionsCSV, restoreBackup } from '../lib/backup';
@@ -226,7 +225,7 @@ export default function Settings() {
     const handleExportCSV = async () => {
         setIsProcessingData(true);
         try {
-            await exportTransactionsCSV(user.id, user.canSync);
+            await exportTransactionsCSV(user.id);
             await alert('Exportação CSV realizada com sucesso.', 'Sucesso', 'success');
         } catch (err) {
             await alert('Erro ao exportar CSV: ' + err.message, 'Erro', 'error');
@@ -238,7 +237,7 @@ export default function Settings() {
     const handleDownloadBackup = async () => {
         setIsProcessingData(true);
         try {
-            await generateBackup(user.id, user.canSync);
+            await generateBackup(user.id);
             await alert('Backup JSON gerado com sucesso.', 'Sucesso', 'success');
         } catch (err) {
             await alert('Erro ao gerar backup: ' + err.message, 'Erro', 'error');
@@ -260,7 +259,7 @@ export default function Settings() {
                 const confirmed = await confirm(`Deseja restaurar o backup (data: ${jsonData.timestamp ? new Date(jsonData.timestamp).toLocaleString() : 'desconhecida'})? Isso sobrescreverá dados existentes com conflitos de ID.`, 'Importar Backup');
                 if (!confirmed) return;
 
-                await restoreBackup(jsonData, user.id, user.canSync);
+                await restoreBackup(jsonData, user.id);
                 await alert('Backup restaurado com sucesso! A página será recarregada.', 'Sucesso', 'success');
                 window.location.reload();
             } catch (err) {
@@ -285,13 +284,7 @@ export default function Settings() {
     const handleResetApp = async () => {
         if (await confirm('PERIGO: Isso irá APAGAR TODOS os seus dados. Esta ação é irreversível. Tem certeza?', 'Zona de Perigo')) {
             try {
-                if (user.canSync) {
-                    await resetCloudData();
-                } else {
-                    await db.categories.clear();
-                    await db.accounts.clear();
-                    await db.transactions.clear();
-                }
+                await resetCloudData();
                 window.location.href = '/';
             } catch (err) {
                 await alert('Erro ao resetar: ' + err.message, 'Erro', 'error');
@@ -823,37 +816,7 @@ export default function Settings() {
                         </div>
                     </Card>
 
-                    {user?.canSync ? (
-                        <Card className="p-4 flex flex-col gap-4 border-blue-500/20">
-                            <div>
-                                <h3 className="font-medium text-lg flex items-center gap-2 text-blue-400">
-                                    <CloudUpload size={20} /> Migrar Dados Antigos
-                                </h3>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1">
-                                    Envia seus dados locais (offline) para sua conta na nuvem.
-                                </p>
-                            </div>
-                            <Button onClick={handleMigrateLocalData} disabled={migrating} className="w-full justify-start bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border-blue-500/20">
-                                <CloudUpload size={16} className="mr-2" />
-                                {migrating ? 'Migrando...' : 'Sincronizar Dados Locais'}
-                            </Button>
-                        </Card>
-                    ) : (
-                        <Card className="p-4 flex flex-col gap-4 border-gray-500/20 opacity-60">
-                            <div>
-                                <h3 className="font-medium text-lg flex items-center gap-2 text-[var(--text-secondary)]">
-                                    <CloudUpload size={20} /> Sincronização em Nuvem
-                                </h3>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1">
-                                    Recurso Premium. Sincronize seus dados e acesse de qualquer lugar.
-                                </p>
-                            </div>
-                            <Button disabled variant="secondary" className="w-full justify-start cursor-not-allowed">
-                                <CloudUpload size={16} className="mr-2" />
-                                Disponível no Plano Premium
-                            </Button>
-                        </Card>
-                    )}
+
 
                     <Card className="p-4 flex flex-col gap-4 border-red-500/20">
                         <div>
