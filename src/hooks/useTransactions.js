@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { addMonths } from 'date-fns';
-import { useState, useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const toNoonUTC = (dateInput) => {
   const [year, month, day] = typeof dateInput === 'string' && dateInput.length === 10
@@ -13,6 +13,7 @@ const toNoonUTC = (dateInput) => {
 
 export function useTransactions() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleError = async (error) => {
     console.error('Transaction Error:', error);
@@ -23,27 +24,24 @@ export function useTransactions() {
         error.code === 'PGRST301' ||
         error.status === 401) {
         console.error("Auth error caught:", error);
-        return;
+        // mutateAsync já relança o erro, não precisamos dar throw aqui para não causar unhandled rejection
     }
 
-    if (msg.includes('Sem conexão')) {
-        alert(msg);
-        return;
-    }
-
-    if (msg.includes('NetworkError') ||
-        msg.includes('Failed to fetch') ||
-        msg.includes('Load failed') ||
-        msg.includes('fetch resource')) {
+    if (msg.includes('Sem conexão') || msg.includes('NetworkError') || msg.includes('Failed to fetch') || msg.includes('Load failed')) {
         alert('Sem conexão com a internet. Verifique sua rede e tente novamente.');
-        return;
     }
-
-    throw error;
   };
 
-  const addTransaction = async (data) => {
-    try {
+  const invalidateTransactionQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    // Outras chaves que podem ser afetadas, se implementarmos
+    queryClient.invalidateQueries({ queryKey: ['budget'] });
+    queryClient.invalidateQueries({ queryKey: ['budgetLimits'] });
+    queryClient.invalidateQueries({ queryKey: ['monthlyComparison'] });
+  };
+
+  const addMutation = useMutation({
+    mutationFn: async (data) => {
         if (!user) throw new Error('Usuário não autenticado');
 
         const {
@@ -142,17 +140,15 @@ export function useTransactions() {
             return;
         }
 
-        if (!user) throw new Error('Usuário não autenticado.');
         const { error } = await supabase.from('transactions').insert(transactionsToAdd);
         if (error) throw error;
+    },
+    onSuccess: invalidateTransactionQueries,
+    onError: handleError
+  });
 
-    } catch (error) {
-        await handleError(error);
-    }
-  };
-
-  const deleteTransaction = async (id, deleteMode = 'single') => {
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async ({ id, deleteMode = 'single' }) => {
         if (!user) return;
 
         const deletedAt = new Date().toISOString();
@@ -202,14 +198,13 @@ export function useTransactions() {
 
         const { error: deleteError } = await query;
         if (deleteError) throw deleteError;
+    },
+    onSuccess: invalidateTransactionQueries,
+    onError: handleError
+  });
 
-    } catch (error) {
-        await handleError(error);
-    }
-  };
-
-  const updateTransaction = async (id, data, mode = 'single') => {
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data, mode = 'single' }) => {
           let normalizedDate, normalizedMonth, normalizedYear;
           if (data.date) {
              const d = toNoonUTC(data.date);
@@ -340,16 +335,16 @@ export function useTransactions() {
 
           const { error } = await supabase.from('transactions').update(updateData).eq('id', id);
           if (error) throw error;
-
-    } catch (error) {
-        await handleError(error);
-    }
-  };
+    },
+    onSuccess: invalidateTransactionQueries,
+    onError: handleError
+  });
 
   return {
-    addTransaction,
-    deleteTransaction,
-    updateTransaction,
-    validateAndRepairTransactions: async () => ({ message: 'Not needed in Cloud' })
+    addTransaction: addMutation.mutateAsync,
+    deleteTransaction: (id, deleteMode) => deleteMutation.mutateAsync({ id, deleteMode }),
+    updateTransaction: (id, data, mode) => updateMutation.mutateAsync({ id, data, mode }),
+    validateAndRepairTransactions: async () => ({ message: 'Not needed in Cloud' }),
+    isLoadingTransaction: addMutation.isPending || deleteMutation.isPending || updateMutation.isPending
   };
 }

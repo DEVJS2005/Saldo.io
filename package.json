@@ -20,6 +20,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@tanstack/react-query": "^5.94.5",
+    "@tanstack/react-query-devtools": "^5.94.5",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

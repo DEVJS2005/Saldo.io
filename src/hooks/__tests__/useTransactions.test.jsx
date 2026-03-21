@@ -1,6 +1,19 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useTransactions } from '../useTransactions';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const createTestQueryClient = () => new QueryClient({
+  defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+});
+
+function renderTransactionsHook() {
+  const queryClient = createTestQueryClient();
+  const wrapper = ({ children }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return renderHook(() => useTransactions(), { wrapper });
+}
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -65,7 +78,7 @@ describe('useTransactions Hook (Cloud Mode)', () => {
     describe('addTransaction', () => {
         it('insere uma transação simples via Supabase', async () => {
             mockInsertSuccess();
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             await act(async () => {
                 await result.current.addTransaction({
@@ -91,7 +104,7 @@ describe('useTransactions Hook (Cloud Mode)', () => {
 
         it('insere 12 transações para recorrência', async () => {
             mockInsertSuccess();
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             await act(async () => {
                 await result.current.addTransaction({
@@ -117,7 +130,7 @@ describe('useTransactions Hook (Cloud Mode)', () => {
 
         it('insere X parcelas para transação parcelada com valores corretos', async () => {
             mockInsertSuccess();
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             await act(async () => {
                 await result.current.addTransaction({
@@ -154,7 +167,7 @@ describe('useTransactions Hook (Cloud Mode)', () => {
         });
 
         it('não chama insert se campos obrigatórios estiverem faltando', async () => {
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             // categoryId ausente — handleError vai re-lançar o erro de validação,
             // então capturamos via try/catch dentro do act
@@ -186,7 +199,7 @@ describe('useTransactions Hook (Cloud Mode)', () => {
             const mockEqChained = vi.fn().mockResolvedValue({ error: null });
             mockUpdate.mockReturnValue({ eq: mockEqChained });
 
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             await act(async () => {
                 await result.current.deleteTransaction('tx-id-123', 'single');
@@ -206,7 +219,7 @@ describe('useTransactions Hook (Cloud Mode)', () => {
             const mockEqChained = vi.fn().mockResolvedValue({ error: null });
             mockUpdate.mockReturnValue({ eq: mockEqChained });
 
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             await act(async () => {
                 await result.current.updateTransaction('tx-id-123', {
@@ -240,17 +253,21 @@ describe('useTransactions Hook (Cloud Mode)', () => {
             mockInsert.mockRejectedValue(new Error('Failed to fetch'));
             const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-            const { result } = renderHook(() => useTransactions());
+            const { result } = renderTransactionsHook();
 
             await act(async () => {
-                await result.current.addTransaction({
-                    description: 'Teste',
-                    amount: 10,
-                    type: 'despesa',
-                    date: '2024-01-01',
-                    categoryId: 'cat-1',
-                    accountId: 'acc-1',
-                });
+                try {
+                    await result.current.addTransaction({
+                        description: 'Teste',
+                        amount: 10,
+                        type: 'despesa',
+                        date: '2024-01-01',
+                        categoryId: 'cat-1',
+                        accountId: 'acc-1',
+                    });
+                } catch (e) {
+                    // Esperado
+                }
             });
 
             expect(alertSpy).toHaveBeenCalledWith(

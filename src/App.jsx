@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Layout } from './components/Layout';
 import { DateProvider } from './contexts/DateContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -195,20 +197,33 @@ function AppContent() {
 
 
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Pode ser repensado depois, mas false é bom padrão para finanças
+      staleTime: 1000 * 60 * 5, // 5 minutos de cache stale
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <AuthProvider>
-      <DateProvider>
-        <DialogProvider>
-          <ErrorBoundary>
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-            <Analytics />
-          </ErrorBoundary>
-        </DialogProvider>
-      </DateProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <DateProvider>
+          <DialogProvider>
+            <ErrorBoundary>
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+              <Analytics />
+            </ErrorBoundary>
+          </DialogProvider>
+        </DateProvider>
+      </AuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 

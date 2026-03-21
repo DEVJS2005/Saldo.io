@@ -1,54 +1,70 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useMasterData() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState([]);
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
+  const { data: categories = [], isLoading: loadingCategories } = useQuery({
+    queryKey: ['categories', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
-    const { data: cats, error: catError } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
-
-    if (catError) console.error('Error fetching categories:', catError);
-    if (cats) setCategories(cats);
-
-    const { data: accs, error: accError } = await supabase
-      .from('accounts')
-      .select('*')
-      .order('name');
-
-    if (accError) console.error('Error fetching accounts:', accError);
-    if (accs) setAccounts(accs);
-
-    setLoading(false);
-  }, [user]);
+  const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
+    queryKey: ['accounts', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   useEffect(() => {
-    fetchData();
+    if (!user) return;
 
     const catSub = supabase
       .channel('categories_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['categories', user.id] });
+      })
       .subscribe();
 
     const accSub = supabase
       .channel('accounts_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['accounts', user.id] });
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(catSub);
       supabase.removeChannel(accSub);
     };
-  }, [fetchData]);
+  }, [user, queryClient]);
 
-  return { categories, accounts, loading, refreshData: fetchData };
+  const refreshData = () => {
+    queryClient.invalidateQueries({ queryKey: ['categories', user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
+  };
+
+  return { 
+    categories, 
+    accounts, 
+    loading: loadingCategories || loadingAccounts, 
+    refreshData 
+  };
 }
