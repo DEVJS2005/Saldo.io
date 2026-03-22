@@ -7,7 +7,7 @@ import { useDialog } from '../contexts/DialogContext';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X, KeySquare, Monitor, Moon, Sun, Globe } from 'lucide-react';
+import { Trash2, Plus, CreditCard, Wallet, Building2, Utensils, PiggyBank, Download, Upload, RefreshCw, CloudUpload, Edit2, Save, X, KeySquare, Monitor, Moon, Sun, Globe, Calendar } from 'lucide-react';
 import { resetCloudData } from '../lib/reset';
 
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,8 @@ export default function Settings() {
     const [newAccType, setNewAccType] = useState('bank');
     const [newAccLimit, setNewAccLimit] = useState('');
     const [newAccLinkedId, setNewAccLinkedId] = useState('');
+    const [newAccClosingDay, setNewAccClosingDay] = useState('');
+    const [newAccDueDay, setNewAccDueDay] = useState('');
 
     // Edits state
     const [limitEdits, setLimitEdits] = useState({});
@@ -38,9 +40,18 @@ export default function Settings() {
     const [accEdits, setAccEdits] = useState({}); // { id: 'New Name' }
     const [editingAccId, setEditingAccId] = useState(null); // Currently editing ID
     const [accLinkedEdits, setAccLinkedEdits] = useState({}); // { id: 'Linked ID' }
+    const [accClosingDayEdits, setAccClosingDayEdits] = useState({});
+    const [accDueDayEdits, setAccDueDayEdits] = useState({});
 
     const [aiProvider, setAiProvider] = useState(localStorage.getItem('saldo_ai_provider') || 'gemini');
     const [isSavingAi, setIsSavingAi] = useState(false);
+
+    // Calendar Integration State
+    const [calMonth, setCalMonth] = useState(new Date().getMonth() + 1);
+    const [calYear, setCalYear] = useState(new Date().getFullYear());
+    const [calIncludeCredit, setCalIncludeCredit] = useState(true);
+    const [calIncludeBank, setCalIncludeBank] = useState(true);
+    const [isExportingCal, setIsExportingCal] = useState(false);
 
     // Password State
     const [currentPassword, setCurrentPassword] = useState('');
@@ -118,12 +129,16 @@ export default function Settings() {
                 name: newAccName,
                 type: newAccType,
                 limit: newAccType === 'credit' ? parseFloat(newAccLimit || 0) : 0,
-                linked_account_id: (newAccType === 'credit' && newAccLinkedId) ? newAccLinkedId : null
+                linked_account_id: (newAccType === 'credit' && newAccLinkedId) ? newAccLinkedId : null,
+                closing_day: newAccType === 'credit' && newAccClosingDay ? parseInt(newAccClosingDay) : null,
+                due_day: newAccType === 'credit' && newAccDueDay ? parseInt(newAccDueDay) : null
             });
             if (error) throw error;
             setNewAccName('');
             setNewAccLimit('');
             setNewAccLinkedId('');
+            setNewAccClosingDay('');
+            setNewAccDueDay('');
             setNewAccType('bank');
             await refreshData();
         } catch (err) {
@@ -136,6 +151,8 @@ export default function Settings() {
         setEditingAccId(acc.id);
         setAccEdits(prev => ({ ...prev, [acc.id]: acc.name }));
         setAccLinkedEdits(prev => ({ ...prev, [acc.id]: acc.linked_account_id || acc.linkedAccountId || '' }));
+        setAccClosingDayEdits(prev => ({ ...prev, [acc.id]: acc.closing_day || '' }));
+        setAccDueDayEdits(prev => ({ ...prev, [acc.id]: acc.due_day || '' }));
     };
 
     const cancelEditingAccount = () => {
@@ -145,15 +162,26 @@ export default function Settings() {
     const saveAccountName = async (id) => {
         const newName = accEdits[id];
         const newLinkedId = accLinkedEdits[id];
+        const closingDay = accClosingDayEdits[id];
+        const dueDay = accDueDayEdits[id];
         if (!newName || !newName.trim()) return;
 
         try {
+            const accToUpdate = accounts.find(a => a.id === id);
+            const isCredit = accToUpdate?.type === 'credit';
+            const payload = {
+                name: newName,
+                linked_account_id: newLinkedId || null
+            };
+
+            if (isCredit) {
+                payload.closing_day = closingDay ? parseInt(closingDay) : null;
+                payload.due_day = dueDay ? parseInt(dueDay) : null;
+            }
+
             const { error } = await supabase
                 .from('accounts')
-                .update({
-                    name: newName,
-                    linked_account_id: newLinkedId || null
-                })
+                .update(payload)
                 .eq('id', id);
 
             if (error) throw error;
@@ -242,6 +270,71 @@ export default function Settings() {
             await alert('Erro ao gerar backup: ' + err.message, 'Erro', 'error');
         } finally {
             setIsProcessingData(false);
+        }
+    };
+
+    const handleExportCalendar = async () => {
+        setIsExportingCal(true);
+        try {
+            let requestBody = { month: calMonth, year: calYear, mode: 'all' };
+
+            if (!calIncludeCredit || !calIncludeBank) {
+                const startDate = new Date(calYear, calMonth - 1, 1).toISOString();
+                const endDate = new Date(calYear, calMonth, 0, 23, 59, 59).toISOString();
+
+                const { data, error } = await supabase.from('active_transactions')
+                    .select('id, type, accounts(type)')
+                    .eq('type', 'despesa')
+                    .gte('date', startDate)
+                    .lte('date', endDate);
+
+                if (error) throw error;
+                
+                const ids = data.filter(tx => {
+                    const accType = Array.isArray(tx.accounts) ? tx.accounts[0]?.type : tx.accounts?.type;
+                    const isCredit = accType === 'credit';
+                    if (isCredit && !calIncludeCredit) return false;
+                    if (!isCredit && !calIncludeBank) return false;
+                    return true;
+                }).map(tx => tx.id);
+                
+                requestBody = { month: calMonth, year: calYear, mode: 'selected', transaction_ids: ids };
+            }
+
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+            const response = await fetch(`${supabaseUrl}/functions/v1/generate-ical`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || 'Erro na conversão do calendário.');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `faturas_${calYear}_${String(calMonth).padStart(2, '0')}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            
+            await alert('Calendário exportado com sucesso! Arquivo .ics pronto.', 'Sucesso', 'success');
+        } catch (err) {
+            console.error(err);
+            await alert('Erro ao exportar calendário: ' + err.message, 'Erro', 'error');
+        } finally {
+            setIsExportingCal(false);
         }
     };
 
@@ -519,11 +612,27 @@ export default function Settings() {
                                         </select>
                                     )}
                                     {newAccType === 'credit' && (
-                                        <div className="w-full sm:w-32">
+                                        <div className="flex gap-2 w-full sm:w-auto">
+                                            <Input
+                                                type="number" min="1" max="31"
+                                                placeholder="Dia F."
+                                                title="Dia de Fechamento"
+                                                className="w-full sm:w-20 text-center"
+                                                value={newAccClosingDay}
+                                                onChange={e => setNewAccClosingDay(e.target.value)}
+                                            />
+                                            <Input
+                                                type="number" min="1" max="31"
+                                                placeholder="Dia V."
+                                                title="Dia de Vencimento"
+                                                className="w-full sm:w-20 text-center"
+                                                value={newAccDueDay}
+                                                onChange={e => setNewAccDueDay(e.target.value)}
+                                            />
                                             <Input
                                                 type="number"
                                                 placeholder="Limite R$"
-                                                className="w-full"
+                                                className="w-full sm:w-32"
                                                 value={newAccLimit}
                                                 onChange={e => setNewAccLimit(e.target.value)}
                                             />
@@ -565,16 +674,36 @@ export default function Settings() {
                                                         </button>
                                                     </div>
                                                     {acc.type === 'credit' && (
-                                                        <select
-                                                            className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--primary)]"
-                                                            value={accLinkedEdits[acc.id] || ''}
-                                                            onChange={(e) => setAccLinkedEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
-                                                        >
-                                                            <option value="">Conta de Pagamento (Opcional)</option>
-                                                            {accounts?.filter(a => (a.type === 'bank' || a.type === 'wallet') && a.id !== acc.id).map(bankAcc => (
-                                                                <option key={bankAcc.id} value={bankAcc.id}>{bankAcc.name}</option>
-                                                            ))}
-                                                        </select>
+                                                        <div className="flex flex-col sm:flex-row gap-2">
+                                                            <select
+                                                                className="w-full sm:flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm focus:outline-none focus:border-[var(--primary)]"
+                                                                value={accLinkedEdits[acc.id] || ''}
+                                                                onChange={(e) => setAccLinkedEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
+                                                            >
+                                                                <option value="">Conta de Pagamento (Opcional)</option>
+                                                                {accounts?.filter(a => (a.type === 'bank' || a.type === 'wallet') && a.id !== acc.id).map(bankAcc => (
+                                                                    <option key={bankAcc.id} value={bankAcc.id}>{bankAcc.name}</option>
+                                                                ))}
+                                                            </select>
+                                                            <div className="flex gap-2">
+                                                                <input
+                                                                    type="number" min="1" max="31"
+                                                                    placeholder="Dia F."
+                                                                    title="Dia de Fechamento"
+                                                                    className="w-16 bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm text-center focus:outline-none focus:border-[var(--primary)]"
+                                                                    value={accClosingDayEdits[acc.id] || ''}
+                                                                    onChange={(e) => setAccClosingDayEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
+                                                                />
+                                                                <input
+                                                                    type="number" min="1" max="31"
+                                                                    placeholder="Dia V."
+                                                                    title="Dia de Vencimento"
+                                                                    className="w-16 bg-[var(--bg-card)] border border-[var(--border-color)] rounded px-2 py-1 text-sm text-center focus:outline-none focus:border-[var(--primary)]"
+                                                                    value={accDueDayEdits[acc.id] || ''}
+                                                                    onChange={(e) => setAccDueDayEdits(prev => ({ ...prev, [acc.id]: e.target.value }))}
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </div>
                                             ) : (
@@ -607,10 +736,15 @@ export default function Settings() {
                                     </div>
 
                                     {acc.type === 'credit' && (
-                                        <div className="flex items-center justify-between gap-2 bg-[var(--bg-card)]/50 p-2 rounded text-sm">
-                                            <span className="text-[var(--text-secondary)]">Limite:</span>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs">R$</span>
+                                                        <div className="flex items-center justify-between gap-2 bg-[var(--bg-card)]/50 p-2 rounded text-sm w-full">
+                                                            <div className="flex gap-2 sm:gap-4 text-[var(--text-secondary)] text-xs font-mono bg-blue-500/10 px-2 py-1 rounded text-blue-500">
+                                                                {(acc.closing_day || acc.due_day) ? (
+                                                                    <span>F: {acc.closing_day || '--'} | V: {acc.due_day || '--'}</span>
+                                                                ) : <span>Dias F/V ñ conf.</span>}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 ml-auto">
+                                                                <span className="text-[var(--text-secondary)]">Limite:</span>
+                                                                <span className="text-xs">R$</span>
                                                 <input
                                                     type="number"
                                                     className="w-20 bg-transparent border-b border-[var(--border-color)] focus:border-[var(--primary)] outline-none text-right font-medium"
@@ -771,6 +905,66 @@ export default function Settings() {
                             {t('settings.ai_privacy', 'O Saldo.io nunca envia nomes de suas transações ou dados sensíveis aos modelos. Tudo ocorre via proxy anônimo na nuvem.')}
                         </p>
                     </div>
+                </Card>
+            </div>
+
+            {/* Calendar Integration Section */}
+            <div className="space-y-4 md:col-span-2">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Calendar size={20} className="text-indigo-400" /> Integração com Calendário
+                </h2>
+                <Card className="p-4">
+                    <p className="text-sm text-[var(--text-secondary)] mb-4">
+                        Exporte as faturas e despesas do mês selecionado para o formato iCal (.ics) e adicione à sua agenda (Google Calendar, Apple Calendar, Outlook).
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end mb-4">
+                        <div className="space-y-2">
+                            <label className="text-xs text-[var(--text-secondary)]">Mês / Ano</label>
+                            <input
+                                type="month"
+                                className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                                value={`${calYear}-${String(calMonth).padStart(2, '0')}`}
+                                onChange={(e) => {
+                                    if(e.target.value) {
+                                        const [y, m] = e.target.value.split('-');
+                                        setCalYear(parseInt(y));
+                                        setCalMonth(parseInt(m));
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        <div className="space-y-2 flex flex-col gap-3 sm:mt-0 mt-2">
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={calIncludeCredit}
+                                    onChange={e => setCalIncludeCredit(e.target.checked)}
+                                    className="rounded border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--primary)] focus:ring-[var(--primary)] outline-none"
+                                />
+                                Incluir Faturas (Cartão de Crédito)
+                            </label>
+                            <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={calIncludeBank}
+                                    onChange={e => setCalIncludeBank(e.target.checked)}
+                                    className="rounded border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--primary)] focus:ring-[var(--primary)] outline-none"
+                                />
+                                Incluir Demais Despesas
+                            </label>
+                        </div>
+                    </div>
+
+                    <Button
+                        onClick={handleExportCalendar}
+                        disabled={isExportingCal || (!calIncludeCredit && !calIncludeBank)}
+                        className="w-full sm:w-auto mt-2"
+                    >
+                        <Download size={16} className="mr-2" />
+                        {isExportingCal ? 'Processando (Gerando...' : 'Baixar Calendário (.ics)'}
+                    </Button>
                 </Card>
             </div>
 

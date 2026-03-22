@@ -16,6 +16,18 @@ export default async function globalSetup() {
 
   await loginUser(page);
 
+  // Handle LGPD Terms Modal
+  try {
+    const termsModal = page.getByText(/Termos de Uso e Privacidade/i);
+    if (await termsModal.isVisible({ timeout: 2000 })) {
+      await page.getByRole('checkbox').check();
+      await page.getByRole('button', { name: /Li e aceito/i }).click();
+      await page.waitForTimeout(500); // wait for state to settle
+    }
+  } catch (e) {
+    // Ignore if no modal
+  }
+
   // Wait for Supabase to save the session asynchronously to localStorage
   await page.waitForFunction(() => {
     return Object.keys(window.localStorage).some(key => key.includes('supabase.auth.token') || key.includes('-auth-token'));

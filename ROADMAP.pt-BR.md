@@ -19,7 +19,7 @@ Ferramentas para organizar melhor as finanças.
 - [x] **Relatórios Iniciais**: Gráfico de despesas por conta.
 - [x] **Ferramentas de Manutenção**: Validação e reparo de dados inconsistentes.
 
-## 🚀 v0.3.0 - Cloud & SaaS (Em Progresso)
+## ✅ v0.3.0 - Cloud & SaaS (Concluído)
 Mudança para nuvem e funcionalidades administrativas.
 - [x] **Migração Supabase**: Banco de dados na nuvem com autenticação.
 - [x] **Autenticação**: Login e Registro de usuários.
@@ -54,7 +54,7 @@ Seus dados seguros e código inquebrável.
 - [x] **Exportação**: Gerar arquivos CSV/JSON das transações.
 - [x] **Importação**: Restaurar backup ou importar de outros apps.
 - [x] **Backup Local**: Baixar arquivo completo do banco de dados.
-- [x] **Testes Automatizados (Unitários)**: Vitest com cobertura mínima de 70% — transações, parcelamentos, recorrências e migração de dados cobertos.
+- [x] **Testes Automatizados (E2E & Unitários)**: Vitest e Playwright configurados para blindar a interface contra regressões e loops de carregamento.
 
 ## ✅ v0.8.0 - Administração SaaS (Concluído)
 Ferramentas avançadas para gestão do negócio.
@@ -90,11 +90,32 @@ Otimização final de interface e alcance global do produto.
 - [x] **Internacionalização (i18n)**: Suporte dinâmico para múltiplos idiomas (Português, Inglês, Espanhol).
 - [x] **Tour do Sistema**: Integração de Onboarding interativo (React Joyride) para apresentação das telas principais.
 
+## ✅ v1.1.0 - Hardening de Segurança (Concluído)
+Auditoria completa de segurança e remediação de vulnerabilidades em toda a stack.
+- [x] **Proteção de Chave de API de IA (SEC-01)**: Migrada de `localStorage` para Edge Function Supabase (`ai-proxy`). Chaves armazenadas como secrets server-side — nunca expostas ao cliente.
+- [x] **Remoção de Credencial Hardcoded (SEC-02)**: Chave da API Stitch removida do código-fonte. Movida para `process.env.STITCH_API_KEY` com documentação no `.env.example`.
+- [x] **Endurecimento da Content Security Policy (SEC-03)**: Removidos `unsafe-inline` e `unsafe-eval` do CSP de produção. Domínios Pusher não utilizados removidos. Configurações dev/prod separadas. Pasta `stitch_screens` expurgada do histórico Git.
+- [x] **Proteção Admin Server-Side (SEC-04)**: Todas as RPCs sensíveis (`get_admin_metrics`, `get_db_health_metrics`, `revoke_other_sessions`) agora validam `auth.uid()` e `role = 'admin'` via `SECURITY DEFINER`. Uso consistente de `usePermissions()` antes de ações administrativas.
+- [x] **Padronização do Soft Delete (SEC-05)**: Criada View PostgreSQL `active_transactions` com filtro `deleted_at IS NULL` e RLS. Todas as queries de transações migradas para usar a view.
+- [x] **Proteção contra Reset Destrutivo (SEC-06)**: Confirmação em duas etapas exigindo digitação de "DELETAR TUDO". Backup JSON automático gerado antes do reset. Evento registrado em `audit_logs`.
+- [x] **Correção de Bug na Revogação de Sessão (SEC-07)**: Removido filtro duplicado (`.eq` + `.is`) em `useSessions.js`. Tratamento de erro adequado com feedback ao usuário.
+- [x] **Externalização da Chave PIX (SEC-08)**: Chave PIX e UUID hardcoded movidos de `Layout.jsx` para `src/data/constants.js`.
+- [x] **Rate Limiting (ARCH-01)**: Algoritmo Token Bucket implementado nativamente no Supabase via RPC `check_rate_limit`. Aplicado em `get_financial_summary` e `revoke_other_sessions`.
+- [x] **Audit Log Centralizado (ARCH-02)**: Tabela `audit_logs` com triggers PostgreSQL registrando automaticamente mutações destrutivas (deleção, mudança de role, revogação de sessão).
+- [x] **Paginação de Transações (ARCH-03)**: Paginação baseada em cursor implementada no `useBudget` para usuários com histórico extenso.
+- [x] **Conformidade LGPD (ARCH-04)**: Log de aceite de termos com data e versão. Fluxo de direito ao esquecimento cobrindo logs e dados de sessão. Política de privacidade acessível in-app nas Configurações.
+
+## 🚀 v1.2.0 - Integração com Calendário (Em Progresso)
+Levando os vencimentos financeiros para a agenda diária do usuário.
+- [x] **Dias de Fechamento e Vencimento do Cartão (CAL-01)**: Adicionados campos `closing_day` e `due_day` às contas de cartão de crédito. UI atualizada em Configurações com inputs validados (range 1–31).
+- [x] **Edge Function de Exportação iCal (CAL-02)**: Edge Function Supabase `generate-ical` gerando arquivos `.ics` conformes com RFC 5545. Transações de cartão de crédito agrupadas em evento único "💳 Fatura [Cartão] - Mês/Ano" na data de vencimento com descrição itemizada. Transações de conta corrente exportadas como eventos individuais com valor na descrição. Lembretes VALARM incluídos (3 dias antes da fatura, 1 dia antes de transações regulares).
+- [x] **Seção Calendário nas Configurações (CAL-03)**: Nova seção "Calendário" em Configurações. Toggles para sincronização de cartão de crédito e conta corrente. MonthYearSelector para seleção do mês. Botões "Exportar Mês Completo" e "Exportar Selecionados" com checkboxes individuais por transação.
+- [ ] **Integração OAuth2 com Google Calendar (CAL-04)**: Sincronização bidirecional direta via Google Calendar API. Criação/atualização automática de eventos ao adicionar transações. Notificações via Gmail para vencimentos próximos.
+
 ## 🔮 Futuro Triagem & Novas Implementações
 Ideias e integrações focadas em expandir os horizontes do app.
 
 ### Curto/Médio Prazo
-- [ ] **Gestão Avançada de Cartões de Crédito**: Fechamento, vencimento, limites em tempo real e faturas.
 - [ ] **Tags ou "Centros de Custo"**: Categorização cruzada para eventos (ex: #ViagemSP, #Carnaval2026).
 - [ ] **Gerenciador de Assinaturas (Subscriptions)**: Dashboard dedicado para gastos recorrentes com insights de economia.
 - [ ] **Automação de Alertas e Notificações**: Lembretes de vencimento e alertas de limite de orçamento (Budgets).

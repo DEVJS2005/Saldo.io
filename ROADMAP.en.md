@@ -70,7 +70,18 @@ Advanced tools for business management.
 - [x] **System Control**:
     - [x] Maintenance Mode (Lock login except Admin).
     - [x] Global Announcements (Dashboard message for all).
-    - [ ] Database Monitoring (Size and health).
+    - [x] Database Monitoring (Size, health, growth and indexes with visual UI).
+
+## ✅ v0.9.0 - Quality, CI/CD & Security (Completed)
+Production reliability and layered data protection.
+- [x] **CI/CD (GitHub Actions)**: Pipeline with mandatory Lint, automatic Build and Tests — merge blocked without passing checks.
+- [x] **Test Coverage**: Coverage report with minimum 70% threshold (statements, branches, functions, lines).
+- [x] **CSP Headers**: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options and Referrer-Policy via Vercel.
+- [x] **Backend Permission Validation**: RPC functions (`check_user_permissions`, `check_admin_access`, `check_sync_access`) with `SECURITY DEFINER` — immune to client-side manipulation.
+- [x] **`usePermissions` Hook**: React layer to securely consume permission RPCs before sensitive actions.
+- [x] **`audit_logs` Table**: Immutable (append-only) log of all admin panel actions, protected by RLS.
+- [x] **RLS Policies**: Security policies for `profiles`, `transactions`, `categories` and `accounts` tables.
+- [x] **Security Fix**: Removed `localStorage` fallback for `role/canSync` — timeout now assumes minimum permission level.
 
 ## ✅ v1.0.0 - Global Experience & Onboarding (Completed)
 Final UI optimization and global reach of the product.
@@ -79,11 +90,32 @@ Final UI optimization and global reach of the product.
 - [x] **Internationalization (i18n)**: Dynamic support for multiple languages (Portuguese, English, Spanish).
 - [x] **System Tour**: Interactive Onboarding integration (React Joyride) to present the main screens.
 
+## ✅ v1.1.0 - Security Hardening (Completed)
+Full security audit and vulnerability remediation across the entire stack.
+- [x] **AI API Key Protection (SEC-01)**: Migrated from `localStorage` to Supabase Edge Function (`ai-proxy`). API keys stored as server-side secrets — never exposed to the client.
+- [x] **Hardcoded Credential Removal (SEC-02)**: Removed Stitch API key from source code. Moved to `process.env.STITCH_API_KEY` with `.env.example` documentation.
+- [x] **Content Security Policy Hardening (SEC-03)**: Removed `unsafe-inline` and `unsafe-eval` from production CSP. Cleaned unused Pusher domains. Separated dev/prod configurations. Purged untracked `stitch_screens` folder from Git history.
+- [x] **Server-Side Admin Protection (SEC-04)**: All sensitive RPCs (`get_admin_metrics`, `get_db_health_metrics`, `revoke_other_sessions`) now validate `auth.uid()` and `role = 'admin'` via `SECURITY DEFINER`. Consistent use of `usePermissions()` before administrative actions.
+- [x] **Soft Delete Standardization (SEC-05)**: Created `active_transactions` PostgreSQL View with `deleted_at IS NULL` filter and RLS. All transaction queries migrated to use the view.
+- [x] **Destructive Reset Protection (SEC-06)**: Two-step confirmation requiring user to type "DELETAR TUDO". Automatic JSON backup generated before reset. Reset event registered in `audit_logs`.
+- [x] **Session Revocation Bug Fix (SEC-07)**: Removed duplicate filter (`.eq` + `.is`) in `useSessions.js`. Added proper error handling with user feedback.
+- [x] **PIX Key Externalization (SEC-08)**: Moved hardcoded PIX key and UUID from `Layout.jsx` to `src/data/constants.js`.
+- [x] **Rate Limiting (ARCH-01)**: Token Bucket algorithm implemented natively in Supabase via `check_rate_limit` RPC. Applied to `get_financial_summary` and `revoke_other_sessions`.
+- [x] **Centralized Audit Log (ARCH-02)**: `audit_logs` table with PostgreSQL triggers automatically recording destructive mutations (delete, role change, session revocation).
+- [x] **Transaction Pagination (ARCH-03)**: Cursor-based pagination implemented in `useBudget` for users with extensive history.
+- [x] **LGPD Compliance (ARCH-04)**: Terms acceptance log with date and version. Right to erasure flow covering logs and session data. In-app privacy policy accessible from Settings.
+
+## 🚀 v1.2.0 - Calendar Integration (In Progress)
+Bringing financial deadlines into the user's daily agenda.
+- [x] **Credit Card Due & Closing Days (CAL-01)**: Added `closing_day` and `due_day` fields to credit card accounts. UI updated in Settings with validated inputs (range 1–31).
+- [x] **iCal Export Edge Function (CAL-02)**: Supabase Edge Function `generate-ical` producing RFC 5545 compliant `.ics` files. Credit card transactions grouped into a single "💳 Fatura [Card] - Month/Year" event on the due date with itemized description. Regular account transactions exported as individual events with amount in description. VALARM reminders included (3 days before invoice, 1 day before regular transactions).
+- [x] **Calendar Settings Section (CAL-03)**: New "Calendar" section in Settings. Toggles for credit card and checking account sync. MonthYearSelector for month selection. "Export Full Month" and "Export Selected" buttons with individual transaction checkboxes.
+- [ ] **Google Calendar OAuth2 Integration (CAL-04)**: Direct two-way sync via Google Calendar API. Automatic event creation/update when transactions are added. Notifications via Gmail for upcoming due dates.
+
 ## 🔮 Future Triage & New Implementations
 Ideas and integrations focused on expanding the app's horizons.
 
 ### Short/Medium Term
-- [ ] **Advanced Credit Card Management**: Closing dates, due dates, real-time limits, and invoices.
 - [ ] **Tags or "Cost Centers"**: Cross-categorization for events (e.g., #SPTrip, #Carnival2026).
 - [ ] **Subscriptions Manager**: Dedicated dashboard for recurring expenses with savings insights.
 - [ ] **Alerts & Notifications Automation**: Due date reminders and budget ceiling alerts.

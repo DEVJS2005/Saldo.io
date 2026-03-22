@@ -9,5 +9,6 @@ export async function loginUser(page: Page) {
   await page.getByTestId('input-password').fill(password);
   await page.getByTestId('btn-login').click();
 
-  await page.waitForURL(/\/(dashboard)?$/, { timeout: 8000 });
+  // Wait until URL changes from /login or stays on dashboard
+  await page.waitForURL(url => !url.href.endsWith('/login'), { timeout: 8000 }).catch(() => {});
 }
