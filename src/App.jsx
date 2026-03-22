@@ -9,6 +9,7 @@ import { Suspense, lazy, useState, useEffect } from 'react';
 import Loading from './components/ui/Loading';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
+import TermsModal from './components/TermsModal';
 
 // Lazy Load Pages
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -160,6 +161,12 @@ function AppContent() {
 
   if (maintenance?.active && user?.role !== 'admin' && !isLoginPage) {
     return <MaintenanceScreen message={maintenance.message} />;
+  }
+
+  // Intercepta rotas validas se o usuario nao tiver concordado com LGPD
+  const isPublicRoute = isLoginPage || window.location.pathname === '/register' || window.location.pathname === '/reset-password';
+  if (user && !user.termsAccepted && !isPublicRoute) {
+    return <TermsModal />;
   }
 
   return (

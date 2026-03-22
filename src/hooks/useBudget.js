@@ -20,7 +20,8 @@ export function useBudget(monthDate = new Date()) {
         .select('*')
         .gte('date', start)
         .lte('date', end)
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .limit(150);
 
       if (monthlyError) throw monthlyError;
       const monthlyData = data || [];
@@ -42,11 +43,16 @@ export function useBudget(monthDate = new Date()) {
           }
       }
 
-      // Process Monthly Stats
-      let income = 0;
-      let expense = 0;
-      let pendingIncome = 0;
-      let pendingExpense = 0;
+      // Fetch Monthly Stats via RPC (Evita Loop O(n) no front e garante totalidade ignorando o limit 150)
+      const { data: monthlyStats, error: statsError } = await supabase
+          .rpc('get_monthly_budget_stats', { p_start_date: start, p_end_date: end });
+
+      if (statsError) console.error('Error fetching monthly stats:', statsError);
+
+      let income = Number(monthlyStats?.income) || 0;
+      let expense = Number(monthlyStats?.expense) || 0;
+      let pendingIncome = Number(monthlyStats?.pending_income) || 0;
+      let pendingExpense = Number(monthlyStats?.pending_expense) || 0;
 
       const transactions = monthlyData.map(t => ({
           ...t,
@@ -58,17 +64,6 @@ export function useBudget(monthDate = new Date()) {
           installmentId: t.installment_id || t.installmentId,
           amount: Number(t.amount)
       }));
-
-      transactions.forEach(t => {
-        const val = t.amount;
-        if (t.type === 'receita') {
-            income += val;
-            if (t.paymentStatus !== 'paid') pendingIncome += val;
-        } else if (t.type === 'despesa') {
-            expense += val;
-            if (t.paymentStatus !== 'paid') pendingExpense += val;
-        }
-      });
 
       return {
           income,

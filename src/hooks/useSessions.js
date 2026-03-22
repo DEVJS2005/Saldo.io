@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -78,7 +79,6 @@ export function useSessions() {
                     await supabase
                         .from('sessions')
                         .update({ revoked_at: new Date().toISOString() })
-                        .eq('revoked_at', null)
                         .is('revoked_at', null);
                 } else {
                     // Revogar apenas esta sessão
@@ -90,6 +90,7 @@ export function useSessions() {
             }
         } catch (err) {
             console.warn('[useSessions] Falha ao revogar sessão:', err.message);
+            toast.error('Erro ao encerrar sessão: ' + err.message);
         } finally {
             await supabase.auth.signOut({ scope });
         }

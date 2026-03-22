@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { InstallPrompt } from './ui/InstallPrompt';
+import { DONATION_PIX_KEY, DONATION_PIX_PAYLOAD } from '../data/constants';
 
 const NavItem = ({ to, icon: Icon, label, active, onClick, testId }) => {
   if (onClick) {
@@ -253,7 +254,7 @@ export const Layout = ({ children }) => {
               </p>
               <div className="flex flex-col items-center gap-3">
                 <img
-                  src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=00020101021126580014br.gov.bcb.pix013679f98c7c-456d-43b2-b791-a6f2fb5cac545204000053039865802BR5925JOAO%20VICTOR%20BATISTA%20SANTO6007ARACAJU62070503***63043102&margin=10"
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(DONATION_PIX_PAYLOAD)}&margin=10`}
                   alt="QR Code PIX"
                   className="rounded-xl border border-[var(--border-color)] bg-white p-1 select-none pointer-events-none shrink-0 block"
                   style={{ width: '140px', height: '140px' }}
@@ -261,7 +262,7 @@ export const Layout = ({ children }) => {
                 <div className="w-full text-left">
                   <span className="text-[10px] uppercase font-bold tracking-wider opacity-50 ml-1">Chave PIX (EAT)</span>
                   <div className="flex items-center gap-2 w-full bg-[var(--bg-input)] rounded-lg p-2.5 border border-[var(--border-color)] mt-1 select-all cursor-text">
-                    <span className="text-xs font-mono text-[var(--text-primary)]">79f98c7c-456d-43b2-b791-a6f2fb5cac54</span>
+                    <span className="text-xs font-mono text-[var(--text-primary)]">{DONATION_PIX_KEY}</span>
                   </div>
                 </div>
               </div>

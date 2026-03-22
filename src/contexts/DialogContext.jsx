@@ -13,9 +13,11 @@ export const useDialog = () => {
 export const DialogProvider = ({ children }) => {
     const [dialog, setDialog] = useState({
         isOpen: false,
-        type: 'info', // 'info', 'success', 'warning', 'error', 'confirm'
+        type: 'info', // 'info', 'success', 'warning', 'error', 'confirm', 'prompt'
         title: '',
         message: '',
+        inputValue: '',
+        placeholder: '',
         confirmLabel: 'Confirmar',
         cancelLabel: 'Cancelar',
         onConfirm: () => { },
@@ -32,6 +34,8 @@ export const DialogProvider = ({ children }) => {
             type: options.type || 'info',
             title: options.title || '',
             message: options.message || '',
+            inputValue: '',
+            placeholder: options.placeholder || '',
             confirmLabel: options.confirmLabel || 'OK',
             cancelLabel: options.cancelLabel || 'Cancelar',
             onConfirm: options.onConfirm || (() => { }),
@@ -54,6 +58,27 @@ export const DialogProvider = ({ children }) => {
                 },
                 onCancel: () => {
                     resolve(false);
+                    closeDialog();
+                },
+            });
+        });
+    };
+
+    const promptUser = (message, title = 'Entrada Necessária', placeholder = '') => {
+        return new Promise((resolve) => {
+            showDialog({
+                type: 'prompt',
+                title,
+                message,
+                placeholder,
+                confirmLabel: 'Confirmar',
+                cancelLabel: 'Cancelar',
+                onConfirm: (val) => {
+                    resolve(val);
+                    closeDialog();
+                },
+                onCancel: () => {
+                    resolve(null);
                     closeDialog();
                 },
             });
@@ -85,13 +110,14 @@ export const DialogProvider = ({ children }) => {
             case 'error': return <AlertTriangle className="text-red-500" size={32} />;
             case 'warning': return <AlertTriangle className="text-amber-500" size={32} />;
             case 'success': return <CheckCircle className="text-emerald-500" size={32} />;
-            case 'confirm': return <HelpCircle className="text-[var(--primary)]" size={32} />;
+            case 'confirm': 
+            case 'prompt': return <HelpCircle className="text-[var(--primary)]" size={32} />;
             default: return <Info className="text-blue-500" size={32} />;
         }
     };
 
     return (
-        <DialogContext.Provider value={{ showDialog, closeDialog, confirm, alert }}>
+        <DialogContext.Provider value={{ showDialog, closeDialog, confirm, alert, promptUser }}>
             {children}
 
             {dialog.isOpen && (
@@ -106,8 +132,27 @@ export const DialogProvider = ({ children }) => {
                                 <p className="text-[var(--text-secondary)] mt-2">{dialog.message}</p>
                             </div>
 
+                            {dialog.type === 'prompt' && (
+                                <div className="w-full mt-2">
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none"
+                                        placeholder={dialog.placeholder}
+                                        value={dialog.inputValue}
+                                        onChange={(e) => setDialog(prev => ({ ...prev, inputValue: e.target.value }))}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                dialog.onConfirm(dialog.inputValue);
+                                                if (dialog.type !== 'prompt') closeDialog();
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            )}
+
                             <div className="flex gap-3 w-full mt-2">
-                                {dialog.type === 'confirm' && (
+                                {(dialog.type === 'confirm' || dialog.type === 'prompt') && (
                                     <button
                                         onClick={() => {
                                             dialog.onCancel();
@@ -121,12 +166,8 @@ export const DialogProvider = ({ children }) => {
 
                                 <button
                                     onClick={() => {
-                                        dialog.onConfirm();
-                                        // Only close automatically if it's an alert or plain confirm logic handled by promise wrapper
-                                        // But effectively for shared usage we close it here inside the wrapper mostly.
-                                        // For custom onConfirm passed via showDialog, we might want user to close it manually? 
-                                        // For simplicity, our helpers confirm/alert handle closing.
-                                        if (!dialog.type === 'confirm' && !dialog.type === 'alert') closeDialog();
+                                        dialog.onConfirm(dialog.inputValue);
+                                        if (dialog.type !== 'confirm' && dialog.type !== 'alert' && dialog.type !== 'prompt') closeDialog();
                                     }}
                                     className={clsx(
                                         "flex-1 px-4 py-2 rounded-xl text-white font-medium shadow-lg transition-all",

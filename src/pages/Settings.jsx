@@ -19,7 +19,7 @@ export default function Settings() {
     const { validateAndRepairTransactions } = useTransactions();
     const { categories, accounts, refreshData } = useMasterData();
     const { user } = useAuth();
-    const { confirm, alert } = useDialog();
+    const { confirm, alert, promptUser } = useDialog();
     const { t, i18n } = useTranslation();
     const { theme, setTheme } = useTheme();
 
@@ -281,13 +281,21 @@ export default function Settings() {
     };
 
     const handleResetApp = async () => {
-        if (await confirm('PERIGO: Isso irá APAGAR TODOS os seus dados. Esta ação é irreversível. Tem certeza?', 'Zona de Perigo')) {
+        const resetPrompt = await promptUser(
+            'PERIGO: Isso irá APAGAR TODOS os seus dados. Esta ação é irreversível.\n\nPara confirmar, digite exatamente "DELETAR TUDO" no campo abaixo:',
+            'Zona de Perigo',
+            'DELETAR TUDO'
+        );
+
+        if (resetPrompt === 'DELETAR TUDO') {
             try {
                 await resetCloudData();
                 window.location.href = '/';
             } catch (err) {
                 await alert('Erro ao resetar: ' + err.message, 'Erro', 'error');
             }
+        } else if (resetPrompt !== null) {
+            await alert('Texto incorreto. Operação cancelada por segurança.', 'Cancelado', 'info');
         }
     };
 

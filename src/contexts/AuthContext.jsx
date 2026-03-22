@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
         if (!sessionUser) return null;
         try {
             const result = await withTimeout(
-                supabase.from('profiles').select('role, is_active, can_sync').eq('id', sessionUser.id).single(),
+                supabase.from('profiles').select('role, is_active, can_sync, terms_accepted_at').eq('id', sessionUser.id).single(),
                 15000
             );
 
@@ -105,7 +105,8 @@ export function AuthProvider({ children }) {
             return {
                 ...sessionUser,
                 role: data?.role || 'user',
-                canSync: data?.can_sync || false
+                canSync: data?.can_sync || false,
+                termsAccepted: !!data?.terms_accepted_at
             };
         } catch (err) {
             // Falhas de rede transitórias (background/foreground mobile, token refresh)
@@ -132,7 +133,8 @@ export function AuthProvider({ children }) {
             return {
                 ...sessionUser,
                 role: 'user',
-                canSync: true
+                canSync: true,
+                termsAccepted: false
             };
         }
     };
@@ -195,6 +197,7 @@ export function AuthProvider({ children }) {
                         if (prev?.id === userWithRole.id &&
                             prev?.role === userWithRole.role &&
                             prev?.canSync === userWithRole.canSync &&
+                            prev?.termsAccepted === userWithRole.termsAccepted &&
                             prev?.email === userWithRole.email) {
                             return prev;
                         }
