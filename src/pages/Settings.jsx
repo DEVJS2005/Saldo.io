@@ -190,7 +190,11 @@ export default function Settings() {
             await refreshData();
         } catch (err) {
             console.error(err);
-            await alert('Erro ao atualizar conta: ' + err.message, 'Erro', 'error');
+            if (err.message && err.message.includes('NetworkError')) {
+                await alert('Seu Navegador ou AdBlocker impediu a conexão (ou sua sessão expirou). Por favor, desative escudos de privacidade para o localhost ou atualize a página (F5) e faça login novamente.', 'Erro de Rede (CORS/AdBlock)', 'error');
+            } else {
+                await alert('Erro ao atualizar conta: ' + err.message, 'Erro', 'error');
+            }
         }
     };
 
