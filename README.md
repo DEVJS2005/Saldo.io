@@ -147,5 +147,3 @@ Fluxo geral:
 - **Maturidade:** funcional para uso real, ainda em evolução contínua
 - **Pontos fortes atuais:** fluxo principal de transações, dashboard e relatórios
 - **Pontos em andamento:** ajustes de onboarding, expansão de testes E2E e monetização
-
-Se quiser, posso também padronizar esse mesmo formato no `README.pt-BR.md` e `README.en.md` para manter tudo consistente.
