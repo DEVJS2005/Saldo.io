@@ -8,13 +8,12 @@ Permitir avaliação rápida do produto sem exigir cadastro inicial.
 - Dados fictícios
 - Sem dados pessoais reais
 
-## Credenciais de exemplo
+## Credenciais de exemplo (substituir em produção)
 - Email: `DEMO_EMAIL`
 - Senha: `DEMO_PASSWORD`
-- Configure os valores reais via variáveis de ambiente ou secret manager; não documente credenciais concretas.
+- Configure os valores reais via variáveis de ambiente ou secret manager; não documente senhas válidas no repositório.
 
 ## Regras de segurança
 - Bloquear exportações sensíveis na sandbox
 - Limitar ações administrativas
 - Executar reset periódico da base demo
-- Rotacionar ou resetar automaticamente as credenciais da conta demo

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Plus, WalletMinimal, CheckCircle, Sparkles } from 'lucide-react';
@@ -15,14 +15,17 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useMasterData } from '../hooks/useMasterData';
+import { Link } from 'react-router-dom';
 
 const ONBOARDING_GOAL_KEY = 'saldo_onboarding_goal';
+const ACTIVATION_METRICS_KEY = 'saldo_activation_metrics';
+const IN_APP_FEEDBACK_KEY = 'saldo_in_app_feedback';
 
 const GOAL_OPTIONS = [
-  'Quitar dívidas',
-  'Economizar para emergência',
-  'Organizar gastos do mês',
-  'Juntar para uma viagem'
+  'CLT com cartão: organizar mês sem sustos',
+  'CLT com cartão: quitar dívidas e recuperar controle',
+  'CLT com cartão: reservar 15% da renda'
 ];
 
 const toNoonISOString = (date) => {
@@ -42,15 +45,81 @@ export default function Dashboard() {
   const [goal, setGoal] = useState(localStorage.getItem(ONBOARDING_GOAL_KEY) || GOAL_OPTIONS[0]);
   const [bankAccountName, setBankAccountName] = useState('Conta Principal');
   const [cardName, setCardName] = useState('Cartão Principal');
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackScore, setFeedbackScore] = useState(8);
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
 
   const { income, expense, balanceProjected, balanceReal, transactions, accountBalances, loading, refresh } = useBudget(selectedDate);
+  const { accounts } = useMasterData();
 
   const hasDashboardData = transactions.length > 0 || Object.keys(accountBalances || {}).length > 0;
 
   const objectiveLabel = localStorage.getItem(ONBOARDING_GOAL_KEY);
+  const firstReportDone = localStorage.getItem('saldo_first_report_seen') === '1';
+
+  const activationMetrics = useMemo(() => {
+    const stored = JSON.parse(localStorage.getItem(ACTIVATION_METRICS_KEY) || '{}');
+    return {
+      signup: !!user?.id || !!stored.signup,
+      firstAccount: Object.keys(accountBalances || {}).length > 0 || !!stored.firstAccount,
+      firstTransaction: (transactions?.length || 0) > 0 || !!stored.firstTransaction,
+      firstReport: firstReportDone || !!stored.firstReport
+    };
+  }, [user?.id, accountBalances, transactions?.length, firstReportDone]);
+
+  useEffect(() => {
+    const now = new Date().toISOString();
+    const previous = JSON.parse(localStorage.getItem(ACTIVATION_METRICS_KEY) || '{}');
+    const merged = {
+      signup: previous.signup || activationMetrics.signup ? (previous.signup || now) : null,
+      firstAccount: previous.firstAccount || activationMetrics.firstAccount ? (previous.firstAccount || now) : null,
+      firstTransaction: previous.firstTransaction || activationMetrics.firstTransaction ? (previous.firstTransaction || now) : null,
+      firstReport: previous.firstReport || activationMetrics.firstReport ? (previous.firstReport || now) : null
+    };
+    localStorage.setItem(ACTIVATION_METRICS_KEY, JSON.stringify(merged));
+  }, [activationMetrics]);
 
   const formatCurrency = (val) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+  const dueAlerts = useMemo(() => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    return (accounts || [])
+      .filter((acc) => acc.type === 'credit' && Number.isFinite(Number(acc.due_day)))
+      .map((acc) => {
+        const dueDay = Number(acc.due_day);
+        const daysLeft = dueDay - currentDay;
+        return {
+          id: acc.id,
+          name: acc.name,
+          dueDay,
+          daysLeft
+        };
+      })
+      .filter((alert) => alert.daysLeft >= 0 && alert.daysLeft <= 7)
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  }, [accounts]);
+
+  const monthlyRoutine = useMemo(() => {
+    const hasMonthCloseTx = transactions.some((tx) => tx.description?.includes('Fechamento de Mês'));
+    const pendingExpenses = transactions.filter((tx) => tx.type === 'despesa' && tx.payment_status === 'pending');
+    return {
+      hasMonthCloseTx,
+      pendingCount: pendingExpenses.length
+    };
+  }, [transactions]);
+
+  const smartSummary = useMemo(() => {
+    if (!transactions.length) {
+      return 'Comece lançando 3 transações para receber um resumo inteligente do mês.';
+    }
+    const delta = income - expense;
+    if (delta >= 0) {
+      return `Você está fechando positivo em ${formatCurrency(delta)}. Mantenha a disciplina nas despesas variáveis.`;
+    }
+    return `Atenção: seu mês está negativo em ${formatCurrency(Math.abs(delta))}. Priorize cortar gastos não essenciais nesta semana.`;
+  }, [income, expense, transactions.length]);
 
   const handleCreateDemoData = async () => {
     if (!user) return;
@@ -198,6 +267,44 @@ export default function Dashboard() {
     }
   };
 
+  const handleSaveFeedback = async () => {
+    const cleanMessage = feedbackText.trim();
+    if (!cleanMessage) {
+      window.alert('Escreva um feedback curto para enviar.');
+      return;
+    }
+
+    const payload = {
+      created_at: new Date().toISOString(),
+      score: feedbackScore,
+      message: cleanMessage,
+      persona: goal || 'CLT com cartão'
+    };
+
+    const previous = JSON.parse(localStorage.getItem(IN_APP_FEEDBACK_KEY) || '[]');
+    localStorage.setItem(IN_APP_FEEDBACK_KEY, JSON.stringify([payload, ...previous].slice(0, 20)));
+
+    try {
+      if (user?.id) {
+        const { error } = await supabase.from('feedback').insert({
+          user_id: user.id,
+          score: feedbackScore,
+          message: cleanMessage,
+          context: 'dashboard_onboarding'
+        });
+
+        if (error) {
+          console.error('Falha ao salvar feedback no Supabase:', error);
+        }
+      }
+    } catch {
+      // Mantém captação local se tabela remota não existir.
+    }
+
+    setFeedbackSaved(true);
+    setFeedbackText('');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -223,7 +330,7 @@ export default function Dashboard() {
                 <Sparkles size={16} className="mr-1" /> Setup guiado
               </Button>
             )}
-            {transactions.some(tx => tx.description.includes('Fechamento de Mês')) ? (
+            {transactions.some(t => t.description?.includes('Fechamento de Mês')) ? (
               <div className="flex items-center text-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--success)]/20">
                 <CheckCircle size={16} className="mr-2" />
                 {t('dashboard.month_closed', 'Mês Fechado')}
@@ -252,6 +359,114 @@ export default function Dashboard() {
           </Button>
         </Card>
       )}
+
+      <Card title="Métricas de ativação (Fase 2)">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+          <div className="p-3 rounded-lg border border-[var(--border-color)]">
+            <p className="opacity-70">Cadastro</p>
+            <p className="font-semibold">{activationMetrics.signup ? '✅ Concluído' : '⏳ Pendente'}</p>
+          </div>
+          <div className="p-3 rounded-lg border border-[var(--border-color)]">
+            <p className="opacity-70">1ª Conta</p>
+            <p className="font-semibold">{activationMetrics.firstAccount ? '✅ Concluído' : '⏳ Pendente'}</p>
+          </div>
+          <div className="p-3 rounded-lg border border-[var(--border-color)]">
+            <p className="opacity-70">1ª Transação</p>
+            <p className="font-semibold">{activationMetrics.firstTransaction ? '✅ Concluído' : '⏳ Pendente'}</p>
+          </div>
+          <div className="p-3 rounded-lg border border-[var(--border-color)]">
+            <p className="opacity-70">1º Relatório</p>
+            <p className="font-semibold">{activationMetrics.firstReport ? '✅ Concluído' : '⏳ Pendente'}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Feedback rápido (dentro do app)">
+        <p className="text-sm text-[var(--text-secondary)] mb-3">
+          Estamos validando a proposta para a persona: <strong>{goal}</strong>.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs uppercase tracking-wide opacity-70 font-semibold">Nota da experiência (0-10)</label>
+            <input
+              type="range"
+              min={0}
+              max={10}
+              value={feedbackScore}
+              onChange={(e) => setFeedbackScore(Number(e.target.value))}
+              className="w-full"
+            />
+            <p className="text-xs opacity-70">Nota atual: {feedbackScore}</p>
+          </div>
+          <textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            rows={3}
+            className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm"
+            placeholder="O que te ajudou e o que faltou no primeiro uso?"
+          />
+          <Button onClick={handleSaveFeedback}>Enviar feedback</Button>
+          {feedbackSaved && <p className="text-xs text-[var(--success)]">Feedback salvo. Obrigado! 🙌</p>}
+        </div>
+      </Card>
+
+      <Card title="Retenção (Fase 3)">
+        <div className="space-y-4 text-sm">
+          <div>
+            <h4 className="font-semibold mb-2">🔔 Alertas de vencimento</h4>
+            {dueAlerts.length === 0 ? (
+              <p className="text-[var(--text-secondary)]">Nenhum vencimento de cartão nos próximos 7 dias.</p>
+            ) : (
+              <ul className="space-y-2">
+                {dueAlerts.map((alert) => (
+                  <li key={alert.id} className="p-2 rounded-lg border border-[var(--border-color)]">
+                    {alert.name}: vence dia {alert.dueDay} ({alert.daysLeft === 0 ? 'hoje' : `em ${alert.daysLeft} dia(s)`})
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">🗓️ Rotina mensal automática</h4>
+            <p className="text-[var(--text-secondary)]">
+              {monthlyRoutine.hasMonthCloseTx
+                ? 'Fechamento mensal já lançado. Próximo passo: revisar metas do mês.'
+                : 'Fechamento mensal pendente. Recomendado: fechar o mês após revisar despesas pendentes.'}
+            </p>
+            {monthlyRoutine.pendingCount > 0 && (
+              <p className="text-xs mt-1 opacity-80">
+                Você ainda possui {monthlyRoutine.pendingCount} despesa(s) pendente(s) este mês.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">🧠 Resumo inteligente</h4>
+            <p className="text-[var(--text-secondary)]">{smartSummary}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">📅 Calendário integrado</h4>
+            <p className="text-[var(--text-secondary)] mb-2">
+              Exporte despesas para calendário (.ics) em Configurações para visualizar vencimentos na agenda.
+            </p>
+            <Link to="/settings" className="text-[var(--primary)] hover:underline text-sm font-medium">
+              Ir para Configurações → Calendário
+            </Link>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">📥 Importação facilitada</h4>
+            <p className="text-[var(--text-secondary)] mb-2">
+              Importe backup JSON e acelere a migração de outros apps para o Saldo.io.
+            </p>
+            <Link to="/settings" className="text-[var(--primary)] hover:underline text-sm font-medium">
+              Ir para Configurações → Importar Backup
+            </Link>
+          </div>
+        </div>
+      </Card>
 
       {
         loading ? (

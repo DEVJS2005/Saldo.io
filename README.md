@@ -56,8 +56,12 @@ O **Saldo.io** resolve isso com um fluxo simples de contas, cartões, transaçõ
 | Parcelamento | Controle por parcelas | ✅ |
 | Relatórios | Gráficos e comparativos | ✅ |
 | Onboarding guiado | Conta + cartão + dados de exemplo | ✅ |
-| Feedback in-app | Coleta estruturada | 🕒 Planejado |
-| Alertas de vencimento | Notificações recorrentes | 🕒 Planejado |
+| Feedback in-app | Coleta estruturada | ✅ MVP entregue |
+| Métricas de ativação | cadastro, 1ª conta, 1ª transação, 1º relatório | ✅ MVP entregue |
+| Alertas de vencimento | Próximos vencimentos de cartão (7 dias) | ✅ MVP entregue |
+| Rotina mensal automática | Checklist de fechamento e pendências | ✅ MVP entregue |
+| Resumos inteligentes | Insight textual de desempenho mensal | ✅ MVP entregue |
+| Calendário integrado | Atalho para exportação .ics | ✅ MVP entregue |
 | Importação de dados | Migração de outros apps | 🕒 Planejado |
 
 ---
@@ -132,23 +136,23 @@ Fluxo macro:
 ## Roadmap enxuto por fases
 
 ### Fase 2 — validar proposta
-- foco em 1 persona (profissional CLT com cartão de crédito)
-- onboarding curto (até 3 passos)
-- feedback dentro do app
-- métricas de ativação: cadastro, 1ª conta, 1ª transação, 1º relatório
+- [x] foco em 1 persona (profissional CLT com cartão de crédito)
+- [x] onboarding curto (até 3 passos)
+- [x] feedback dentro do app (MVP)
+- [x] métricas de ativação: cadastro, 1ª conta, 1ª transação, 1º relatório (MVP)
 
 ### Fase 3 — fortalecer retenção
-- alertas de vencimento
-- rotina mensal automática
-- resumos inteligentes
-- calendário integrado
-- importação facilitada de outros apps
+- [x] alertas de vencimento (MVP)
+- [x] rotina mensal automática (MVP)
+- [x] resumos inteligentes (MVP)
+- [x] calendário integrado (MVP)
+- [ ] importação facilitada de outros apps
 
 ### Fase 4 — ganhar confiança
-- política de privacidade clara
-- página “como seus dados são tratados”
-- backup/restauração simplificados
-- página pública de segurança e arquitetura resumida
+- [x] política de privacidade clara (`/privacy`)
+- [x] página “como seus dados são tratados” (`SECURITY_AND_DATA.md`)
+- [x] backup/restauração simplificados (guia curto em Configurações)
+- [x] página pública de segurança e arquitetura resumida (`/security`)
 
 Documentos de apoio:
 - [SECURITY_AND_DATA.md](SECURITY_AND_DATA.md)
