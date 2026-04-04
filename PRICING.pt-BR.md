@@ -1,5 +1,9 @@
 # Proposta de Planos (Saldo.io)
 
+## Links
+
+- [README](./README.md)
+- [ROADMAP](./ROADMAP.md)
 ## Plano Gratuito (Free)
 
 **Ideal para:** quem está começando a organizar finanças pessoais.
