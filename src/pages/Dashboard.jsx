@@ -330,7 +330,7 @@ export default function Dashboard() {
                 <Sparkles size={16} className="mr-1" /> Setup guiado
               </Button>
             )}
-            {transactions.some(t => t.description.includes('Fechamento de Mês')) ? (
+            {transactions.some(t => t.description?.includes('Fechamento de Mês')) ? (
               <div className="flex items-center text-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--success)]/20">
                 <CheckCircle size={16} className="mr-2" />
                 {t('dashboard.month_closed', 'Mês Fechado')}
