@@ -93,44 +93,70 @@ export default function Dashboard() {
         .eq('user_id', user.id);
 
       if (allCategoriesError) throw allCategoriesError;
+      let createdBankId = null;
+      let createdCardId = null;
 
-      const allCategoriesByKey = new Map(
-        (allCategories || []).map((cat) => [`${cat.name}-${cat.type}`, cat])
-      );
+      try {
+        const { data: allCategories, error: allCategoriesError } = await supabase
+          .from('categories')
+          .select('id, name, type')
+          .eq('user_id', user.id);
 
-      const incomeCategory = allCategoriesByKey.get('Salário-receita');
-      const expenseCategory = allCategoriesByKey.get('Alimentação-despesa');
-      const housingCategory = allCategoriesByKey.get('Moradia-despesa');
-      const transportCategory = allCategoriesByKey.get('Transporte-despesa');
+        if (allCategoriesError) throw allCategoriesError;
 
-      if (!incomeCategory || !expenseCategory || !housingCategory || !transportCategory) {
-        throw new Error('Não foi possível preparar as categorias para o exemplo.');
+        const incomeCategory = allCategories.find((cat) => cat.type === 'receita');
+        const expenseCategory = allCategories.find((cat) => cat.type === 'despesa');
+
+        if (!incomeCategory || !expenseCategory) {
+          throw new Error('Não foi possível preparar as categorias para o exemplo.');
+        }
+
+        const { data: createdBank, error: bankError } = await supabase
+          .from('accounts')
+          .insert({ user_id: user.id, name: bankAccountName.trim(), type: 'bank', limit: 0 })
+          .select('id')
+          .single();
+
+        if (bankError) throw bankError;
+
+        createdBankId = createdBank.id;
+
+        const { data: createdCard, error: cardError } = await supabase
+          .from('accounts')
+          .insert({
+            user_id: user.id,
+            name: cardName.trim(),
+            type: 'credit',
+            limit: 3000,
+            linked_account_id: createdBank.id,
+            closing_day: 8,
+            due_day: 15
+          })
+          .select('id')
+          .single();
+
+        if (cardError) throw cardError;
+
+        createdCardId = createdCard.id;
+      } catch (error) {
+        if (createdCardId) {
+          await supabase
+            .from('accounts')
+            .delete()
+            .eq('id', createdCardId)
+            .eq('user_id', user.id);
+        }
+
+        if (createdBankId) {
+          await supabase
+            .from('accounts')
+            .delete()
+            .eq('id', createdBankId)
+            .eq('user_id', user.id);
+        }
+
+        throw error;
       }
-
-      const { data: createdBank, error: bankError } = await supabase
-        .from('accounts')
-        .insert({ user_id: user.id, name: bankAccountName.trim(), type: 'bank', limit: 0 })
-        .select('id')
-        .single();
-
-      if (bankError) throw bankError;
-
-      const { data: createdCard, error: cardError } = await supabase
-        .from('accounts')
-        .insert({
-          user_id: user.id,
-          name: cardName.trim(),
-          type: 'credit',
-          limit: 3000,
-          linked_account_id: createdBank.id,
-          closing_day: 8,
-          due_day: 15
-        })
-        .select('id')
-        .single();
-
-      if (cardError) throw cardError;
-
       const now = new Date();
       const createSampleTransaction = (day, transaction) => {
         const transactionDate = new Date(Date.UTC(
