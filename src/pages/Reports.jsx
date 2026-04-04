@@ -1,7 +1,7 @@
 import { useDate } from '../contexts/DateContext';
 import { useBudget } from '../hooks/useBudget';
 import { useMasterData } from '../hooks/useMasterData';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MonthYearSelector } from '../components/ui/MonthYearSelector';
 import { MonthlyComparisonChart } from '../components/reports/MonthlyComparisonChart';
 import { FluxoMensalChart } from '../components/reports/FluxoMensalChart';
@@ -11,6 +11,7 @@ import { BudgetProgress } from '../components/reports/BudgetProgress';
 import { TrendingUp, BarChart2, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+// eslint-disable-next-line no-unused-vars
 function SectionTitle({ icon: Icon, title, subtitle }) {
     return (
         <div className="flex items-center gap-3 mb-4">
@@ -53,6 +54,10 @@ export default function Reports() {
 
     const formatCurrency = (v) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+    useEffect(() => {
+        localStorage.setItem('saldo_first_report_seen', '1');
+    }, []);
 
     return (
         <div className="space-y-10">
