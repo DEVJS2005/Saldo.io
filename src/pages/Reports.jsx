@@ -11,7 +11,6 @@ import { BudgetProgress } from '../components/reports/BudgetProgress';
 import { TrendingUp, BarChart2, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-// eslint-disable-next-line no-unused-vars
 function SectionTitle({ icon: Icon, title, subtitle }) {
     return (
         <div className="flex items-center gap-3 mb-4">
