@@ -93,95 +93,125 @@ export default function Dashboard() {
         .eq('user_id', user.id);
 
       if (allCategoriesError) throw allCategoriesError;
+      let createdBankId = null;
+      let createdCardId = null;
 
-      const incomeCategory = allCategories.find((cat) => cat.type === 'receita');
-      const expenseCategory = allCategories.find((cat) => cat.type === 'despesa');
+      try {
+        const { data: allCategories, error: allCategoriesError } = await supabase
+          .from('categories')
+          .select('id, name, type')
+          .eq('user_id', user.id);
 
-      if (!incomeCategory || !expenseCategory) {
-        throw new Error('Não foi possível preparar as categorias para o exemplo.');
+        if (allCategoriesError) throw allCategoriesError;
+
+        const incomeCategory = allCategories.find((cat) => cat.type === 'receita');
+        const expenseCategory = allCategories.find((cat) => cat.type === 'despesa');
+
+        if (!incomeCategory || !expenseCategory) {
+          throw new Error('Não foi possível preparar as categorias para o exemplo.');
+        }
+
+        const { data: createdBank, error: bankError } = await supabase
+          .from('accounts')
+          .insert({ user_id: user.id, name: bankAccountName.trim(), type: 'bank', limit: 0 })
+          .select('id')
+          .single();
+
+        if (bankError) throw bankError;
+
+        createdBankId = createdBank.id;
+
+        const { data: createdCard, error: cardError } = await supabase
+          .from('accounts')
+          .insert({
+            user_id: user.id,
+            name: cardName.trim(),
+            type: 'credit',
+            limit: 3000,
+            linked_account_id: createdBank.id,
+            closing_day: 8,
+            due_day: 15
+          })
+          .select('id')
+          .single();
+
+        if (cardError) throw cardError;
+
+        createdCardId = createdCard.id;
+      } catch (error) {
+        if (createdCardId) {
+          await supabase
+            .from('accounts')
+            .delete()
+            .eq('id', createdCardId)
+            .eq('user_id', user.id);
+        }
+
+        if (createdBankId) {
+          await supabase
+            .from('accounts')
+            .delete()
+            .eq('id', createdBankId)
+            .eq('user_id', user.id);
+        }
+
+        throw error;
       }
-
-      const { data: createdBank, error: bankError } = await supabase
-        .from('accounts')
-        .insert({ user_id: user.id, name: bankAccountName.trim(), type: 'bank', limit: 0 })
-        .select('id')
-        .single();
-
-      if (bankError) throw bankError;
-
-      const { data: createdCard, error: cardError } = await supabase
-        .from('accounts')
-        .insert({
-          user_id: user.id,
-          name: cardName.trim(),
-          type: 'credit',
-          limit: 3000,
-          linked_account_id: createdBank.id,
-          closing_day: 8,
-          due_day: 15
-        })
-        .select('id')
-        .single();
-
-      if (cardError) throw cardError;
-
       const now = new Date();
-      const month = now.getMonth();
-      const year = now.getFullYear();
+      const createSampleTransaction = (day, transaction) => {
+        const transactionDate = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          day,
+          12
+        ));
+
+        return {
+          ...transaction,
+          date: toNoonISOString(transactionDate),
+          month: transactionDate.getUTCMonth(),
+          year: transactionDate.getUTCFullYear(),
+          is_recurring: false
+        };
+      };
 
       const sampleTransactions = [
-        {
+        createSampleTransaction(5, {
           user_id: user.id,
           type: 'receita',
           category_id: incomeCategory.id,
           account_id: createdBank.id,
           amount: 5200,
           description: 'Salário',
-          payment_status: 'paid',
-          date: toNoonISOString(new Date(year, month, 5)),
-          month,
-          year,
-          is_recurring: false
-        },
-        {
+          payment_status: 'paid'
+        }),
+        createSampleTransaction(10, {
           user_id: user.id,
           type: 'despesa',
           category_id: expenseCategory.id,
           account_id: createdBank.id,
           amount: 1650,
           description: 'Aluguel',
-          payment_status: 'paid',
-          date: toNoonISOString(new Date(year, month, 10)),
-          month,
-          year,
-          is_recurring: false
-        },
-        {
+          payment_status: 'paid'
+        }),
+        createSampleTransaction(12, {
           user_id: user.id,
           type: 'despesa',
           category_id: expenseCategory.id,
           account_id: createdCard.id,
           amount: 420,
           description: 'Supermercado',
-          payment_status: 'pending',
-          date: toNoonISOString(new Date(year, month, 12)),
-          month,
-          year,
-          is_recurring: false
-        },
-        {
+          payment_status: 'pending'
+        }),
+        createSampleTransaction(16, {
           user_id: user.id,
           type: 'despesa',
           category_id: expenseCategory.id,
           account_id: createdCard.id,
           amount: 180,
           description: 'Combustível',
-          payment_status: 'pending',
-          date: toNoonISOString(new Date(year, month, 16)),
-          month,
-          year,
-          is_recurring: false
-        }
+          payment_status: 'pending'
+        })
       ];
 
       const { error: txError } = await supabase.from('transactions').insert(sampleTransactions);
@@ -223,7 +253,7 @@ export default function Dashboard() {
                 <Sparkles size={16} className="mr-1" /> Setup guiado
               </Button>
             )}
-            {transactions.some(t => t.description.includes('Fechamento de Mês')) ? (
+            {transactions.some(tx => tx.description.includes('Fechamento de Mês')) ? (
               <div className="flex items-center text-[var(--success)] bg-[var(--success)]/10 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--success)]/20">
                 <CheckCircle size={16} className="mr-2" />
                 {t('dashboard.month_closed', 'Mês Fechado')}

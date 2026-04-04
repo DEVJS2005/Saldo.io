@@ -1,97 +1,149 @@
 # 💰 Saldo.io
 
-> **Smart, Secure, and Hybrid Financial Control (SaaS).**
-> *Built with **Antigravity - Gemini 3 Pro***
+Aplicação web de finanças pessoais com foco em simplicidade, velocidade e visão clara do mês.
 
-**Saldo.io** is a modern personal finance platform that combines the speed of a local app with the security of the cloud. Built with **React 19** and **Supabase**, it offers a premium experience for organizing your finances.
+[![Status](https://img.shields.io/badge/status-beta-orange)](#-status-real-do-projeto)
+[![Licença](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-![Status](https://img.shields.io/badge/Status-v1.0.0_(Stable)-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white) ![Coverage](https://img.shields.io/badge/Coverage-min_70%25-brightgreen)
-
----
-
-## ✨ Key Features
-
-### 🔄 Hybrid Architecture (Dual Database)
-- **Offline Mode (Free)**: Your data is stored only on your device (IndexedDB). Total privacy, zero cost.
-- **Cloud Mode (Premium)**: Automatic sync with the cloud (Supabase) for access from anywhere.
-
-### 📊 Complete Management
-- **Intuitive Dashboard**: Clear view of projections, current balance, income, and expenses.
-- **Smart Transactions**:
-  - Automatic installments.
-  - Recurring transactions (fixed or variable) with edit propagation.
-- **Multiple Accounts**: Wallet, Bank, Vouchers, and Credit Cards (with invoice tracking).
-
-### 🛡️ Access Security
-- **Robust Authentication**: Secure login via email.
-- **Data Protection**: RLS (Row Level Security) policies ensure that only you can access your data.
-- **Fail-Safe**: Secure logout system and protection against connection loss.
-
-### ⚙️ Admin Panel (SaaS)
-- User and permission management.
-- Access control for Premium features (Sync).
-- System audit and metrics (Changelog, Database Health, Audit Logs).
-
-### 🌐 Global Experience & Onboarding
-- **PWA (Progressive Web App)**: Installable on Mobile/Desktop, responsive and offline-ready.
-- **Internationalization (i18n)**: Fully translated to English, Spanish and Portuguese.
-- **Themes**: System-based or manual Dark/Light mode toggle.
+> Idiomas: **[Português](README.pt-BR.md)** · **[English](README.en.md)**
 
 ---
 
-## 🛠️ Tech Stack
+## O problema que resolve
 
-This project uses the latest in the web ecosystem:
+Muita gente controla dinheiro em planilhas soltas, apps complexos demais ou anotações sem contexto mensal.
+O **Saldo.io** resolve isso com:
 
-- **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) (Icons)
-- **Local Data**: [Dexie.js](https://dexie.org/) (IndexedDB Wrapper)
-- **Backend / Cloud**: [Supabase](https://supabase.com/) (PostgreSQL, Auth, RPC)
-- **Testing**: [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) (E2E)
-- **Deploy**: Vercel / Cloudflare Pages
-
----
-
-## 🚀 How to Run Locally
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/saldo.io.git
-   cd saldo.io
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment Variables**
-   Create a `.env` file in the root and add your Supabase keys:
-   ```env
-   VITE_SUPABASE_URL=your_url_here
-   VITE_SUPABASE_ANON_KEY=your_anon_key_here
-   ```
-
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
+- visão consolidada de **saldo, receitas e despesas**;
+- controle de **contas e cartões** no mesmo fluxo;
+- lançamentos **recorrentes** e **parcelados**;
+- experiência rápida com arquitetura híbrida (cliente + nuvem).
 
 ---
 
-## 🗺️ Roadmap
+## Demo pública
 
-Check out our [Detailed Roadmap](ROADMAP.en.md) to see future plans, including:
-- [ ] Advanced Reports & Charts
-- [ ] Bank Integration (Open Finance)
-- [ ] Data Export
+- **Status:** disponível via ambiente público de demonstração (quando configurado pelo mantenedor).
+- **Conta demo:** pode ser habilitada/desabilitada no painel Admin.
+- **URL sugerida para publicação:** `https://seu-projeto.vercel.app`
 
----
-
-## 🤝 Contribution
-
-Contributions are welcome! Feel free to open **Issues** or submit **Pull Requests**.
+> Se você for o mantenedor, publique com Vercel/Cloudflare e atualize esta seção com a URL final.
 
 ---
 
-Developed with 💜 by **You**.
+## Screenshots (organizadas)
+
+### Dashboard
+![Dashboard](./dashboard_screenshot.png)
+
+### Transações
+![Transações](./transactions_screenshot.png)
+
+### Relatórios
+![Relatórios](./reports_screenshot.png)
+
+### Configurações
+![Configurações](./settings_screenshot.png)
+
+---
+
+## Tabela de features
+
+| Área | Feature | Status |
+|---|---|---|
+| Dashboard | Saldo real/projetado e cards de resumo | ✅ Disponível |
+| Transações | Criar, editar, excluir, filtrar | ✅ Disponível |
+| Recorrência | Série mensal com propagação de edição | ✅ Disponível |
+| Parcelamento | Despesas parceladas com controle por parcela | ✅ Disponível |
+| Contas/Cartões | Gestão de contas bancárias e crédito | ✅ Disponível |
+| Relatórios | Gráficos por categoria e fluxo mensal | ✅ Disponível |
+| Backup | Exportação e restauração | ✅ Disponível |
+| IA | Insights financeiros (configurável) | ⚠️ Parcial |
+| Open Finance | Conexão bancária automática | 🕒 Planejado |
+
+---
+
+## Comparação Free vs Premium
+
+| Recurso | Free | Premium |
+|---|---:|---:|
+| Contas bancárias | 1 | Ilimitadas |
+| Cartões de crédito | 1 | Ilimitados |
+| Lançamentos | Ilimitados | Ilimitados |
+| Relatórios avançados | Limitado | Completo |
+| Exportação CSV/PDF | ❌ | ✅ |
+| Insights com IA | Limitado | ✅ |
+| Backup em nuvem | ❌ | ✅ |
+| Suporte prioritário | ❌ | ✅ |
+
+> Referência completa de proposta comercial: `PRICING.pt-BR.md`.
+
+---
+
+## Setup local (instruções corretas)
+
+### 1) Pré-requisitos
+- Node.js 20+
+- npm 10+
+- Projeto Supabase (para autenticação e dados em nuvem)
+
+### 2) Instalar dependências
+```bash
+npm install
+```
+
+### 3) Configurar variáveis de ambiente
+Crie `.env` na raiz:
+
+```env
+VITE_SUPABASE_URL=SEU_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY=SUA_SUPABASE_ANON_KEY
+# opcionais para área de doação/IA
+VITE_PIX_KEY=
+VITE_PIX_PAYLOAD=
+```
+
+### 4) Rodar em desenvolvimento
+```bash
+npm run dev
+```
+
+### 5) Build de produção
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## Arquitetura resumida
+
+- **Frontend:** React 19 + Vite
+- **Estado e cache:** TanStack Query + Context API
+- **Backend:** Supabase (Postgres, Auth, RPC)
+- **Visual:** Tailwind CSS + componentes customizados
+- **Testes:** Vitest + Playwright
+
+Fluxo geral:
+1. Usuário autentica.
+2. UI consulta dados via Supabase.
+3. RPCs retornam resumos (saldo global, estatísticas mensais).
+4. Dashboard renderiza cards, gráficos e listas.
+
+---
+
+## Roadmap enxuto
+
+- [ ] Finalizar onboarding guiado com telemetria de ativação
+- [ ] Melhorar plano Free/Premium com feature flags
+- [ ] Evoluir insights de IA com sugestões acionáveis
+- [ ] Publicar documentação de APIs/RPCs
+
+---
+
+## Status real do projeto
+
+- **Fase:** Beta
+- **Maturidade:** funcional para uso real, ainda em evolução contínua
+- **Pontos fortes atuais:** fluxo principal de transações, dashboard e relatórios
+- **Pontos em andamento:** ajustes de onboarding, expansão de testes E2E e monetização
