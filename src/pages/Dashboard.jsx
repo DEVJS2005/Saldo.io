@@ -132,62 +132,60 @@ export default function Dashboard() {
       if (cardError) throw cardError;
 
       const now = new Date();
-      const month = now.getMonth();
-      const year = now.getFullYear();
+      const createSampleTransaction = (day, transaction) => {
+        const transactionDate = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          day,
+          12
+        ));
+
+        return {
+          ...transaction,
+          date: toNoonISOString(transactionDate),
+          month: transactionDate.getUTCMonth(),
+          year: transactionDate.getUTCFullYear(),
+          is_recurring: false
+        };
+      };
 
       const sampleTransactions = [
-        {
+        createSampleTransaction(5, {
           user_id: user.id,
           type: 'receita',
           category_id: incomeCategory.id,
           account_id: createdBank.id,
           amount: 5200,
           description: 'Salário',
-          payment_status: 'paid',
-          date: toNoonISOString(new Date(year, month, 5)),
-          month,
-          year,
-          is_recurring: false
-        },
-        {
+          payment_status: 'paid'
+        }),
+        createSampleTransaction(10, {
           user_id: user.id,
           type: 'despesa',
           category_id: expenseCategory.id,
           account_id: createdBank.id,
           amount: 1650,
           description: 'Aluguel',
-          payment_status: 'paid',
-          date: toNoonISOString(new Date(year, month, 10)),
-          month,
-          year,
-          is_recurring: false
-        },
-        {
+          payment_status: 'paid'
+        }),
+        createSampleTransaction(12, {
           user_id: user.id,
           type: 'despesa',
           category_id: expenseCategory.id,
           account_id: createdCard.id,
           amount: 420,
           description: 'Supermercado',
-          payment_status: 'pending',
-          date: toNoonISOString(new Date(year, month, 12)),
-          month,
-          year,
-          is_recurring: false
-        },
-        {
+          payment_status: 'pending'
+        }),
+        createSampleTransaction(16, {
           user_id: user.id,
           type: 'despesa',
           category_id: expenseCategory.id,
           account_id: createdCard.id,
           amount: 180,
           description: 'Combustível',
-          payment_status: 'pending',
-          date: toNoonISOString(new Date(year, month, 16)),
-          month,
-          year,
-          is_recurring: false
-        }
+          payment_status: 'pending'
+        })
       ];
 
       const { error: txError } = await supabase.from('transactions').insert(sampleTransactions);
