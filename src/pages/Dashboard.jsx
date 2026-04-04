@@ -286,12 +286,16 @@ export default function Dashboard() {
 
     try {
       if (user?.id) {
-        await supabase.from('feedback').insert({
+        const { error } = await supabase.from('feedback').insert({
           user_id: user.id,
           score: feedbackScore,
           message: cleanMessage,
           context: 'dashboard_onboarding'
         });
+
+        if (error) {
+          console.error('Falha ao salvar feedback no Supabase:', error);
+        }
       }
     } catch {
       // Mantém captação local se tabela remota não existir.
