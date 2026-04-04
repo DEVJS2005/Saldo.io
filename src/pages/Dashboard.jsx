@@ -94,10 +94,16 @@ export default function Dashboard() {
 
       if (allCategoriesError) throw allCategoriesError;
 
-      const incomeCategory = allCategories.find((cat) => cat.type === 'receita');
-      const expenseCategory = allCategories.find((cat) => cat.type === 'despesa');
+      const allCategoriesByKey = new Map(
+        (allCategories || []).map((cat) => [`${cat.name}-${cat.type}`, cat])
+      );
 
-      if (!incomeCategory || !expenseCategory) {
+      const incomeCategory = allCategoriesByKey.get('Salário-receita');
+      const expenseCategory = allCategoriesByKey.get('Alimentação-despesa');
+      const housingCategory = allCategoriesByKey.get('Moradia-despesa');
+      const transportCategory = allCategoriesByKey.get('Transporte-despesa');
+
+      if (!incomeCategory || !expenseCategory || !housingCategory || !transportCategory) {
         throw new Error('Não foi possível preparar as categorias para o exemplo.');
       }
 
