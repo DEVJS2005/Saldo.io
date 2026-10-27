@@ -976,6 +976,14 @@ export default function Settings() {
             <div className="space-y-4 md:col-span-2">
                 <h2 className="text-xl font-semibold">Manutenção e Dados</h2>
 
+                <Card className="p-4 border-[var(--primary)]/20">
+                    <h3 className="font-medium text-lg">Backup/Restauração em 2 passos</h3>
+                    <ol className="list-decimal pl-5 text-sm text-[var(--text-secondary)] mt-2 space-y-1">
+                        <li>Clique em <strong>Baixar Backup Completo (JSON)</strong>.</li>
+                        <li>Quando precisar, use <strong>Restaurar Backup (JSON)</strong> e selecione o arquivo.</li>
+                    </ol>
+                </Card>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card className="p-4 flex flex-col gap-4">
                         <div>

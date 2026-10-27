@@ -7,7 +7,6 @@ import { Card } from '../components/ui/Card';
 import { InstallPrompt } from '../components/ui/InstallPrompt';
 import { getErrorMessage } from '../utils/authErrors';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 
@@ -106,6 +105,12 @@ export default function Login() {
                     <Link to="/register" className="text-[var(--primary)] font-bold hover:underline transition-all">
                         {t('auth.register_now')}
                     </Link>
+                </div>
+
+                <div className="mt-4 text-center text-xs text-[var(--text-secondary)] flex items-center justify-center gap-3">
+                    <Link to="/privacy" className="hover:underline">Política de Privacidade</Link>
+                    <span>•</span>
+                    <Link to="/security" className="hover:underline">Segurança & Arquitetura</Link>
                 </div>
 
                 <InstallPrompt variant="card" />

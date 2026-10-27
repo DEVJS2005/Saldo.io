@@ -1,7 +1,7 @@
 import { useDate } from '../contexts/DateContext';
 import { useBudget } from '../hooks/useBudget';
 import { useMasterData } from '../hooks/useMasterData';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MonthYearSelector } from '../components/ui/MonthYearSelector';
 import { MonthlyComparisonChart } from '../components/reports/MonthlyComparisonChart';
 import { FluxoMensalChart } from '../components/reports/FluxoMensalChart';
@@ -53,6 +53,10 @@ export default function Reports() {
 
     const formatCurrency = (v) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+    useEffect(() => {
+        localStorage.setItem('saldo_first_report_seen', '1');
+    }, []);
 
     return (
         <div className="space-y-10">
